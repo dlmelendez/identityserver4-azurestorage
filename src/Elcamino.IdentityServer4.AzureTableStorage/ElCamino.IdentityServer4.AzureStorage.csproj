@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>ElCamino.IdentityServer4.AzureStorage</AssemblyName>
+    <RootNamespace>ElCamino.IdentityServer4.AzureStorage</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Copyright>Copyright ©  2019 David Melendez, Apache 2.0 License</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/dlmelendez/identityserver4-azurestorage</PackageProjectUrl>
+    <PackageIconUrl>https://dlmelendez.github.io/identityazuretable/images/projectNugetPic.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/dlmelendez/identityserver4-azurestorage</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>ASP.NET;Identity;Azure Storage;IdentityServer4;MVC;</PackageTags>
+    <PackageReleaseNotes>Check https://github.com/dlmelendez/identityserver4-azurestorage/releases for the latest release information.</PackageReleaseNotes>
+    <Authors>David Melendez</Authors>
+    <Company>David Melendez</Company>
+    <Description>Uses Azure Blob and Table Storage services as an alternative to Entity Framework/SQL data access for IdentityServer4.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.1" />
+    <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.2.0" />
+    <PackageReference Include="IdentityServer4.Storage" Version="2.4.0" />
+    <PackageReference Include="IdentityServer4" Version="2.4.0" />
+    <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
