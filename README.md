@@ -1,5 +1,6 @@
 # identityserver4-azurestorage
-Uses Azure Blob and Table Storage services as an alternative to Entity Framework/SQL data access for IdentityServer4.
+Uses Azure Blob and Table Storage services as an alternative to [Entity Framework/SQL data access for IdentityServer4](https://identityserver4.readthedocs.io/en/latest/quickstarts/7_entity_framework.html#identityserver4-entityframework).
+Use the unit tests as a guide to seeding operational and configuration data.
 
 # Getting Started
 ## startup.cs
