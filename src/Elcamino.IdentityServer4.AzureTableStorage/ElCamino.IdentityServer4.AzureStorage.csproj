@@ -10,7 +10,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/dlmelendez/identityserver4-azurestorage</PackageProjectUrl>
     <PackageIconUrl>https://dlmelendez.github.io/identityazuretable/images/projectNugetPic.png</PackageIconUrl>
-    <RepositoryUrl>https://github.com/dlmelendez/identityserver4-azurestorage</RepositoryUrl>
+    <RepositoryUrl>https://github.com/dlmelendez/identityserver4-azurestorage.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>ASP.NET;Identity;Azure Storage;IdentityServer4;MVC;</PackageTags>
     <PackageReleaseNotes>Check https://github.com/dlmelendez/identityserver4-azurestorage/releases for the latest release information.</PackageReleaseNotes>
