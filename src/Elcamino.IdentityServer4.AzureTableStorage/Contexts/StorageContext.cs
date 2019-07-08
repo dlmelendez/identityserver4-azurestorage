@@ -26,10 +26,18 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public async Task<string> GetBlobContentAsync(CloudBlockBlob blob)
         {
-            if (await blob.ExistsAsync())
+            try
             {
                 return await blob.DownloadTextAsync();
             }
+            catch (Microsoft.Azure.Storage.StorageException storageEx)
+            {
+                if (!(storageEx.RequestInformation.ErrorCode == Microsoft.Azure.Storage.Blob.Protocol.BlobErrorCodeStrings.BlobNotFound ))
+                {
+                    throw; 
+                }
+            }
+            
             return string.Empty;
         }
 
