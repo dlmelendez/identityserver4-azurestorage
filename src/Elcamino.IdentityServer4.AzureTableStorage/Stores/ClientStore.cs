@@ -83,7 +83,6 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
         public async Task UpdateClientCacheFileAsync(IEnumerable<Entities.Client> entities)
         {
-            DateTime dateTimeNow = DateTime.UtcNow;
             string blobName = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer);
             _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {entities.Count()} saved in blob storage: {blobName}");
         }
