@@ -45,13 +45,20 @@ using IdentityServer4;
     },
     "clientStorageConfig": {
       "storageConnectionString": "UseDevelopmentStorage=true;",
-      "blobContainerName": "idsrv4clientconfig"
+      "blobContainerName": "idsrv4clientconfig",
+	  "blobCacheContainerName": "idsrv4clientconfigcache",
+	  "enableCacheRefresh": true,
+	  "cacheRefreshInterval": 1800
     },
     "resourceStorageConfig": {
       "storageConnectionString": "UseDevelopmentStorage=true;",
       "apiTableName": "idsrv4apiscopeindex",
       "apiBlobContainerName": "idsrv4apiresources",
-      "identityBlobContainerName": "idsrv4identityresources"
+      "identityBlobContainerName": "idsrv4identityresources",
+	  "apiBlobCacheContainerName": "idsrv4apiresourcescache",
+      "identityBlobCacheContainerName": "idsrv4identityresourcescache",
+	  "enableCacheRefresh": true,
+	  "cacheRefreshInterval": 1800
     }
   }
 }
