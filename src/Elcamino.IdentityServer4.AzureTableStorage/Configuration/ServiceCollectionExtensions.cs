@@ -48,7 +48,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.Configure<ClientStorageConfig>(clientStorageConfigSection)
                 .AddScoped(clientStorageContextType, clientStorageContextType)
-                .AddTransient<IClientStorageStore, ClientStore>();
+                .AddTransient<IClientStorageStore, ClientStore>()
+                .AddTransient<ClientCacheRefresh>()
+                .AddSingleton<IHostedService, ClientCacheRefreshHost>();
             //IdSrv4 adds the store,.AddScoped(clientStoreType, clientStoreType);
             return services;
         }
@@ -67,7 +69,9 @@ namespace Microsoft.Extensions.DependencyInjection
             //IdSrv4 adds the store, Type resourceStoreType = typeof(ResourceStore);
 
             services.Configure<ResourceStorageConfig>(resourceStorageConfigSection)
-                .AddScoped(resourceStorageContextType, resourceStorageContextType);
+                .AddScoped(resourceStorageContextType, resourceStorageContextType)
+                .AddTransient<ResourceCacheRefresh>()
+                .AddSingleton<IHostedService, ResourceCacheRefreshHost>();
             //IdSrv4 adds the store,.AddScoped(resourceStoreType, resourceStoreType);
             return services;
         }
