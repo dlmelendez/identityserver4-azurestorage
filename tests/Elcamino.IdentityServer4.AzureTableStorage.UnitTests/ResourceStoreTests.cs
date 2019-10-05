@@ -23,11 +23,11 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
     {
         private ILogger<ResourceStore> _logger;
 
-        private static Model.ApiResource CreateApiTestObject()
+        private static Model.ApiResource CreateApiTestObject(string name = null)
         {
             return new Model.ApiResource
             {
-                Name = "api1",
+                Name = !string.IsNullOrWhiteSpace(name) ? name : "api1",
                 Description = "My API",
                 Scopes = new List<Scope>
                     {
@@ -134,6 +134,51 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
         }
 
         [TestMethod]
+        public async Task ResourceStore_Api_RemoveGetTest()
+        {
+            Stopwatch stopwatch = new Stopwatch();
+
+            var storageContext = Services.BuildServiceProvider().GetService<ResourceStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            var store = new ResourceStore(storageContext, _logger);
+            Assert.IsNotNull(store);
+
+            string name = Guid.NewGuid().ToString("n");
+            var resource = CreateApiTestObject(name);
+            Console.WriteLine(JsonConvert.SerializeObject(resource));
+
+            stopwatch.Start();
+            await store.StoreAsync(resource);
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.StoreAsync({resource.Name})-api: {stopwatch.ElapsedMilliseconds} ms");
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            var resources = await store.GetAllResourcesAsync();
+            int count = resources.ApiResources.Count();
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.GetAllResourcesAsync().ApiResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
+            Assert.IsNotNull(resources.ApiResources.FirstOrDefault(f=> f.Name == name));
+
+            //Remove
+            stopwatch.Reset();
+            stopwatch.Start();
+            await store.RemoveApiResourceAsync(resource.Name);
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.StoreAsync({resource.Name})-api: {stopwatch.ElapsedMilliseconds} ms");
+
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            var findResource = await store.FindApiResourceAsync(resource.Name);
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.FindResourceByIdAsync({resource.Name})-api: {stopwatch.ElapsedMilliseconds} ms");
+            Assert.IsNull(findResource);
+
+        }
+
+        [TestMethod]
         public async Task ResourceStore_Identity_SaveGetTest()
         {
             Stopwatch stopwatch = new Stopwatch();
@@ -170,6 +215,51 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.GetAllResourcesAsync().IdentityResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<int>(GetIdentityResources().Count(), count) ;
+        }
+
+        [TestMethod]
+        public async Task ResourceStore_Identity_RemoveGetTest()
+        {
+            Stopwatch stopwatch = new Stopwatch();
+
+            var storageContext = Services.BuildServiceProvider().GetService<ResourceStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            var store = new ResourceStore(storageContext, _logger);
+            Assert.IsNotNull(store);
+
+            var resource = new IdentityResources.Address();
+            Console.WriteLine(JsonConvert.SerializeObject(resource));
+
+            stopwatch.Start();
+            await store.StoreAsync(resource);
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.StoreAsync({resource.Name})-identity: {stopwatch.ElapsedMilliseconds} ms");
+
+            
+            stopwatch.Reset();
+            stopwatch.Start();
+            var resources = await store.GetAllResourcesAsync();
+            int count = resources.IdentityResources.Count();
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.GetAllResourcesAsync().IdentityResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
+            Assert.IsTrue(count > 0);
+
+            stopwatch.Reset();
+            //Remove
+            stopwatch.Start();
+
+            await store.RemoveIdentityResourceAsync(resource.Name);
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.RemoveIdentityResourceAsync({resource.Name})-identity: {stopwatch.ElapsedMilliseconds} ms");
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            resources = await store.GetAllResourcesAsync();
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.GetAllResourcesAsync().IdentityResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
+            Assert.IsNull(resources.IdentityResources.FirstOrDefault(f=> f.Name == resource.Name));
+
         }
     }
 }
