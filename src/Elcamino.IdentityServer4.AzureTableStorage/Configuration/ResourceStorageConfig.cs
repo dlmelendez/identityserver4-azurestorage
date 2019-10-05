@@ -26,7 +26,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Configuration
         [JsonProperty("apiBlobCacheContainerName")]
         public string ApiBlobCacheContainerName { get; set; }
 
-        [JsonProperty("identityBlobContainerName")]
+        [JsonProperty("identityBlobCacheContainerName")]
         public string IdentityBlobCacheContainerName { get; set; }
 
         /// <summary>
