@@ -50,9 +50,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new List<Task<bool>>() { PersistedGrantTable.CreateIfNotExistsAsync(),
+            var tasks = new Task<bool>[] { PersistedGrantTable.CreateIfNotExistsAsync(),
                 PersistedGrantBlobContainer.CreateIfNotExistsAsync()};
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
             return tasks.Select(t => t.Result).All(a => a);
         }
 
@@ -88,7 +88,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
                 QueryComparisons.LessThan,
                 DateTimeOffset.UtcNow);
             tq.TakeCount = maxResults;
-            return (await GetAllByTableQueryAsync(tq, PersistedGrantTable)).ToArray();
+            return (await GetAllByTableQueryAsync(tq, PersistedGrantTable).ConfigureAwait(false)).ToArray();
 
         }
 
@@ -99,9 +99,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             if (keyEntity != null)
             {
                 var entities = keyEntity.ToModel().ToEntities();
-                await Task.WhenAll(GetAndDeleteTableEntityByKeys(entities.subjectGrant.PartitionKey, entities.subjectGrant.RowKey, PersistedGrantTable),
+                await Task.WhenAll(GetAndDeleteTableEntityByKeysAsync(entities.subjectGrant.PartitionKey, entities.subjectGrant.RowKey, PersistedGrantTable),
                         table.ExecuteAsync(TableOperation.Delete(keyEntity)),
-                        DeleteBlobAsync(key, PersistedGrantBlobContainer));
+                        DeleteBlobAsync(key, PersistedGrantBlobContainer)).ConfigureAwait(false);
                 return true;
             }
             return false;

@@ -23,12 +23,12 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
     {
         private ILogger<ClientStore> _logger;
 
-        private static Model.Client CreateTestObject()
+        private static Model.Client CreateTestObject(string clientid = null)
         {
             return new Model.Client
             {
 
-                ClientId = "samplejs",
+                ClientId = !string.IsNullOrWhiteSpace(clientid)? clientid :"samplejs",
                 ClientName = "JavaScript Client",
                 AccessTokenType = AccessTokenType.Reference,
                 AccessTokenLifetime = 330,// 330 seconds, default 60 minutes
@@ -107,6 +107,13 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             Console.WriteLine($"ClientStore.GetAllClients() Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
             Assert.IsTrue(count > 0);
 
+            stopwatch.Reset();
+            stopwatch.Start();
+            var getClient = (await store.GetAllClients()).FirstOrDefault(f => f.ClientId == client.ClientId);
+            stopwatch.Stop();
+            Console.WriteLine($"ClientStore.GetAllClients(): {stopwatch.ElapsedMilliseconds} ms");
+            Assert.IsNotNull(getClient);
+
 
         }
 
@@ -141,6 +148,13 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             stopwatch.Stop();
             Console.WriteLine($"ClientStore.FindClientByIdAsync({client.ClientId}): {stopwatch.ElapsedMilliseconds} ms");
             Assert.IsNull(findClient);
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            var getClient = (await store.GetAllClients()).FirstOrDefault(f => f.ClientId == client.ClientId);
+            stopwatch.Stop();
+            Console.WriteLine($"ClientStore.GetAllClients(): {stopwatch.ElapsedMilliseconds} ms");
+            Assert.IsNull(getClient);
 
         }
 

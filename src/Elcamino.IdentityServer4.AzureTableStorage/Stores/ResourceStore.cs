@@ -50,14 +50,16 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
                     && existingEntity.Scopes.Count > 0)
                 {
                     //Remove old scope indexes
-                    var deleteIndexes = existingEntity?.Scopes?.Select(s => s.Name).Distinct().Select(i => GenerateResourceIndexEntity(entity.Name, i)).ToList();
+                    var deleteIndexes = existingEntity?.Scopes?.Select(s => s.Name).Distinct().Select(i => GenerateResourceIndexEntity(entity.Name, i));
                     await DeleteScopeIndexesAsync(deleteIndexes, StorageContext.ApiResourceTable);
-
                 }
                 // Add new scope indexes
-                var newIndexes = entity?.Scopes?.Select(s => s.Name).Distinct().Select(i => GenerateResourceIndexEntity(entity.Name, i)).ToList();
+                var newIndexes = entity?.Scopes?.Select(s => s.Name).Distinct().Select(i => GenerateResourceIndexEntity(entity.Name, i));
                 await CreateScopeIndexesAsync(newIndexes, StorageContext.ApiResourceTable);
-                await StorageContext.SaveBlobAsync(entity.Name, JsonConvert.SerializeObject(entity), StorageContext.ApiResourceBlobContainer);
+                await StorageContext.SaveBlobWithHashedKeyAsync(entity.Name, JsonConvert.SerializeObject(entity), StorageContext.ApiResourceBlobContainer);
+                var entities = await GetAllApiResourceEntitiesAsync();
+                entities = entities.Where(e => entity.Name != e.Name).Concat(new Entities.ApiResource[] { entity });
+                await UpdateApiResourceCacheFileAsync(entities);
             }
             catch (AggregateException agg)
             {
@@ -78,7 +80,10 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             var entity = model.ToEntity();
             try
             {                
-                await StorageContext.SaveBlobAsync(entity.Name, JsonConvert.SerializeObject(entity), StorageContext.IdentityResourceBlobContainer);
+                await StorageContext.SaveBlobWithHashedKeyAsync(entity.Name, JsonConvert.SerializeObject(entity), StorageContext.IdentityResourceBlobContainer);
+                var entities = await GetAllIdentityResourceEntitiesAsync();
+                entities = entities.Where(e => entity.Name != e.Name).Concat(new Entities.IdentityResource[] { entity });
+                await UpdateIdentityResourceCacheFileAsync(entities);
             }
             catch (AggregateException agg)
             {
@@ -93,29 +98,112 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
 
         }
-       
 
-        private async Task DeleteScopeIndexesAsync(List<Entities.ResourceScopeIndexTblEntity> indexes, CloudTable table)
+        public async Task RemoveIdentityResourceAsync(string name)
         {
-            if (indexes != null && indexes.Count > 0)
+            try
             {
-                List<Task> tasks = new List<Task>(indexes.Count);
-                indexes.ForEach((index) => tasks.Add(StorageContext.GetAndDeleteTableEntityByKeys(index.PartitionKey, index.RowKey, table)));
-                await Task.WhenAll(tasks);
+                await StorageContext.DeleteBlobAsync(name, StorageContext.IdentityResourceBlobContainer);
+                var entities = await GetAllIdentityResourceEntitiesAsync();
+                entities = entities.Where(e => name != e.Name);
+                await UpdateIdentityResourceCacheFileAsync(entities);
+            }
+            catch (AggregateException agg)
+            {
+                ExceptionHelper.LogStorageExceptions(agg, tableStorageLogger: null, (blobEx) =>
+                {
+                    _logger.LogWarning("exception removing {clientId} client in blob storage: {error}", name, blobEx.Message);
+                });
+            }
+        }
+
+        public async Task RemoveApiResourceAsync(string name)
+        {
+            try
+            {
+                // Remove old scope indexes
+                var existingEntity = await StorageContext.GetEntityBlobAsync<Entities.ApiResource>(name, StorageContext.ApiResourceBlobContainer);
+                if (existingEntity != null
+                    && existingEntity.Scopes != null
+                    && existingEntity.Scopes.Count > 0)
+                {
+                    //Remove old scope indexes
+                    var deleteIndexes = existingEntity?.Scopes?.Select(s => s.Name).Distinct().Select(i => GenerateResourceIndexEntity(name, i));
+                    await DeleteScopeIndexesAsync(deleteIndexes, StorageContext.ApiResourceTable);
+                }
+                await StorageContext.DeleteBlobAsync(name, StorageContext.ApiResourceBlobContainer);
+                var entities = await GetAllApiResourceEntitiesAsync();
+                entities = entities.Where(e => name != e.Name);
+                await UpdateApiResourceCacheFileAsync(entities);
+            }
+            catch (AggregateException agg)
+            {
+                ExceptionHelper.LogStorageExceptions(agg, tableStorageLogger: null, (blobEx) =>
+                {
+                    _logger.LogWarning("exception removing {0} client in blob storage: {1}", name, blobEx.Message);
+                });
+            }
+        }
+
+        private async Task DeleteScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, CloudTable table)
+        {
+            if (indexes != null )
+            {                
+                await Task.WhenAll(indexes.Select((index) => StorageContext.GetAndDeleteTableEntityByKeysAsync(index.PartitionKey, index.RowKey, table)))
+                    .ConfigureAwait(false);
             }
         }
         
-        private async Task CreateScopeIndexesAsync(List<Entities.ResourceScopeIndexTblEntity> indexes, CloudTable table)
+        private async Task CreateScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, CloudTable table)
         {
-            if (indexes != null && indexes.Count > 0)
+            if (indexes != null)
             {
-                List<Task> tasks = new List<Task>(indexes.Count);
-                indexes.ForEach((index) => tasks.Add(table.ExecuteAsync(TableOperation.InsertOrReplace(index))));
-                await Task.WhenAll(tasks);
+                await Task.WhenAll(indexes.Select((index) => table.ExecuteAsync(TableOperation.InsertOrReplace(index))))
+                    .ConfigureAwait(false);
             }
         }
 
-        private async Task<List<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, CloudTable table)
+        public async Task UpdateApiResourceCacheFileAsync(IEnumerable<Entities.ApiResource> entities)
+        {
+            DateTime dateTimeNow = DateTime.UtcNow;
+            string blobName = await StorageContext.UpdateBlobCacheFileAsync<Entities.ApiResource>(entities, StorageContext.ApiResourceBlobCacheContainer);
+            _logger.LogInformation($"{nameof(UpdateApiResourceCacheFileAsync)} client count {entities.Count()} saved in blob storage: {blobName}");
+        }
+
+        public async Task UpdateIdentityResourceCacheFileAsync(IEnumerable<Entities.IdentityResource> entities)
+        {
+            DateTime dateTimeNow = DateTime.UtcNow;
+            string blobName = await StorageContext.UpdateBlobCacheFileAsync<Entities.IdentityResource>(entities, StorageContext.IdentityResourceBlobCacheContainer);
+            _logger.LogInformation($"{nameof(UpdateIdentityResourceCacheFileAsync)} client count {entities.Count()} saved in blob storage: {blobName}");
+        }
+
+        public async Task<IEnumerable<Entities.ApiResource>> GetLatestApiResourceCacheAsync()
+        {
+            try
+            {
+                return await StorageContext.GetLatestFromCacheBlobAsync<Entities.ApiResource>(StorageContext.ApiResourceBlobCacheContainer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(GetLatestApiResourceCacheAsync)} error");
+            }
+            return null;
+        }
+
+        public async Task<IEnumerable<Entities.IdentityResource>> GetLatestIdentityResourceCacheAsync()
+        {
+            try
+            {
+                return await StorageContext.GetLatestFromCacheBlobAsync<Entities.IdentityResource>(StorageContext.IdentityResourceBlobCacheContainer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(GetLatestIdentityResourceCacheAsync)} error");
+            }
+            return null;
+        }
+
+        private async Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, CloudTable table)
         {
             string partitionKeyFilter = TableQuery.GenerateFilterCondition("PartitionKey",
                 QueryComparisons.Equal,
@@ -124,7 +212,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             TableQuery<Entities.ResourceScopeIndexTblEntity> tq = new TableQuery<Entities.ResourceScopeIndexTblEntity>();
             tq.FilterString = partitionKeyFilter;
 
-            return (await StorageContext.GetAllByTableQueryAsync(tq, table))?.ToList();
+            return (await StorageContext.GetAllByTableQueryAsync(tq, table));
         }
 
         private Entities.ResourceScopeIndexTblEntity GenerateResourceIndexEntity(string name, string scope)
@@ -170,34 +258,26 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             var entities = await GetResourcesByScopeAsync<Entities.ApiResource>(scopeNames, StorageContext.ApiResourceTable, StorageContext.ApiResourceBlobContainer);
             _logger.LogDebug("Found {scopes} API scopes in blob storage", entities.Count());
 
-            return entities.Select(s => s?.ToModel()).ToList();
+            return entities.Select(s => s?.ToModel());
         }
 
         private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, CloudTable table, CloudBlobContainer container) where Entity : class, new()
         {
-            var names = scopeNames.Distinct().ToArray();
-            List<Task<List<Entities.ResourceScopeIndexTblEntity>>> scopeTasks = new List<Task<List<Entities.ResourceScopeIndexTblEntity>>>(names.Length);
-            scopeTasks.AddRange(names.Select(scope => GetResourceScopeIndexTblEntitiesAsync(scope, table)).ToArray());
+            var scopeTasks = scopeNames.Distinct().Select(scope => GetResourceScopeIndexTblEntitiesAsync(scope, table));
 
             await Task.WhenAll(scopeTasks);
 
-            string[] resourceNames = scopeTasks
+            IEnumerable<string> resourceNames = scopeTasks
                 .Where(w => w != null && w.Result != null)
                 .SelectMany(m => m.Result)
                 .Where(w2 => !string.IsNullOrWhiteSpace(w2.ResourceName))
                 .Select(s => s.ResourceName)
-                .Distinct()
-                .ToArray();
+                .Distinct();
 
-            List<Task<Entity>> keyTasks = new List<Task<Entity>>(resourceNames.Count());
-            foreach (string resourceName in resourceNames)
-            {
-                keyTasks.Add(StorageContext.GetEntityBlobAsync<Entity>(resourceName, container));                
-            }
-
+            var keyTasks = resourceNames.Select(resourceName => StorageContext.GetEntityBlobAsync<Entity>(resourceName, container)).ToArray();
             await Task.WhenAll(keyTasks);
 
-            return keyTasks.Where(k => k?.Result != null).Select(s => s.Result).ToArray();
+            return keyTasks.Where(k => k?.Result != null).Select(s => s.Result);
 
         }
 
@@ -209,22 +289,17 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         public async Task<IEnumerable<IdentityResource>> FindIdentityResourcesByScopeAsync(IEnumerable<string> scopeNames)
         {
 
-            string[] scopes = scopeNames.Where(w => !string.IsNullOrWhiteSpace(w)).Distinct().ToArray();
+            var scopes = scopeNames.Where(w => !string.IsNullOrWhiteSpace(w)).Distinct();
 
-            List<Task<Entities.IdentityResource>> keyTasks = new List<Task<Entities.IdentityResource>>(scopes.Length);
+            var keyTasks = scopes.Select(scope => StorageContext.GetEntityBlobAsync<Entities.IdentityResource>(scope, StorageContext.IdentityResourceBlobContainer));
 
-            foreach (string scope in scopes)
-            {
-                keyTasks.Add(StorageContext.GetEntityBlobAsync<Entities.IdentityResource>(scope, StorageContext.IdentityResourceBlobContainer));                
-            }
+            await Task.WhenAll(keyTasks).ConfigureAwait(false);
 
-            await Task.WhenAll(keyTasks);
+            IEnumerable<Entities.IdentityResource> entities = keyTasks.Where(k => k?.Result != null).Select(s => s.Result);
 
-            Entities.IdentityResource[] entities = keyTasks.Where(k => k?.Result != null).Select(s => s.Result).ToArray();
+            _logger.LogDebug($"Found {scopes.Count()} Identity scopes in blob storage");
 
-            _logger.LogDebug("Found {scopes} Identity scopes in blob storage", entities.Count());
-
-            return entities.Select(s => s?.ToModel()).ToList();
+            return entities.Where(w => w != null).Select(s => s?.ToModel());
 
         }
 
@@ -234,9 +309,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         /// <returns></returns>
         public async Task<Resources> GetAllResourcesAsync()
         {
-            var identityTask = StorageContext.GetAllBlobEntitiesAsync<Entities.IdentityResource>(StorageContext.IdentityResourceBlobContainer, _logger);
+            var identityTask = GetAllIdentityResourceEntitiesAsync();
 
-            var apisTask = StorageContext.GetAllBlobEntitiesAsync<Entities.ApiResource>(StorageContext.ApiResourceBlobContainer, _logger);
+            var apisTask = GetAllApiResourceEntitiesAsync();
 
             await Task.WhenAll(identityTask, apisTask);
 
@@ -244,12 +319,37 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             var apis = apisTask.Result;
 
             var result = new Resources(
-                identity.ToArray().Select(x => x.ToModel()).AsEnumerable(),
-                apis.ToArray().Select(x => x.ToModel()).AsEnumerable());
+                identity.Select(x => x.ToModel()).AsEnumerable(),
+                apis.Select(x => x.ToModel()).AsEnumerable());
 
-            _logger.LogDebug("Found {scopes} as all scopes in blob storage", result.IdentityResources.Select(x=>x.Name).Union(result.ApiResources.SelectMany(x=>x.Scopes).Select(x=>x.Name)));
+            _logger.LogDebug("Found {0} as all scopes in blob storage", result.IdentityResources.Select(x=>x.Name).Union(result.ApiResources.SelectMany(x=>x.Scopes).Select(x=>x.Name)));
 
             return result;
         }
+
+        private async Task<IEnumerable<Entities.ApiResource>> GetAllApiResourceEntitiesAsync()
+        {
+            var entities = await GetLatestApiResourceCacheAsync();
+            if (entities == null)
+            {
+                entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.ApiResource>(StorageContext.ApiResourceBlobContainer, _logger);
+                await UpdateApiResourceCacheFileAsync(entities);
+            }
+
+            return entities;
+        }
+
+        private async Task<IEnumerable<Entities.IdentityResource>> GetAllIdentityResourceEntitiesAsync()
+        {
+            var entities = await GetLatestIdentityResourceCacheAsync();
+            if (entities == null)
+            {
+                entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.IdentityResource>(StorageContext.IdentityResourceBlobContainer, _logger);
+                await UpdateIdentityResourceCacheFileAsync(entities);
+            }
+
+            return entities;
+        }
+
     }
 }

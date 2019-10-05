@@ -34,9 +34,21 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
         public async Task<IEnumerable<Client>> GetAllClients()
         {
-            var entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.Client>(StorageContext.ClientBlobContainer, _logger);
-            
+            var entities = await GetAllClientEntities();
+
             return entities.Select(s => s?.ToModel()).ToArray();
+        }
+
+        private async Task<IEnumerable<Entities.Client>> GetAllClientEntities()
+        {
+            var entities = await GetLatestClientCacheAsync();
+            if (entities == null)
+            {
+                entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.Client>(StorageContext.ClientBlobContainer, _logger);
+                await UpdateClientCacheFileAsync(entities);
+            }
+
+            return entities;
         }
 
         public async Task<Client> FindClientByIdAsync(string clientId)
@@ -54,7 +66,10 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             var entity = model.ToEntity();
             try
             {
-                await StorageContext.SaveBlobAsync(entity.ClientId, JsonConvert.SerializeObject(entity), StorageContext.ClientBlobContainer);
+                await StorageContext.SaveBlobWithHashedKeyAsync(entity.ClientId, JsonConvert.SerializeObject(entity), StorageContext.ClientBlobContainer);
+                var entities = await GetAllClientEntities();
+                entities = entities.Where(e => entity.ClientId != e.ClientId).Concat(new Entities.Client[] { entity });
+                await UpdateClientCacheFileAsync(entities);
             }
             catch (AggregateException agg)
             {
@@ -64,6 +79,26 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
                 });
             }
 
+        }      
+
+        public async Task UpdateClientCacheFileAsync(IEnumerable<Entities.Client> entities)
+        {
+            DateTime dateTimeNow = DateTime.UtcNow;
+            string blobName = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer);
+            _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {entities.Count()} saved in blob storage: {blobName}");
+        }
+
+        public async Task<IEnumerable<Entities.Client>> GetLatestClientCacheAsync()
+        {
+            try
+            {
+                return await StorageContext.GetLatestFromCacheBlobAsync<Entities.Client>(StorageContext.ClientCacheBlobContainer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(GetLatestClientCacheAsync)} error");
+            }
+            return null;
         }
 
         public async Task RemoveAsync(string clientId)
@@ -71,6 +106,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             try
             {
                 await  StorageContext.DeleteBlobAsync(clientId, StorageContext.ClientBlobContainer);
+                var entities = await GetAllClientEntities();
+                entities = entities.Where(e => clientId != e.ClientId);
+                await UpdateClientCacheFileAsync(entities);
             }
             catch (AggregateException agg)
             {

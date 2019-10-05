@@ -47,6 +47,14 @@ namespace ElCamino.IdentityServer4.AzureStorage.Helpers
             return null;
         }
 
+        public static string GenerateDateTimeDecendingId(DateTime dt)
+        {
+            //Maybe validate UTC somewhere else?
+            //if (dt.Kind != DateTimeKind.Utc)
+            //    throw new ArgumentException("DateTime must be UTC kind.", nameof(dt));
+            TimeSpan ts = DateTime.MaxValue.Subtract(dt);
+            return ts.TotalMilliseconds.ToString("000000000000000");
+        }
 
         public static string GenerateHashValue(string plainText)
         {
