@@ -2,6 +2,8 @@
 Uses Azure Blob and Table Storage services as an alternative to [Entity Framework/SQL data access for IdentityServer4](https://identityserver4.readthedocs.io/en/latest/quickstarts/7_entity_framework.html#identityserver4-entityframework).
 Use the unit tests as a guide to seeding operational and configuration data.
 
+[![NuGet Badge](https://buildstats.info/nuget/ElCamino.IdentityServer4.AzureStorage)](https://www.nuget.org/packages/ElCamino.IdentityServer4.AzureStorage/)
+
 # Getting Started
 ## startup.cs
 ```C#
