@@ -19,7 +19,6 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 {
     public class PersistedGrantStorageContext : StorageContext
     {
-        private PersistedGrantStorageConfig _config = null;
         private string BlobContainerName = string.Empty;
 
 
@@ -58,8 +57,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         protected virtual void Initialize(PersistedGrantStorageConfig config)
         {
-            _config = config;
-            TableClient = Microsoft.Azure.Cosmos.Table.CloudStorageAccount.Parse(_config.StorageConnectionString).CreateCloudTableClient();
+            TableClient = Microsoft.Azure.Cosmos.Table.CloudStorageAccount.Parse(config.StorageConnectionString).CreateCloudTableClient();
             TableClient.DefaultRequestOptions.PayloadFormat = TablePayloadFormat.Json;
             PersistedGrantTableName = config.PersistedGrantTableName;
 
@@ -70,7 +68,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
             PersistedGrantTable = TableClient.GetTableReference(PersistedGrantTableName);
 
-            BlobClient = Microsoft.Azure.Storage.CloudStorageAccount.Parse(_config.StorageConnectionString).CreateCloudBlobClient();
+            BlobClient = Microsoft.Azure.Storage.CloudStorageAccount.Parse(config.StorageConnectionString).CreateCloudBlobClient();
             BlobContainerName = config.BlobContainerName;
             if (string.IsNullOrWhiteSpace(BlobContainerName))
             {
