@@ -23,7 +23,6 @@ namespace Microsoft.Extensions.DependencyInjection
            IConfiguration persistedGrantStorageConfigSection)
         {
             var persistedGrantStorageContextType = typeof(PersistedGrantStorageContext);
-            //IdSrv4 adds the store, Type persistedGrantStoreType = typeof(PersistedGrantStore);
 
             services.Configure<PersistedGrantStorageConfig>(persistedGrantStorageConfigSection)
                 .AddScoped(persistedGrantStorageContextType, persistedGrantStorageContextType)
@@ -36,6 +35,24 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection CreatePersistedGrantStorage(this IServiceCollection services)
         {
             var storageContext = services.BuildServiceProvider().GetService<PersistedGrantStorageContext>();
+            storageContext.CreateStorageIfNotExists().Wait();
+            return services;
+        }
+
+        public static IServiceCollection AddDeviceFlowContext(this IServiceCollection services,
+          IConfiguration deviceFlowStorageConfigSection)
+        {
+            var deviceFlowStorageContextType = typeof(DeviceFlowStorageContext);
+
+            services.Configure<DeviceFlowStorageConfig>(deviceFlowStorageConfigSection)
+                .AddScoped(deviceFlowStorageContextType, deviceFlowStorageContextType); ;
+            //IdSrv4 adds the store,.AddScoped(deviceFlowStoreType, deviceFlowStoreType);
+            return services;
+        }
+
+        public static IServiceCollection CreateDeviceFlowStorage(this IServiceCollection services)
+        {
+            var storageContext = services.BuildServiceProvider().GetService<DeviceFlowStorageContext>();
             storageContext.CreateStorageIfNotExists().Wait();
             return services;
         }
