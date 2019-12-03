@@ -22,7 +22,9 @@ using IdentityServer4;
                 .AddClientContext(Configuration.GetSection("IdentityServer4:clientStorageConfig"))
                 .CreateClientStorage() //Can be removed after first run.
                 .AddResourceContext(Configuration.GetSection("IdentityServer4:resourceStorageConfig"))
-                .CreateResourceStorage(); //Can be removed after first run.
+                .CreateResourceStorage() //Can be removed after first run.
+                .AddDeviceFlowContext(Configuration.GetSection("IdentityServer4:deviceFlowStorageConfig"))
+                .CreateDeviceFlowStorage() //Can be removed after first run.
 
 	    // Adds IdentityServer
             services.AddIdentityServer()
@@ -31,6 +33,7 @@ using IdentityServer4;
             .AddClientStore<ClientStore>()
             .AddCorsPolicyService<StorageCorsPolicyService>()
             .AddPersistedGrantStore<PersistedGrantStore>()
+            .AddDeviceFlowStore<DeviceFlowStore>()
 ...
 ```
 ## appsettings.json
@@ -61,6 +64,11 @@ using IdentityServer4;
       "identityBlobCacheContainerName": "idsrv4identityresourcescache",
 	  "enableCacheRefresh": true,
 	  "cacheRefreshInterval": 1800
+    },
+    "deviceFlowStorageConfig": {
+      "storageConnectionString": "UseDevelopmentStorage=true;",
+      "blobUserContainerName": "deviceflowusercodes",
+      "blobDeviceContainerName": "deviceflowdevicecodes"
     }
   }
 }
