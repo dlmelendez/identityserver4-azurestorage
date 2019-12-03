@@ -14,7 +14,7 @@ steps:
   displayName: 'PowerShell Script'
   inputs:
     scriptType: inlineScript
-    inlineScript: '(Get-Content .\tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', $env:STORAGECONNECTION } | Set-Content .\tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\appsettings.json'
+    inlineScript: '(Get-Content .\tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', $(STORAGECONNECTION) } | Set-Content .\tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\appsettings.json'
 
 - task: UseDotNet@2
   displayName: 'Use .Net Core sdk 2.2.x'
