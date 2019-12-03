@@ -1,0 +1,51 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- task: PowerShell@1
+  displayName: 'PowerShell Script'
+  inputs:
+    scriptType: inlineScript
+    inlineScript: '(Get-Content .\tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', ''$env:STORAGECONNECTION''} | Set-Content .\tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\appsettings.json'
+
+- task: UseDotNet@2
+  displayName: 'Use .Net Core sdk 2.2.x'
+  inputs:
+    version: 2.2.x
+- task: UseDotNet@2
+  displayName: 'Use .Net Core sdk 3.0.x'
+  inputs:
+    version: 3.0.x
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet build'
+  inputs:
+    projects: '**/ElCamino.IdentityServer4.AzureStorage.sln'
+    arguments: '-c $(BuildConfiguration) '
+- task: VSTest@2
+  inputs:
+    testSelector: 'testAssemblies'
+    testAssemblyVer2: |
+      **\ElCamino.IdentityServer4.AzureStorage.Tests.dll
+      !**\*TestAdapter.dll
+      !**\obj\**
+    searchFolder: '$(System.DefaultWorkingDirectory)'
+- task: CopyFiles@1
+  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+  inputs:
+    Contents: |
+     **/*.dll
+     **/*.nupkg
+     **/*.snupkg
+     **/*.zip
+     **/publish/**
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'

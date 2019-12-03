@@ -267,4 +267,3 @@ __pycache__/
 /test/Data.Tests/global.json
 !/src/Web/wwwroot/out-tsc/
 /src/Web/wwwroot/
-azure-pipelines.yml
