@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ElCamino.IdentityServer4.AzureStorage;
 using ElCamino.IdentityServer4.AzureStorage.Stores;
+using IdentityServer4.Stores.Serialization;
 
 namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
 {
@@ -38,6 +39,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
                .CreateClientStorage();
             Services.AddResourceContext(Configuration.GetSection("IdentityServer4:resourceStorageConfig"))
                .CreateResourceStorage();
+            Services.AddTransient<IPersistentGrantSerializer>((f) =>  new PersistentGrantSerializer());
+            Services.AddDeviceFlowContext(Configuration.GetSection("IdentityServer4:deviceFlowStorageConfig"))
+               .CreateDeviceFlowStorage();
             Services.AddLogging();
 
         }
