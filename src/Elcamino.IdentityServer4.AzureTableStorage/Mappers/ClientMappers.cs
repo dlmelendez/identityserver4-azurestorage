@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Security.Claims;
-using Model = IdentityServer4.Models;
+using Models = IdentityServer4.Models;
 
 namespace ElCamino.IdentityServer4.AzureStorage.Mappers
 {
@@ -19,7 +19,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Mappers
                 cfg.CreateMap<Entities.ClientProperty, KeyValuePair<string, string>>()
                .ReverseMap();
 
-                cfg.CreateMap<Entities.Client, Model.Client>()
+                cfg.CreateMap<Entities.Client, Models.Client>()
                     .ForMember(dest => dest.ProtocolType, opt => opt.Condition(srs => srs != null))
                     .ReverseMap();
 
@@ -57,7 +57,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Mappers
                     .ReverseMap()
                     .ForMember(dest => dest.GrantType, opt => opt.MapFrom(src => src));
 
-                cfg.CreateMap<Entities.ClientSecret, Entities.Secret>(MemberList.Destination)
+                cfg.CreateMap<Entities.ClientSecret, Models.Secret>(MemberList.Destination)
                     .ForMember(dest => dest.Type, opt => opt.Condition(srs => srs != null))
                     .ReverseMap();
             }
@@ -72,9 +72,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.Mappers
         /// </summary>
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
-        public static Model.Client ToModel(this Entities.Client entity)
+        public static Models.Client ToModel(this Entities.Client entity)
         {
-            return Mapper.Map<Model.Client>(entity);
+            return Mapper.Map<Models.Client>(entity);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Mappers
         /// </summary>
         /// <param name="model">The model.</param>
         /// <returns></returns>
-        public static Entities.Client ToEntity(this Model.Client model)
+        public static Entities.Client ToEntity(this Models.Client model)
         {
             return Mapper.Map<Entities.Client>(model);
         }
