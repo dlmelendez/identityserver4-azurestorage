@@ -3,8 +3,7 @@
 
 using ElCamino.IdentityServer4.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage.Blobs;
 using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
@@ -20,11 +19,11 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
     public class DeviceFlowStorageContext : StorageContext
     {
 
-        public CloudBlobClient BlobClient { get; private set; }
+        public BlobServiceClient BlobClient { get; private set; }
 
-        public CloudBlobContainer UserCodeBlobContainer { get; private set; }
+        public BlobContainerClient UserCodeBlobContainer { get; private set; }
 
-        public CloudBlobContainer DeviceCodeBlobContainer { get; private set; }
+        public BlobContainerClient DeviceCodeBlobContainer { get; private set; }
 
         public DeviceFlowStorageContext(IOptions<DeviceFlowStorageConfig> config) : this(config.Value)
         {
@@ -43,27 +42,27 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         protected virtual void Initialize(DeviceFlowStorageConfig config)
         {
 
-            BlobClient = Microsoft.Azure.Storage.CloudStorageAccount.Parse(config.StorageConnectionString).CreateCloudBlobClient();
+            BlobClient = new BlobServiceClient(config.StorageConnectionString);
             if (string.IsNullOrWhiteSpace(config.BlobUserContainerName))
             {
                 throw new ArgumentException($"{nameof(config.BlobUserContainerName)} cannot be null or empty, check your configuration.", nameof(config.BlobUserContainerName));
             }
-            UserCodeBlobContainer = BlobClient.GetContainerReference(config.BlobUserContainerName);
+            UserCodeBlobContainer = BlobClient.GetBlobContainerClient(config.BlobUserContainerName);
 
             if (string.IsNullOrWhiteSpace(config.BlobDeviceContainerName))
             {
                 throw new ArgumentException($"{nameof(config.BlobDeviceContainerName)} cannot be null or empty, check your configuration.", nameof(config.BlobDeviceContainerName));
             }
-            DeviceCodeBlobContainer = BlobClient.GetContainerReference(config.BlobDeviceContainerName);
+            DeviceCodeBlobContainer = BlobClient.GetBlobContainerClient(config.BlobDeviceContainerName);
 
         }
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new Task<bool>[] { UserCodeBlobContainer.CreateIfNotExistsAsync(),
+            var tasks = new Task[] { UserCodeBlobContainer.CreateIfNotExistsAsync(),
                 DeviceCodeBlobContainer.CreateIfNotExistsAsync()};
             await Task.WhenAll(tasks).ConfigureAwait(false);
-            return tasks.Select(t => t.Result).All(a => a);
+            return tasks.Select(t => t.IsCompleted).All(a => a);
         }
 
     }

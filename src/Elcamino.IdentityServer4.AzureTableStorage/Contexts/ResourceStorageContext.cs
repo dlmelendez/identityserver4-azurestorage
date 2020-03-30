@@ -3,9 +3,8 @@
 
 using ElCamino.IdentityServer4.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Cosmos.Table;
+using Azure.Storage.Blobs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,18 +29,18 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public CloudTable ApiResourceTable { get; private set; }
 
-        public CloudBlobContainer ApiResourceBlobContainer { get; private set; }
+        public BlobContainerClient ApiResourceBlobContainer { get; private set; }
 
-        public CloudBlobContainer IdentityResourceBlobContainer { get; private set; }
+        public BlobContainerClient IdentityResourceBlobContainer { get; private set; }
 
-        public CloudBlobContainer ApiResourceBlobCacheContainer { get; private set; }
+        public BlobContainerClient ApiResourceBlobCacheContainer { get; private set; }
 
-        public CloudBlobContainer IdentityResourceBlobCacheContainer { get; private set; }
+        public BlobContainerClient IdentityResourceBlobCacheContainer { get; private set; }
 
 
         public CloudTableClient TableClient { get; private set; }
 
-        public CloudBlobClient BlobClient { get; private set; }
+        public BlobServiceClient BlobClient { get; private set; }
 
 
         public ResourceStorageContext(IOptions<ResourceStorageConfig> config) : this(config.Value)
@@ -60,14 +59,14 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new List<Task<bool>>() {
+            var tasks = new List<Task>() {
                 ApiResourceTable.CreateIfNotExistsAsync(),
                 ApiResourceBlobContainer.CreateIfNotExistsAsync(),
                 IdentityResourceBlobContainer.CreateIfNotExistsAsync(),
                 ApiResourceBlobCacheContainer.CreateIfNotExistsAsync(),
                 IdentityResourceBlobCacheContainer.CreateIfNotExistsAsync()};
             await Task.WhenAll(tasks).ConfigureAwait(false);
-            return tasks.Select(t => t.Result).All(a => a);
+            return tasks.Select(t => t.IsCompleted).All(a => a);
         }
 
         protected virtual void Initialize(ResourceStorageConfig config)
@@ -85,26 +84,26 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
             ApiResourceTable = TableClient.GetTableReference(ApiResourceTableName);
 
-            BlobClient = Microsoft.Azure.Storage.CloudStorageAccount.Parse(_config.StorageConnectionString).CreateCloudBlobClient();
+            BlobClient = new BlobServiceClient(_config.StorageConnectionString);
             ApiBlobContainerName = config.ApiBlobContainerName;
             if (string.IsNullOrWhiteSpace(ApiBlobContainerName))
             {
                 throw new ArgumentException($"ApiBlobContainerName cannot be null or empty, check your configuration.", nameof(config.ApiBlobContainerName));
             }
-            ApiResourceBlobContainer = BlobClient.GetContainerReference(ApiBlobContainerName);
+            ApiResourceBlobContainer = BlobClient.GetBlobContainerClient(ApiBlobContainerName);
 
             ApiBlobCacheContainerName = !string.IsNullOrWhiteSpace(config.ApiBlobCacheContainerName) ? config.ApiBlobCacheContainerName : DefaultApiBlobCacheContainerName;
-            ApiResourceBlobCacheContainer = BlobClient.GetContainerReference(ApiBlobCacheContainerName);
+            ApiResourceBlobCacheContainer = BlobClient.GetBlobContainerClient(ApiBlobCacheContainerName);
 
             IdentityBlobContainerName = config.IdentityBlobContainerName;
             if (string.IsNullOrWhiteSpace(IdentityBlobContainerName))
             {
                 throw new ArgumentException($"IdentityBlobContainerName cannot be null or empty, check your configuration.", nameof(config.IdentityBlobContainerName));
             }
-            IdentityResourceBlobContainer = BlobClient.GetContainerReference(IdentityBlobContainerName);
+            IdentityResourceBlobContainer = BlobClient.GetBlobContainerClient(IdentityBlobContainerName);
 
             IdentityBlobCacheContainerName = !string.IsNullOrWhiteSpace(config.IdentityBlobCacheContainerName) ? config.IdentityBlobCacheContainerName : DefaultIdentityBlobCacheContainerName;
-            IdentityResourceBlobCacheContainer = BlobClient.GetContainerReference(IdentityBlobCacheContainerName);
+            IdentityResourceBlobCacheContainer = BlobClient.GetBlobContainerClient(IdentityBlobCacheContainerName);
 
         }
     }
