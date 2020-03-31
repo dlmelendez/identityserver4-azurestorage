@@ -140,6 +140,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Hosted
             var entities = await context.GetAllBlobEntitiesAsync<Entities.Client>(context.ClientBlobContainer, _logger);
             string blobName = await context.UpdateBlobCacheFileAsync<Entities.Client>(entities, context.ClientCacheBlobContainer);
             _logger.LogInformation($"{nameof(RefreshCacheAsync)} client count {entities.Count()} saved in blob storage: {blobName}");
+            await context.DeleteBlobCacheFilesAsync(blobName, context.ClientCacheBlobContainer, _logger);
         }
 
     }

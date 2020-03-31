@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using Azure;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,7 +13,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Helpers
     {
         public static void LogStorageExceptions(AggregateException aggregate, 
             Action<Microsoft.Azure.Cosmos.Table.StorageException> tableStorageLogger= null,
-            Action<Microsoft.Azure.Storage.StorageException> blobStorageLogger = null)
+            Action<RequestFailedException> blobStorageLogger = null)
         {
             if (aggregate.InnerExceptions != null)
             {
@@ -23,7 +24,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Helpers
                     {
                         tableStorageLogger?.Invoke(tableStorageException);
                     }
-                    Microsoft.Azure.Storage.StorageException blobException = ex as Microsoft.Azure.Storage.StorageException;
+                    RequestFailedException blobException = ex as RequestFailedException;
                     if (blobException != null)
                     {
                         blobStorageLogger?.Invoke(blobException);

@@ -9,7 +9,7 @@ using ElCamino.IdentityServer4.AzureStorage.Mappers;
 using IdentityServer4.Models;
 using IdentityServer4.Stores;
 using Microsoft.Azure.Cosmos.Table;
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -261,7 +261,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             return entities.Select(s => s?.ToModel());
         }
 
-        private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, CloudTable table, CloudBlobContainer container) where Entity : class, new()
+        private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, CloudTable table, BlobContainerClient container) where Entity : class, new()
         {
             var scopeTasks = scopeNames.Distinct().Select(scope => GetResourceScopeIndexTblEntitiesAsync(scope, table));
 

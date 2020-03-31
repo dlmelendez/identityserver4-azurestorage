@@ -6,7 +6,7 @@
     <RootNamespace>ElCamino.IdentityServer4.AzureStorage</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright ©  2019 David Melendez, Apache 2.0 License</Copyright>
+    <Copyright>Copyright ©  2020 David Melendez, Apache 2.0 License</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/dlmelendez/identityserver4-azurestorage</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dlmelendez/identityserver4-azurestorage.git</RepositoryUrl>
@@ -17,16 +17,16 @@
     <Authors>David Melendez</Authors>
     <Company>David Melendez</Company>
     <Description>Uses Azure Blob and Table Storage services as an alternative to Entity Framework/SQL data access for IdentityServer4.</Description>
-    <Version>1.5.1</Version>
+    <Version>1.6</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.1" />
-    <PackageReference Include="IdentityServer4.Storage" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.3" />
+    <PackageReference Include="IdentityServer4.Storage" Version="3.1.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
@@ -38,8 +38,8 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="8.0.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.6" />
-    <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="10.0.3" />
     <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
   </ItemGroup>
 

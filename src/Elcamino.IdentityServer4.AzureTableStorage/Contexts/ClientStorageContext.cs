@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 using ElCamino.IdentityServer4.AzureStorage.Configuration;
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -18,11 +18,11 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         private string BlobContainerName = string.Empty;
         private string BlobCacheContainerName = string.Empty;
 
-        public CloudBlobClient BlobClient { get; private set; }
+        public BlobServiceClient BlobClient { get; private set; }
 
-        public CloudBlobContainer ClientBlobContainer { get; private set; }
+        public BlobContainerClient ClientBlobContainer { get; private set; }
 
-        public CloudBlobContainer ClientCacheBlobContainer { get; private set; }
+        public BlobContainerClient ClientCacheBlobContainer { get; private set; }
 
         public const string DefaultClientCacheBlobContainer = "clientstorecache";
 
@@ -45,23 +45,23 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             _config = config;
 
 
-            BlobClient = Microsoft.Azure.Storage.CloudStorageAccount.Parse(_config.StorageConnectionString).CreateCloudBlobClient();
+            BlobClient = new BlobServiceClient(_config.StorageConnectionString);
             BlobContainerName = config.BlobContainerName;
             if (string.IsNullOrWhiteSpace(BlobContainerName))
             {
                 throw new ArgumentException($"BlobContainerName cannot be null or empty, check your configuration.", nameof(config.BlobContainerName));
             }
-            ClientBlobContainer = BlobClient.GetContainerReference(BlobContainerName);
+            ClientBlobContainer = BlobClient.GetBlobContainerClient(BlobContainerName);
             BlobCacheContainerName = !string.IsNullOrWhiteSpace(config.BlobCacheContainerName) ? config.BlobCacheContainerName : DefaultClientCacheBlobContainer;
-            ClientCacheBlobContainer = BlobClient.GetContainerReference(BlobCacheContainerName);
+            ClientCacheBlobContainer = BlobClient.GetBlobContainerClient(BlobCacheContainerName);
 
         }
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new Task<bool>[] { ClientBlobContainer.CreateIfNotExistsAsync(), ClientCacheBlobContainer.CreateIfNotExistsAsync() };
+            var tasks = new Task[] { ClientBlobContainer.CreateIfNotExistsAsync(), ClientCacheBlobContainer.CreateIfNotExistsAsync() };
             await Task.WhenAll(tasks).ConfigureAwait(false);
-            return tasks.All(a => a.Result);       
+            return tasks.All(a => a.IsCompleted);       
         }
     }
 }

@@ -3,8 +3,8 @@
 
 using ElCamino.IdentityServer4.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage;
+using Azure.Storage.Blobs;
 using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
@@ -28,9 +28,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public CloudTableClient TableClient { get; private set; }
 
-        public CloudBlobClient BlobClient { get; private set; }
+        public BlobServiceClient BlobClient { get; private set; }
 
-        public CloudBlobContainer PersistedGrantBlobContainer { get; private set; }
+        public BlobContainerClient PersistedGrantBlobContainer { get; private set; }
 
 
         public PersistedGrantStorageContext(IOptions<PersistedGrantStorageConfig> config) : this(config.Value)
@@ -49,10 +49,10 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new Task<bool>[] { PersistedGrantTable.CreateIfNotExistsAsync(),
+            var tasks = new Task[] { PersistedGrantTable.CreateIfNotExistsAsync(),
                 PersistedGrantBlobContainer.CreateIfNotExistsAsync()};
             await Task.WhenAll(tasks).ConfigureAwait(false);
-            return tasks.Select(t => t.Result).All(a => a);
+            return true;
         }
 
         protected virtual void Initialize(PersistedGrantStorageConfig config)
@@ -68,13 +68,13 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
             PersistedGrantTable = TableClient.GetTableReference(PersistedGrantTableName);
 
-            BlobClient = Microsoft.Azure.Storage.CloudStorageAccount.Parse(config.StorageConnectionString).CreateCloudBlobClient();
+            BlobClient = new BlobServiceClient(config.StorageConnectionString);
             BlobContainerName = config.BlobContainerName;
             if (string.IsNullOrWhiteSpace(BlobContainerName))
             {
                 throw new ArgumentException($"BlobContainerName cannot be null or empty, check your configuration.", nameof(config.BlobContainerName));
             }
-            PersistedGrantBlobContainer = BlobClient.GetContainerReference(BlobContainerName);
+            PersistedGrantBlobContainer = BlobClient.GetBlobContainerClient(BlobContainerName);
 
         }
 
