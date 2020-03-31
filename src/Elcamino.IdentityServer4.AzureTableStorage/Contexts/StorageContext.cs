@@ -53,6 +53,29 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             return blobName;
         }
 
+        /// <summary>
+        /// Deletes all blobs older than the latestBlobName by name comparsion
+        /// </summary>
+        /// <param name="latestBlobName"></param>
+        /// <param name="cacheContainer"></param>
+        /// <returns></returns>
+        public async Task DeleteBlobCacheFilesAsync(string latestBlobName, BlobContainerClient cacheContainer, ILogger logger)
+        {
+#if NETSTANDARD2_1
+            await foreach (BlobItem blobName in cacheContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None))
+#else
+            foreach(BlobItem blobName in cacheContainer.GetBlobs(BlobTraits.None, BlobStates.None))
+#endif
+            {
+                if (String.Compare(latestBlobName, blobName.Name) == -1)
+                {
+                    BlobClient blobClient = cacheContainer.GetBlobClient(blobName.Name);
+                    await blobClient.DeleteAsync();
+                    logger.LogInformation($"container: {cacheContainer.Name} blob: {blobName.Name} - cache file deleted");
+                }
+            }
+        }
+
         public async Task<IEnumerable<Entity>> GetLatestFromCacheBlobAsync<Entity>(BlobContainerClient cacheContainer)
         {
             BlobClient blob = await GetFirstBlobAsync(cacheContainer);

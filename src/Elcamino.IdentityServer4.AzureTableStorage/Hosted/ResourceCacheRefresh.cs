@@ -140,6 +140,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Hosted
             var apiEntities = await context.GetAllBlobEntitiesAsync<Entities.ApiResource>(context.ApiResourceBlobContainer, _logger);
             string blobName = await context.UpdateBlobCacheFileAsync<Entities.ApiResource>(apiEntities, context.ApiResourceBlobCacheContainer);
             _logger.LogInformation($"{nameof(RefreshCacheAsync)} api resource count {apiEntities.Count()} saved in blob storage: {blobName}");
+            await context.DeleteBlobCacheFilesAsync(blobName, context.ApiResourceBlobCacheContainer, _logger);
         }
 
         private async Task RefreshIdentityCacheAsync(ResourceStorageContext context)
@@ -147,6 +148,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Hosted
             var identityEntities = await context.GetAllBlobEntitiesAsync<Entities.IdentityResource>(context.IdentityResourceBlobContainer, _logger);
             string blobName = await context.UpdateBlobCacheFileAsync<Entities.IdentityResource>(identityEntities, context.IdentityResourceBlobCacheContainer);
             _logger.LogInformation($"{nameof(RefreshCacheAsync)} identity resource count {identityEntities.Count()} saved in blob storage: {blobName}");
+            await context.DeleteBlobCacheFilesAsync(blobName, context.IdentityResourceBlobCacheContainer, _logger);
         }
 
     }
