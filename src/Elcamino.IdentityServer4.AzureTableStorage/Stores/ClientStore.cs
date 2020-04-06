@@ -43,7 +43,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             var entities = await GetLatestClientCacheAsync();
             if (entities == null)
             {
-                entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.Client>(StorageContext.ClientBlobContainer, _logger);
+                entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.Client>(StorageContext.ClientBlobContainer, _logger).ToListAsync();
                 await UpdateClientCacheFileAsync(entities);
             }
 
@@ -82,8 +82,14 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
         public async Task UpdateClientCacheFileAsync(IEnumerable<Entities.Client> entities)
         {
-            string blobName = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer);
-            _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {entities.Count()} saved in blob storage: {blobName}");
+            (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer);
+            _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
+        }
+
+        public async Task UpdateClientCacheFileAsync(IAsyncEnumerable<Entities.Client> entities)
+        {
+            (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer);
+            _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
         }
 
         public async Task<IEnumerable<Entities.Client>> GetLatestClientCacheAsync()

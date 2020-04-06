@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <LangVersion>8.0</LangVersion>
     <AssemblyName>ElCamino.IdentityServer4.AzureStorage</AssemblyName>
     <RootNamespace>ElCamino.IdentityServer4.AzureStorage</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -17,7 +18,7 @@
     <Authors>David Melendez</Authors>
     <Company>David Melendez</Company>
     <Description>Uses Azure Blob and Table Storage services as an alternative to Entity Framework/SQL data access for IdentityServer4.</Description>
-    <Version>1.6</Version>
+    <Version>1.6.1</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
@@ -29,7 +30,7 @@
     <PackageReference Include="IdentityServer4.Storage" Version="3.1.2" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.2.0" />

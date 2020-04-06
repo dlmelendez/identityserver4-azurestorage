@@ -45,12 +45,17 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         }
 
-        public async Task<string> UpdateBlobCacheFileAsync<Entity>(IEnumerable<Entity> entities, BlobContainerClient cacheContainer)
+        public async Task<(string blobName, int count)> UpdateBlobCacheFileAsync<Entity>(IEnumerable<Entity> entities, BlobContainerClient cacheContainer)
         {
             DateTime dateTimeNow = DateTime.UtcNow;
             string blobName = KeyGeneratorHelper.GenerateDateTimeDecendingId(dateTimeNow);
             await SaveBlobAsync(blobName, JsonConvert.SerializeObject(entities), cacheContainer);
-            return blobName;
+            return (blobName, count: entities.Count());
+        }
+
+        public async Task<(string blobName, int count)> UpdateBlobCacheFileAsync<Entity>(IAsyncEnumerable<Entity> entities, BlobContainerClient cacheContainer)
+        {
+            return await UpdateBlobCacheFileAsync(await entities.ToListAsync(), cacheContainer);
         }
 
         /// <summary>
@@ -61,11 +66,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         /// <returns></returns>
         public async Task DeleteBlobCacheFilesAsync(string latestBlobName, BlobContainerClient cacheContainer, ILogger logger)
         {
-#if NETSTANDARD2_1
             await foreach (BlobItem blobName in cacheContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None))
-#else
-            foreach(BlobItem blobName in cacheContainer.GetBlobs(BlobTraits.None, BlobStates.None))
-#endif
             {
                 if (String.Compare(latestBlobName, blobName.Name) == -1)
                 {
@@ -120,70 +121,30 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             }
         }
 
-        public async Task<IEnumerable<Entity>> GetAllBlobEntitiesAsync<Entity>(BlobContainerClient container, ILogger logger) where Entity : class, new()
+        public async IAsyncEnumerable<Entity> GetAllBlobEntitiesAsync<Entity>(BlobContainerClient container, ILogger logger) where Entity : class, new()
         {
-#if NETSTANDARD2_0
-            var entityTasks = (GetAllBlobs(container))
-                .Select(blobJson =>
-                {
-                    return GetEntityBlobAsync<Entity>(blobJson);
-                }).ToArray(); //.ToArray actually speeds up the task processing
-
-
-            await Task.WhenAll(entityTasks);
-#else
-            List<Task<Entity>> entityTasks = new List<Task<Entity>>();
             await foreach(var blobJson in GetAllBlobsAsync(container))
             {
-                entityTasks.Add(GetEntityBlobAsync<Entity>(blobJson));
+                yield return await GetEntityBlobAsync<Entity>(blobJson);
             }
-
-            await Task.WhenAll(entityTasks);
-#endif
-            return entityTasks.Where(w => w?.Result != null).Select(s => s.Result);
         }
-
-#if NETSTANDARD2_1
+       
 
         public async IAsyncEnumerable<BlobClient> GetAllBlobsAsync(BlobContainerClient container)
         {
-            string token = null;
-            do
+            AsyncPageable<BlobItem> pageable = container.GetBlobsAsync(BlobTraits.None, BlobStates.None, string.Empty);
+            IAsyncEnumerable<Page<BlobItem>> pages = pageable.AsPages();
+            await foreach (Page<BlobItem> page in pages)
             {
-                AsyncPageable<BlobItem> pageable = container.GetBlobsAsync(BlobTraits.None, BlobStates.None, string.Empty);
-                IAsyncEnumerable<Page<BlobItem>> pages = pageable.AsPages(token, 100);
-                await foreach (Page<BlobItem> page in pages)
+                foreach(BlobItem blob in page.Values)
                 {
-                    token = page.ContinuationToken;
-                    foreach(BlobItem blob in page.Values)
-                    {
-                        yield return container.GetBlobClient(blob.Name);
-                    }
+                    yield return container.GetBlobClient(blob.Name);
                 }
-            } while (!string.IsNullOrEmpty(token));
-        }
-#endif
-        public IEnumerable<BlobClient> GetAllBlobs(BlobContainerClient container)
-        {
-            string token = null;
-            do
-            {
-                Pageable<BlobItem> pageable = container.GetBlobs(BlobTraits.None, BlobStates.None, string.Empty);
-                IEnumerable<Page<BlobItem>> pages = pageable.AsPages(token, 100);
-                foreach (Page<BlobItem> page in pages)
-                {
-                    token = page.ContinuationToken;
-                    foreach (BlobItem blob in page.Values)
-                    {
-                        yield return container.GetBlobClient(blob.Name);
-                    }
-                }
-            } while (!string.IsNullOrEmpty(token));
+            }
         }
 
         public async Task<BlobClient> GetFirstBlobAsync(BlobContainerClient container)
         {
-#if NETSTANDARD2_1
             AsyncPageable<BlobItem> pageable = container.GetBlobsAsync(BlobTraits.None, BlobStates.None, string.Empty);
             IAsyncEnumerable<Page<BlobItem>> pages = pageable.AsPages(pageSizeHint:1);
 
@@ -198,24 +159,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             }
             
             return null;
-#else
-            return await Task.FromResult(GetFirstBlob(container));
-#endif
-        }
-
-        public BlobClient GetFirstBlob(BlobContainerClient container)
-        {
-            Pageable<BlobItem> pageable = container.GetBlobs(BlobTraits.None, BlobStates.None, string.Empty);
-            IEnumerable<Page<BlobItem>> pages = pageable.AsPages(pageSizeHint: 1);
-
-            Page<BlobItem> page = pages.FirstOrDefault();
-            BlobItem blob = page?.Values?.FirstOrDefault();
-            if (blob != null)
-            {
-                return container.GetBlobClient(blob.Name);
-            }
-            return null;
-        }
+        }       
 
         public async Task DeleteBlobAsync(string keyNotHashed, BlobContainerClient container)
         {
