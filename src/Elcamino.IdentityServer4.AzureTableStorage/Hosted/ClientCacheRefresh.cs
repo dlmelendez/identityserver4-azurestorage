@@ -126,7 +126,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Hosted
             try
             {
                 _logger.LogTrace($"Querying for {nameof(ClientStorageContext)} cache refresh");
-                var context = _serviceProvider.CreateScope().ServiceProvider.GetService<ClientStorageContext>();
+                ClientStorageContext context = _serviceProvider.CreateScope().ServiceProvider.GetService<ClientStorageContext>();
                 await RefreshCacheAsync(context);
             }
             catch (Exception ex)
@@ -137,9 +137,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.Hosted
 
         private async Task RefreshCacheAsync(ClientStorageContext context)
         {
-            var entities = await context.GetAllBlobEntitiesAsync<Entities.Client>(context.ClientBlobContainer, _logger);
-            string blobName = await context.UpdateBlobCacheFileAsync<Entities.Client>(entities, context.ClientCacheBlobContainer);
-            _logger.LogInformation($"{nameof(RefreshCacheAsync)} client count {entities.Count()} saved in blob storage: {blobName}");
+            IAsyncEnumerable<Client> entities = context.GetAllBlobEntitiesAsync<Entities.Client>(context.ClientBlobContainer, _logger);
+            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.Client>(entities, context.ClientCacheBlobContainer);
+            _logger.LogInformation($"{nameof(RefreshCacheAsync)} client count {count} saved in blob storage: {blobName}");
             await context.DeleteBlobCacheFilesAsync(blobName, context.ClientCacheBlobContainer, _logger);
         }
 
