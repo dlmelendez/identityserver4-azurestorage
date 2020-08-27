@@ -5,7 +5,9 @@
 
 
 using AutoMapper;
+using ElCamino.IdentityServer4.AzureStorage.Entities;
 using System.Collections.Generic;
+using System.Linq;
 using Entities = ElCamino.IdentityServer4.AzureStorage.Entities;
 using Models = IdentityServer4.Models;
 
@@ -26,25 +28,25 @@ namespace ElCamino.IdentityServer4.AzureStorage.Mappers
                 cfg.CreateMap<Entities.ApiResource, Models.ApiResource>(MemberList.Destination)
                     .ConstructUsing(src => new Models.ApiResource())
                     .ForMember(x => x.ApiSecrets, opts => opts.MapFrom(x => x.Secrets))
-                    .ReverseMap();
+                    .ForMember(x => x.Scopes, opts => opts.MapFrom(x => x.Scopes.SelectMany(m => m.Name).ToList()))
+                    .ForMember(x => x.AllowedAccessTokenSigningAlgorithms, opts => opts.ConvertUsing(AllowedSigningAlgorithmsConverter.Converter, x => x.AllowedAccessTokenSigningAlgorithms))
+                    .ReverseMap()
+                    .ForMember(x => x.AllowedAccessTokenSigningAlgorithms, opts => opts.ConvertUsing(AllowedSigningAlgorithmsConverter.Converter, x => x.AllowedAccessTokenSigningAlgorithms))
+                    .ForMember(x => x.Scopes, opts => opts.MapFrom(x => x.Scopes.Select(m => new ApiResourceScope() { Name = m }).ToList()));
 
                 cfg.CreateMap<Entities.ApiResourceClaim, string>()
                     .ConstructUsing(x => x.Type)
                     .ReverseMap()
                     .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src));
 
-                cfg.CreateMap<Entities.ApiSecret, Models.Secret>(MemberList.Destination)
+                cfg.CreateMap<Entities.ApiResourceSecret, Models.Secret>(MemberList.Destination)
                     .ForMember(dest => dest.Type, opt => opt.Condition(srs => srs != null))
                     .ReverseMap();
 
-                cfg.CreateMap<Entities.ApiScope, Models.Scope>(MemberList.Destination)
-                    .ConstructUsing(src => new Models.Scope())
-                    .ReverseMap();
-
-                cfg.CreateMap<Entities.ApiScopeClaim, string>()
-                   .ConstructUsing(x => x.Type)
-                   .ReverseMap()
-                   .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src));
+                cfg.CreateMap<Entities.ApiResourceScope, string>()
+                    .ConstructUsing(x => x.Name)
+                    .ReverseMap()
+                    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => new Entities.ApiResourceScope() { Name = src }));
             })
                 .CreateMapper();
         }

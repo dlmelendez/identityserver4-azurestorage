@@ -29,14 +29,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             {
                 Name = !string.IsNullOrWhiteSpace(name) ? name : "api1",
                 Description = "My API",
-                Scopes = new List<Scope>
+                Scopes = new List<string>
                     {
-                       new Scope
-                        {
-                            Name = "api1Scope",
-                            DisplayName = "Scope for the dataEventRecords ApiResource",
-                            UserClaims = GetAllAvailableClaimTypes().ToList()
-                        }                       
+                       "api1Scope"
                     },
                 UserClaims = GetAllAvailableClaimTypes().ToList(),
                 ApiSecrets =
@@ -109,15 +104,15 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
 
             stopwatch.Reset();
             stopwatch.Start();
-            var findResource = await store.FindApiResourceAsync(resource.Name);
+            var findResource = (await store.FindApiResourcesByNameAsync(new string[] { resource.Name })).FirstOrDefault();
             stopwatch.Stop();
-            Console.WriteLine($"ResourceStore.FindResourceByIdAsync({resource.Name})-api: {stopwatch.ElapsedMilliseconds} ms");
+            Console.WriteLine($"{nameof(ResourceStore.FindApiResourcesByNameAsync)}({resource.Name})-api: {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<string>(resource.Name, findResource.Name);
 
             stopwatch.Reset();
             stopwatch.Start();
             string[] findScopes = new string[] { "api1Scope", Guid.NewGuid().ToString() };
-            var findScopesResources = await store.FindApiResourcesByScopeAsync(findScopes);
+            var findScopesResources = await store.FindApiResourcesByScopeNameAsync(findScopes);
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.FindApiResourcesByScopeAsync({string.Join(",", findScopes)})-api: {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<string>(resource.Name, findScopesResources.Single()?.Name);
@@ -129,6 +124,15 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.GetAllResourcesAsync().ApiResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
             Assert.IsTrue(count > 0);
+
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            string findScope = findScopes[0];
+            var apiScopes = await store.FindApiScopesByNameAsync(findScopes);
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.FindApiScopesByNameAsync({findScope})-api: {stopwatch.ElapsedMilliseconds} ms");
+            Assert.AreEqual<int>(1, apiScopes.Where(w => w.Name == findScope).Count());
 
 
         }
@@ -171,7 +175,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
 
             stopwatch.Reset();
             stopwatch.Start();
-            var findResource = await store.FindApiResourceAsync(resource.Name);
+            var findResource = (await store.FindApiResourcesByNameAsync(new string[] { resource.Name })).FirstOrDefault();
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.FindResourceByIdAsync({resource.Name})-api: {stopwatch.ElapsedMilliseconds} ms");
             Assert.IsNull(findResource);
@@ -202,7 +206,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
                 stopwatch.Start();
 
                 string[] findScopes = new string[] { resource.Name, Guid.NewGuid().ToString() };
-                var findScopesResources = await store.FindIdentityResourcesByScopeAsync(findScopes);
+                var findScopesResources = await store.FindIdentityResourcesByScopeNameAsync(findScopes);
                 stopwatch.Stop();
                 Console.WriteLine($"ResourceStore.FindIdentityResourcesByScopeAsync({resource.Name})-identity: {stopwatch.ElapsedMilliseconds} ms");
                 Assert.AreEqual<string>(resource.Name, findScopesResources.Single()?.Name);

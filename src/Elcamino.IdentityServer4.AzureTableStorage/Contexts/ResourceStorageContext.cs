@@ -17,36 +17,41 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
     {
         private ResourceStorageConfig _config = null;
         private string ApiBlobContainerName = string.Empty;
+        private string ApiScopeBlobContainerName = string.Empty;
         private string IdentityBlobContainerName = string.Empty;
 
         private string ApiBlobCacheContainerName = string.Empty;
+        private string ApiScopeBlobCacheContainerName = string.Empty;
         private string IdentityBlobCacheContainerName = string.Empty;
 
         public const string DefaultApiBlobCacheContainerName = "resourceapiblobcache";
+        public const string DefaultApiScopeBlobCacheContainerName = "resourceapiscopeblobcache";
         public const string DefaultIdentityBlobCacheContainerName = "resourceidentityblobcache";
 
         public string ApiResourceTableName { get; private set; }
 
         public CloudTable ApiResourceTable { get; private set; }
 
-        public BlobContainerClient ApiResourceBlobContainer { get; private set; }
 
-        public BlobContainerClient IdentityResourceBlobContainer { get; private set; }
+        public BlobContainerClient ApiResourceBlobContainer { get; private set; }
 
         public BlobContainerClient ApiResourceBlobCacheContainer { get; private set; }
 
-        public BlobContainerClient IdentityResourceBlobCacheContainer { get; private set; }
+        public BlobContainerClient ApiScopeBlobContainer { get; private set; }
 
+        public BlobContainerClient ApiScopeBlobCacheContainer { get; private set; }
+
+        public BlobContainerClient IdentityResourceBlobContainer { get; private set; }
+
+        public BlobContainerClient IdentityResourceBlobCacheContainer { get; private set; }
 
         public CloudTableClient TableClient { get; private set; }
 
         public BlobServiceClient BlobClient { get; private set; }
 
-
         public ResourceStorageContext(IOptions<ResourceStorageConfig> config) : this(config.Value)
         {
         }
-
 
         public ResourceStorageContext(ResourceStorageConfig config)
         {
@@ -62,8 +67,10 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             var tasks = new List<Task>() {
                 ApiResourceTable.CreateIfNotExistsAsync(),
                 ApiResourceBlobContainer.CreateIfNotExistsAsync(),
+                ApiScopeBlobContainer.CreateIfNotExistsAsync(),
                 IdentityResourceBlobContainer.CreateIfNotExistsAsync(),
                 ApiResourceBlobCacheContainer.CreateIfNotExistsAsync(),
+                ApiScopeBlobCacheContainer.CreateIfNotExistsAsync(),
                 IdentityResourceBlobCacheContainer.CreateIfNotExistsAsync()};
             await Task.WhenAll(tasks).ConfigureAwait(false);
             return tasks.Select(t => t.IsCompleted).All(a => a);
@@ -75,6 +82,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             TableClient = Microsoft.Azure.Cosmos.Table.CloudStorageAccount.Parse(_config.StorageConnectionString).CreateCloudTableClient();
             TableClient.DefaultRequestOptions.PayloadFormat = TablePayloadFormat.Json;
 
+            //ApiResourceTableName
             ApiResourceTableName = config.ApiTableName;
 
             if (string.IsNullOrWhiteSpace(ApiResourceTableName))
@@ -85,6 +93,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             ApiResourceTable = TableClient.GetTableReference(ApiResourceTableName);
 
             BlobClient = new BlobServiceClient(_config.StorageConnectionString);
+
+            // ApiResource blob config
             ApiBlobContainerName = config.ApiBlobContainerName;
             if (string.IsNullOrWhiteSpace(ApiBlobContainerName))
             {
@@ -95,6 +105,18 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             ApiBlobCacheContainerName = !string.IsNullOrWhiteSpace(config.ApiBlobCacheContainerName) ? config.ApiBlobCacheContainerName : DefaultApiBlobCacheContainerName;
             ApiResourceBlobCacheContainer = BlobClient.GetBlobContainerClient(ApiBlobCacheContainerName);
 
+            // ApiScope blob config
+            ApiScopeBlobContainerName = config.ApiScopeBlobContainerName;
+            if (string.IsNullOrWhiteSpace(ApiScopeBlobContainerName))
+            {
+                throw new ArgumentException($"ApiScopeBlobContainerName cannot be null or empty, check your configuration.", nameof(config.ApiScopeBlobContainerName));
+            }
+            ApiScopeBlobContainer = BlobClient.GetBlobContainerClient(ApiScopeBlobContainerName);
+
+            ApiScopeBlobCacheContainerName = !string.IsNullOrWhiteSpace(config.ApiScopeBlobCacheContainerName) ? config.ApiScopeBlobCacheContainerName : DefaultApiScopeBlobCacheContainerName;
+            ApiScopeBlobCacheContainer = BlobClient.GetBlobContainerClient(ApiScopeBlobCacheContainerName);
+
+            //IdentityResource blob config
             IdentityBlobContainerName = config.IdentityBlobContainerName;
             if (string.IsNullOrWhiteSpace(IdentityBlobContainerName))
             {

@@ -26,7 +26,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Mappers
                     .ConstructUsing(src => new Models.IdentityResource())
                     .ReverseMap();
 
-                cfg.CreateMap<Entities.IdentityClaim, string>()
+                cfg.CreateMap<Entities.IdentityResourceClaim, string>()
                    .ConstructUsing(x => x.Type)
                    .ReverseMap()
                    .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src));

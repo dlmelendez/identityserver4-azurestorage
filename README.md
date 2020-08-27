@@ -1,6 +1,8 @@
 # identityserver4-azurestorage
-Uses Azure Blob and Table Storage services as an alternative to [Entity Framework/SQL data access for IdentityServer4](https://identityserver4.readthedocs.io/en/latest/quickstarts/7_entity_framework.html#identityserver4-entityframework).
+Uses Azure Blob and Table Storage services as an alternative to [Entity Framework/SQL data access for IdentityServer4](https://identityserver4.readthedocs.io/en/latest/quickstarts/5_entityframework.html).
 Use the unit tests as a guide to seeding operational and configuration data.
+- ElCamino.IdentityServer4.AzureStorage v1.x uses IdentityServer4 2.x & 3.x
+- ElCamino.IdentityServer4.AzureStorage v2.x uses IdentityServer4 >= 4.x (vnext)
 
 [![Build Status](https://dev.azure.com/elcamino/Azure%20OpenSource/_apis/build/status/dlmelendez.identityserver4-azurestorage?branchName=master)](https://dev.azure.com/elcamino/Azure%20OpenSource/_build/latest?definitionId=11&branchName=master)
 

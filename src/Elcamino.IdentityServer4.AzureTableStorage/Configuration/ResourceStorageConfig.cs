@@ -20,14 +20,21 @@ namespace ElCamino.IdentityServer4.AzureStorage.Configuration
         [JsonProperty("apiBlobContainerName")]
         public string ApiBlobContainerName { get; set; }
 
+        [JsonProperty("apiScopeBlobContainerName")]
+        public string ApiScopeBlobContainerName { get; set; }
+
         [JsonProperty("identityBlobContainerName")]
         public string IdentityBlobContainerName { get; set; }
 
         [JsonProperty("apiBlobCacheContainerName")]
         public string ApiBlobCacheContainerName { get; set; }
 
+        [JsonProperty("apiScopeBlobCacheContainerName")]
+        public string ApiScopeBlobCacheContainerName { get; set; }
+
         [JsonProperty("identityBlobCacheContainerName")]
         public string IdentityBlobCacheContainerName { get; set; }
+
 
         /// <summary>
         /// Gets or sets a value indicating whether blob cache will be refreshed on a schedule.
