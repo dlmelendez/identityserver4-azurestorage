@@ -91,6 +91,80 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
         }
 
+        /// <summary>
+        /// Should be used for migration only
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IEnumerable<Entities.ApiResourceV3>> GetAllApiResourceV3EntitiesAsync()
+        {
+            var entities = await StorageContext.SafeGetAllBlobEntitiesAsync<Entities.ApiResourceV3>(StorageContext.ApiResourceBlobContainer, _logger)
+                 .ToListAsync()
+                 .ConfigureAwait(false);
+
+            return entities;
+        }
+
+        /// <summary>
+        /// Migrate ApiResources to create associated ApiScopes in V4 from V3 schema
+        /// </summary>
+        /// <returns></returns>
+        public async Task MigrateV3ApiScopesAsync()
+        {
+            try
+            {
+                foreach (Entities.ApiResourceV3 apiResourceV3 in await GetAllApiResourceV3EntitiesAsync().ConfigureAwait(false))
+                {
+                    try
+                    {
+                        await MigrateV3ApiScopeAsync(apiResourceV3).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, $"{nameof(MigrateV3ApiScopeAsync)}, {nameof(Entities.ApiResourceV3)}.{nameof(Entities.ApiResourceV3.Name)}: {apiResourceV3?.Name?.ToString()}");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogDebug(e, $"{nameof(MigrateV3ApiScopesAsync)}");
+            }
+        }
+
+        /// <summary>
+        /// Takes a v3 ApiResource and creates ApiScopes if they don't exist already.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async Task MigrateV3ApiScopeAsync(Entities.ApiResourceV3 entity)
+        {
+            try
+            {
+                //Create ApiScopes that don't exist
+                List<Entities.ApiScope> entityScopes = entity.Scopes.ToList();
+                if (entityScopes.Count > 0)
+                {
+                    foreach (Entities.ApiScope entityScope in entityScopes)
+                    {
+                        if (!String.IsNullOrWhiteSpace(entityScope.Name))
+                        {
+                            await StoreAsync(entityScope.ToModel()).ConfigureAwait(false);
+                        }
+                    }
+                }
+            }
+            catch (AggregateException agg)
+            {
+                ExceptionHelper.LogStorageExceptions(agg, (tblEx) =>
+                {
+                    _logger.LogWarning("exception updating {apiName} api resource in table storage: {error}", entity.Name, tblEx.Message);
+                }, (blobEx) =>
+                {
+                    _logger.LogWarning("exception updating {apiName} api resource in blob storage: {error}", entity.Name, blobEx.Message);
+                });
+                throw;
+            }
+        }
+
         public async Task StoreAsync(Model.IdentityResource model)
         {
             var entity = model.ToEntity();
@@ -411,7 +485,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
             return entities;
         }
-
+        
         private async Task<IEnumerable<Entities.IdentityResource>> GetAllIdentityResourceEntitiesAsync()
         {
             var entities = await GetLatestIdentityResourceCacheAsync().ConfigureAwait(false);

@@ -127,10 +127,42 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         {
             await foreach(var blobJson in GetAllBlobsAsync(container))
             {
-                yield return await GetEntityBlobAsync<Entity>(blobJson).ConfigureAwait(false);
+                Entity e = await GetEntityBlobAsync<Entity>(blobJson).ConfigureAwait(false);
+                if (e != null)
+                {
+                    yield return e;
+                }
             }
         }
-       
+
+        /// <summary>
+        /// Only gets blob entities that have no serialization errors
+        /// </summary>
+        /// <typeparam name="Entity"></typeparam>
+        /// <param name="container"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public async IAsyncEnumerable<Entity> SafeGetAllBlobEntitiesAsync<Entity>(BlobContainerClient container, ILogger logger) where Entity : class, new()
+        {
+            await foreach (var blobJson in GetAllBlobsAsync(container))
+            {
+                Entity e = null;
+                try
+                {
+                    e = await GetEntityBlobAsync<Entity>(blobJson).ConfigureAwait(false);                    
+                }
+                catch(Exception ex)
+                {
+                    // log and continue
+                    logger.LogError(ex, $"{nameof(SafeGetAllBlobEntitiesAsync)}-{nameof(GetEntityBlobAsync)} error:");
+                    continue;
+                }
+                if (e != null)
+                {
+                    yield return e;
+                }
+            }
+        }
 
         public async IAsyncEnumerable<BlobClient> GetAllBlobsAsync(BlobContainerClient container)
         {

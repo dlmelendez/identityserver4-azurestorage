@@ -41,6 +41,30 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             };
         }
 
+        private static Entities.ApiResourceV3 CreateApiV3EntityTestObject(string apiResourceName, string scopeName)
+        {
+            return new Entities.ApiResourceV3
+            {
+                Name = apiResourceName,
+                Description = "My API",
+                Scopes = new List<Entities.ApiScope>
+                    {
+                       new Entities.ApiScope
+                        {
+                            Name = scopeName,
+                            DisplayName = "Scope for the dataEventRecords ApiResource",
+                            UserClaims = GetAllAvailableClaimTypes().Select(s => new Entities.ApiScopeClaim() { Type = s }).ToList()
+                        }
+                    },
+                UserClaims = GetAllAvailableClaimTypes().Select(s => new Entities.ApiResourceClaim() { Type = s }).ToList(),
+                Secrets = new List<Entities.ApiResourceSecret>()
+                    {
+                        new Entities.ApiResourceSecret() { Value= "SuperSecretAPiKey1".Sha256(), Type = "SharedSecret" }
+                    },
+            };
+        }
+
+
         public static IEnumerable<IdentityResource> GetIdentityResources()
         {
             return new List<IdentityResource>
@@ -81,6 +105,42 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
 
             var store = new ResourceStore(storageContext, _logger);
             Assert.IsNotNull(store);
+        }
+
+        [TestMethod]
+        public async Task ResourceStore_MigrateV3Test()
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            Services.AddScoped(typeof(ResourceStore), typeof(ResourceStore));
+            var storageContext = Services.BuildServiceProvider().GetService<ResourceStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            var store = new ResourceStore(storageContext, _logger);
+            Assert.IsNotNull(store);
+
+            string apiResourceName = "aipResourceName-" + Guid.NewGuid().ToString();
+            Console.WriteLine($"api resource name: {apiResourceName}");
+            string scopeName = "scopeName-" + Guid.NewGuid().ToString();
+            Console.WriteLine($"api scope name: {scopeName}");
+
+            var resource = CreateApiV3EntityTestObject(apiResourceName, scopeName);
+            await storageContext.SaveBlobWithHashedKeyAsync(apiResourceName, JsonConvert.SerializeObject(resource),
+                storageContext.ApiResourceBlobContainer);
+            
+            // Run Migration
+            stopwatch.Start();
+            Services.MigrateResourceV3Storage();
+            stopwatch.Stop();
+            Console.WriteLine($"MigrateResourceV3Storage-api: {stopwatch.ElapsedMilliseconds} ms");
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            string[] findScopes = new string[] { scopeName, Guid.NewGuid().ToString() };
+            var findApiScopes = await store.FindApiScopesByNameAsync(findScopes);
+            stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.FindApiScopesByNameAsync({string.Join(",", findScopes)})-api: {stopwatch.ElapsedMilliseconds} ms");
+            Assert.AreEqual<string>(scopeName, findApiScopes.Single()?.Name);
+            Assert.IsTrue(findApiScopes.Single().UserClaims.AsEnumerable().Any(a => a == resource.Scopes.First().UserClaims.First().Type));
         }
 
         [TestMethod]
