@@ -100,6 +100,13 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
+        public static IServiceCollection MigrateResourceV3Storage(this IServiceCollection services)
+        {
+            ResourceStore resourceStore = services.BuildServiceProvider().GetService<ResourceStore>();
+            resourceStore.MigrateV3ApiScopesAsync().Wait();
+            return services;
+        }
+
 
     }
 }

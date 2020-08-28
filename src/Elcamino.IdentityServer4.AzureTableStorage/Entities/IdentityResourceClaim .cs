@@ -3,13 +3,14 @@
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/IdentityServer4
 
 
+
 #pragma warning disable 1591
 
 namespace ElCamino.IdentityServer4.AzureStorage.Entities
 {
-    public class ApiScopeClaim : UserClaim
+    public class IdentityResourceClaim : UserClaim
     {
-        public int ScopeId { get; set; }
-        public ApiScope ApiScope { get; set; }
+        public int IdentityResourceId { get; set; }
+        public IdentityResource IdentityResource { get; set; }
     }
 }

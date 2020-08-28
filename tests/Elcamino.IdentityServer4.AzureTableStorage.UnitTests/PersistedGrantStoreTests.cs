@@ -5,6 +5,7 @@ using ElCamino.IdentityServer4.AzureStorage.Contexts;
 using ElCamino.IdentityServer4.AzureStorage.Mappers;
 using ElCamino.IdentityServer4.AzureStorage.Stores;
 using IdentityServer4.Models;
+using IdentityServer4.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,7 +28,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             string key = null,
             string subjectId = null, 
             string clientId = null, 
-            string type = null)
+            string type = null,
+            string session = null)
         {
             return new PersistedGrant
             {
@@ -37,6 +39,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
                 SubjectId = subjectId??Guid.NewGuid().ToString(),
                 CreationTime = new DateTime(2016, 08, 01),
                 Expiration = new DateTime(2016, 08, 31),
+                SessionId = session ?? Guid.NewGuid().ToString(),
                 Data = JsonConvert.SerializeObject(new Token())
             };
         }
@@ -214,7 +217,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             }
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            var returnGrants = (await store.GetAllAsync(subject)).ToList();
+            var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject })).ToList();
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}): {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<int>(grants.Count, returnGrants.Count);
@@ -244,7 +247,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             }
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            var returnGrants = (await store.GetAllAsync(subject)).Where(w => w.ClientId == client).ToList();
+            var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject })).Where(w => w.ClientId == client).ToList();
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}): {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<int>(grants.Count, returnGrants.Count);
@@ -252,10 +255,10 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
 
             stopwatch.Reset();
             stopwatch.Start();
-            await store.RemoveAllAsync(subject, client);
+            await store.RemoveAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client });
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.RemoveAllAsync({subject}, {client}): {stopwatch.ElapsedMilliseconds} ms");
-            returnGrants = (await store.GetAllAsync(subject)).Where(w => w.ClientId == client).ToList();
+            returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject })).Where(w => w.ClientId == client).ToList();
             Assert.AreEqual<int>(0, returnGrants.Count);
 
         }
@@ -284,19 +287,64 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             }
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            var returnGrants = (await store.GetAllAsync(subject)).Where(w => w.ClientId == client && w.Type == type).ToList();
+            var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type= type })).ToList();
             stopwatch.Stop();
-            Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}): {stopwatch.ElapsedMilliseconds} ms");
+            Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}, {client}, {type}): {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<int>(grants.Count, returnGrants.Count);
             grants.ForEach(g => AssertGrantsEqual(g, returnGrants.FirstOrDefault(f => f.Key == g.Key)));
 
             stopwatch.Reset();
             stopwatch.Start();
-            await store.RemoveAllAsync(subject, client, type);
+            await store.RemoveAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type});
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.RemoveAllAsync({subject}, {client}, {type}): {stopwatch.ElapsedMilliseconds} ms");
-            returnGrants = (await store.GetAllAsync(subject)).Where(w => w.ClientId == client && w.Type == type).ToList();
+            returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type })).ToList();
             Assert.AreEqual<int>(0, returnGrants.Count);
+
+        }
+
+        [TestMethod]
+        public async Task PersistedGrantStore_RemoveSubjectClientTypeSessionTest()
+        {
+            var storageContext = Services.BuildServiceProvider().GetService<PersistedGrantStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            var store = new PersistedGrantStore(storageContext, _logger);
+            Assert.IsNotNull(store);
+
+            string subject = Guid.NewGuid().ToString();
+            string client = Guid.NewGuid().ToString();
+            string type = Guid.NewGuid().ToString();
+            string session = Guid.NewGuid().ToString();
+
+            List<PersistedGrant> grants = new List<PersistedGrant>();
+            for (int iCounter = 0; iCounter < 10; iCounter++)
+            {                
+                var grant = CreateTestObject(subjectId: subject, 
+                    clientId: client, 
+                    type: type,
+                    session: (session + iCounter.ToString()));
+                Console.WriteLine(JsonConvert.SerializeObject(grant));
+
+                await store.StoreAsync(grant);
+                grants.Add(grant);
+            }
+            string sessionTarget = session + "0";
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type, SessionId = sessionTarget })).ToList();
+            stopwatch.Stop();
+            Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}, {client}, {type}, {sessionTarget}): {stopwatch.ElapsedMilliseconds} ms");
+            Assert.AreEqual<int>(1, returnGrants.Count);
+            returnGrants.ForEach(g => AssertGrantsEqual(g, grants.FirstOrDefault(f => f.Key == g.Key)));
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            await store.RemoveAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type, SessionId = sessionTarget });
+            stopwatch.Stop();
+            Console.WriteLine($"PersistedGrantStore.RemoveAllAsync({subject}, {client}, {type}, {sessionTarget}): {stopwatch.ElapsedMilliseconds} ms");
+            returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type })).ToList();
+            Assert.AreEqual<int>(grants.Count - 1, returnGrants.Count);
 
         }
 

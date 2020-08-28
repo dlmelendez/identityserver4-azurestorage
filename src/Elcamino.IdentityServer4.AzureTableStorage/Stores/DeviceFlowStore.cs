@@ -72,7 +72,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         {
             string entityJson = JsonConvert.SerializeObject(ToEntity(data, deviceCode, userCode));
             await Task.WhenAll(Context.SaveBlobWithHashedKeyAsync(deviceCode, entityJson, Context.DeviceCodeBlobContainer),
-                               Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer));
+                               Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -82,7 +83,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         /// <returns></returns>
         public virtual async Task<DeviceCode> FindByUserCodeAsync(string userCode)
         {
-            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer);
+            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer)
+                .ConfigureAwait(false);
             DeviceCode model = ToModel(deviceFlowCodes?.Data);
 
             Logger.LogDebug("{userCode} found in blob storage: {userCodeFound}", userCode, model != null);
@@ -97,7 +99,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         /// <returns></returns>
         public virtual async Task<DeviceCode> FindByDeviceCodeAsync(string deviceCode)
         {
-            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer);
+            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer)
+                .ConfigureAwait(false);
             DeviceCode model = ToModel(deviceFlowCodes?.Data);
 
             Logger.LogDebug("{deviceCode} found in blob storage: {deviceCodeFound}", deviceCode, model != null);
@@ -113,7 +116,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         /// <returns></returns>
         public virtual async Task UpdateByUserCodeAsync(string userCode, DeviceCode data)
         {
-            DeviceFlowCodes existingUserCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer);
+            DeviceFlowCodes existingUserCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer)
+                .ConfigureAwait(false);
             if (existingUserCode == null)
             {
                 Logger.LogError("{userCode} not found in blob storage", userCode);
@@ -121,7 +125,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
 
             string deviceCode = existingUserCode.DeviceCode;
-            DeviceFlowCodes existingDeviceCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer);
+            DeviceFlowCodes existingDeviceCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer)
+                .ConfigureAwait(false);
             if (existingDeviceCode == null)
             {
                 Logger.LogError("{deviceCode} not found in blob storage", deviceCode);
@@ -136,7 +141,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
             string entityJson = JsonConvert.SerializeObject(existingUserCode);
             await Task.WhenAll(Context.SaveBlobWithHashedKeyAsync(deviceCode, entityJson, Context.DeviceCodeBlobContainer),
-                               Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer));
+                               Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer))
+                .ConfigureAwait(false);
 
         }
 
@@ -147,14 +153,16 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         /// <returns></returns>
         public virtual async Task RemoveByDeviceCodeAsync(string deviceCode)
         {
-            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer);
+            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer)
+                .ConfigureAwait(false);
 
             if (deviceFlowCodes != null)
             {
                 Logger.LogDebug("removing {deviceCode} device code from blob storage", deviceCode);
 
                 await Task.WhenAll(Context.DeleteBlobAsync(deviceCode, Context.DeviceCodeBlobContainer),
-                                   Context.DeleteBlobAsync(deviceFlowCodes.UserCode, Context.UserCodeBlobContainer));
+                                   Context.DeleteBlobAsync(deviceFlowCodes.UserCode, Context.UserCodeBlobContainer))
+                    .ConfigureAwait(false);
             }
             else
             {
