@@ -24,7 +24,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         public async Task<string> GetBlobContentAsync(string keyNotHashed, BlobContainerClient container)
         {
             BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
-            return await GetBlobContentAsync(blob);
+            return await GetBlobContentAsync(blob).ConfigureAwait(false);
         }
 
         public async Task<string> GetBlobContentAsync(BlobClient blob)
@@ -34,7 +34,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
                 Response<BlobDownloadInfo> download = await blob.DownloadAsync();
                 using (StreamReader sr = new StreamReader(download.Value.Content, Encoding.UTF8))
                 {
-                    return await sr.ReadToEndAsync();
+                    return await sr.ReadToEndAsync().ConfigureAwait(false);
                 }
             }
             catch (RequestFailedException ex)
@@ -49,13 +49,15 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         {
             DateTime dateTimeNow = DateTime.UtcNow;
             string blobName = KeyGeneratorHelper.GenerateDateTimeDecendingId(dateTimeNow);
-            await SaveBlobAsync(blobName, JsonConvert.SerializeObject(entities), cacheContainer);
+            await SaveBlobAsync(blobName, JsonConvert.SerializeObject(entities), cacheContainer)
+                .ConfigureAwait(false);
             return (blobName, count: entities.Count());
         }
 
         public async Task<(string blobName, int count)> UpdateBlobCacheFileAsync<Entity>(IAsyncEnumerable<Entity> entities, BlobContainerClient cacheContainer)
         {
-            return await UpdateBlobCacheFileAsync(await entities.ToListAsync(), cacheContainer);
+            return await UpdateBlobCacheFileAsync(await entities.ToListAsync().ConfigureAwait(false), cacheContainer)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -71,7 +73,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
                 if (String.Compare(latestBlobName, blobName.Name) == -1)
                 {
                     BlobClient blobClient = cacheContainer.GetBlobClient(blobName.Name);
-                    await blobClient.DeleteAsync();
+                    await blobClient.DeleteAsync().ConfigureAwait(false);
                     logger.LogInformation($"container: {cacheContainer.Name} blob: {blobName.Name} - cache file deleted");
                 }
             }
@@ -79,10 +81,10 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public async Task<IEnumerable<Entity>> GetLatestFromCacheBlobAsync<Entity>(BlobContainerClient cacheContainer)
         {
-            BlobClient blob = await GetFirstBlobAsync(cacheContainer);
+            BlobClient blob = await GetFirstBlobAsync(cacheContainer).ConfigureAwait(false);
             if (blob != null)
             {
-                var entities = await GetEntityBlobAsync<List<Entity>>(blob);
+                var entities = await GetEntityBlobAsync<List<Entity>>(blob).ConfigureAwait(false);
                 if (entities != null)
                 {
                     return entities;
@@ -94,14 +96,14 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         public async Task<Entity> GetEntityBlobAsync<Entity>(string keyNotHashed, BlobContainerClient container) where Entity : class, new()
         {
             BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
-            return await GetEntityBlobAsync<Entity>(blob);
+            return await GetEntityBlobAsync<Entity>(blob).ConfigureAwait(false);
         }
 
         public async Task<Entity> GetEntityBlobAsync<Entity>(BlobClient blobJson) where Entity : class, new()
         {
             try
             {
-                var download = await blobJson.DownloadAsync();
+                var download = await blobJson.DownloadAsync().ConfigureAwait(false);
                 using (Stream s = download.Value.Content)
                 {
                     using (StreamReader sr = new StreamReader(s, Encoding.UTF8))
@@ -125,7 +127,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         {
             await foreach(var blobJson in GetAllBlobsAsync(container))
             {
-                yield return await GetEntityBlobAsync<Entity>(blobJson);
+                yield return await GetEntityBlobAsync<Entity>(blobJson).ConfigureAwait(false);
             }
         }
        
@@ -161,26 +163,26 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             return null;
         }       
 
-        public async Task DeleteBlobAsync(string keyNotHashed, BlobContainerClient container)
+        public Task DeleteBlobAsync(string keyNotHashed, BlobContainerClient container)
         {
             BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
-            await blob.DeleteIfExistsAsync();
+            return blob.DeleteIfExistsAsync();
         }
 
-        public async Task SaveBlobWithHashedKeyAsync(string keyNotHashed, string jsonEntityContent, BlobContainerClient container)
+        public Task SaveBlobWithHashedKeyAsync(string keyNotHashed, string jsonEntityContent, BlobContainerClient container)
         {
             BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
 
-            await blob.UploadAsync(new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent)), new BlobHttpHeaders() 
+            return blob.UploadAsync(new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent)), new BlobHttpHeaders() 
             { 
                 ContentType = "application/json"
             });
         }
 
-        public async Task SaveBlobAsync(string blobName, string jsonEntityContent, BlobContainerClient container)
+        public Task SaveBlobAsync(string blobName, string jsonEntityContent, BlobContainerClient container)
         {
             BlobClient blob = container.GetBlobClient(blobName);
-            await blob.UploadAsync(new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent)), new BlobHttpHeaders()
+            return blob.UploadAsync(new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent)), new BlobHttpHeaders()
             {
                 ContentType = "application/json"
             });
@@ -196,16 +198,17 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             where Entity : class, ITableEntity, new()
         {
             string hashedKey = KeyGeneratorHelper.GenerateHashValue(keyNotHashed);
-            var r = await table.ExecuteAsync(TableOperation.Retrieve<Entity>(hashedKey, hashedKey));
+            var r = await table.ExecuteAsync(TableOperation.Retrieve<Entity>(hashedKey, hashedKey))
+                .ConfigureAwait(false);
             return r.Result as Entity;
         }
 
         public async Task GetAndDeleteTableEntityByKeysAsync(string partitionKey, string rowKey, CloudTable table)
         {
-            var entity = (await table.ExecuteAsync(TableOperation.Retrieve(partitionKey, rowKey))).Result as ITableEntity;
+            var entity = (await table.ExecuteAsync(TableOperation.Retrieve(partitionKey, rowKey)).ConfigureAwait(false)).Result as ITableEntity;
             if (entity != null)
             {
-                await table.ExecuteAsync(TableOperation.Delete(entity));
+                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
             }
 
         }
