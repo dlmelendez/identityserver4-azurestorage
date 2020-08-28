@@ -28,7 +28,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Mappers
                 cfg.CreateMap<Entities.ApiResource, Models.ApiResource>(MemberList.Destination)
                     .ConstructUsing(src => new Models.ApiResource())
                     .ForMember(x => x.ApiSecrets, opts => opts.MapFrom(x => x.Secrets))
-                    .ForMember(x => x.Scopes, opts => opts.MapFrom(x => x.Scopes.SelectMany(m => m.Name).ToList()))
+                    .ForMember(x => x.Scopes, opts => opts.MapFrom(x => x.Scopes.Select(m => m.Name).ToList()))
                     .ForMember(x => x.AllowedAccessTokenSigningAlgorithms, opts => opts.ConvertUsing(AllowedSigningAlgorithmsConverter.Converter, x => x.AllowedAccessTokenSigningAlgorithms))
                     .ReverseMap()
                     .ForMember(x => x.AllowedAccessTokenSigningAlgorithms, opts => opts.ConvertUsing(AllowedSigningAlgorithmsConverter.Converter, x => x.AllowedAccessTokenSigningAlgorithms))
