@@ -5,6 +5,7 @@ using ElCamino.IdentityServer4.AzureStorage.Contexts;
 using ElCamino.IdentityServer4.AzureStorage.Stores;
 using IdentityServer4;
 using IdentityServer4.Models;
+using IdentityServer4.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -111,7 +112,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
         public async Task ResourceStore_MigrateV3Test()
         {
             Stopwatch stopwatch = new Stopwatch();
-            Services.AddScoped(typeof(ResourceStore), typeof(ResourceStore));
+            Services.AddScoped<IResourceStore, ResourceStore>();
             var storageContext = Services.BuildServiceProvider().GetService<ResourceStorageContext>();
             Assert.IsNotNull(storageContext);
 

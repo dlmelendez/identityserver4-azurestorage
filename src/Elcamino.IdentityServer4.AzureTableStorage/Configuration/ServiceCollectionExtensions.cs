@@ -8,6 +8,7 @@ using ElCamino.IdentityServer4.AzureStorage.Interfaces;
 using ElCamino.IdentityServer4.AzureStorage.Stores;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
+using IdentityServer4.Stores;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -102,7 +103,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static IServiceCollection MigrateResourceV3Storage(this IServiceCollection services)
         {
-            ResourceStore resourceStore = services.BuildServiceProvider().GetService<ResourceStore>();
+            ResourceStore resourceStore = services.BuildServiceProvider().GetService<IResourceStore>() as ResourceStore;
             resourceStore.MigrateV3ApiScopesAsync().Wait();
             return services;
         }
