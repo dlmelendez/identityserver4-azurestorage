@@ -27,7 +27,7 @@ New config settings, complete settings further down.
 
 ## Changes to startup.cs
 
-Shown below in complete context, add .MigrateResourceV3Storage() into the startup services pipline. Remove after the first run.
+Shown below in complete context, add .MigrateResourceV3Storage() into the startup services pipline. **Must be added __after__ services.AddIdentityServer().AddResourceStore() in the pipeline.** Remove after the first run.
 
 # Getting Started
 ## startup.cs
@@ -49,9 +49,7 @@ using IdentityServer4;
                 .AddResourceContext(Configuration.GetSection("IdentityServer4:resourceStorageConfig"))
                 .CreateResourceStorage() //Can be removed after first run.
                 .AddDeviceFlowContext(Configuration.GetSection("IdentityServer4:deviceFlowStorageConfig"))
-                .CreateDeviceFlowStorage() //Can be removed after first run.
-                //Use for migrating ApiScopes from IdentityServer4 v3 ApiResources
-                //.MigrateResourceV3Storage();
+                .CreateDeviceFlowStorage(); //Can be removed after first run.
 
 	    // Adds IdentityServer
             services.AddIdentityServer()
@@ -61,6 +59,11 @@ using IdentityServer4;
             .AddCorsPolicyService<StorageCorsPolicyService>()
             .AddPersistedGrantStore<PersistedGrantStore>()
             .AddDeviceFlowStore<DeviceFlowStore>()
+...            
+            //Use for migrating ApiScopes from IdentityServer4 v3 ApiResources
+            //Must be added after services.AddIdentityServer().AddResourceStore() in the pipeline
+            //services.MigrateResourceV3Storage();
+
 ...
 ```
 ## appsettings.json
