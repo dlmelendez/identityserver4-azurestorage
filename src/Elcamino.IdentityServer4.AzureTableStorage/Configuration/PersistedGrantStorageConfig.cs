@@ -1,23 +1,18 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Configuration
 {
-    [JsonObject("persistedGrantStorageConfig")]
     public class PersistedGrantStorageConfig
     {
-        [JsonProperty("storageConnectionString")]
         public string StorageConnectionString { get; set; }
 
-        [JsonProperty("blobContainerName")]
         public string BlobContainerName { get; set; }
 
-        [JsonProperty("persistedGrantTableName")]
         public string PersistedGrantTableName { get; set; }
 
         /// <summary>
@@ -28,7 +23,6 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Configuration
         /// <value>
         ///   <c>true</c> if [enable token cleanup]; otherwise, <c>false</c>.
         /// </value>
-        [JsonProperty("enableTokenCleanup")]
         public bool EnableTokenCleanup { get; set; } = false;
 
         /// <summary>
@@ -37,7 +31,6 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Configuration
         /// <value>
         /// The token cleanup interval.
         /// </value>
-        [JsonProperty("tokenCleanupInterval")]
         public int TokenCleanupInterval { get; set; } = 3600;
 
         /// <summary>
@@ -46,7 +39,6 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Configuration
         /// <value>
         /// The size of the token cleanup batch.
         /// </value>
-        [JsonProperty("tokenCleanupBatchSize")]
         public int TokenCleanupBatchSize { get; set; } = 100;
     }
 }

@@ -8,10 +8,8 @@ using ElCamino.Duende.IdentityServer.AzureStorage.Interfaces;
 using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
-using Microsoft.Azure.Cosmos.Table;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +17,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Model = Duende.IdentityServer.Models;
 using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
-using Microsoft.OData.UriParser.Aggregation;
+using Azure.Data.Tables;
+using Azure;
+using System.Text.Json;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
 {
@@ -57,8 +57,8 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
                 // Add new scope indexes
                 var newIndexes = entity?.Scopes?.Select(s => s.Name).Distinct().Select(i => GenerateResourceIndexEntity(entity.Name, i));
                 await CreateScopeIndexesAsync(newIndexes, StorageContext.ApiResourceTable).ConfigureAwait(false);
-                await StorageContext.SaveBlobWithHashedKeyAsync(entity.Name, 
-                    JsonConvert.SerializeObject(entity), StorageContext.ApiResourceBlobContainer)
+                await StorageContext.SaveBlobWithHashedKeyAsync(entity.Name,
+                    JsonSerializer.Serialize(entity, StorageContext.JsonSerializerDefaultOptions), StorageContext.ApiResourceBlobContainer)
                     .ConfigureAwait(false);
                 //Create ApiScopes that don't exist
                 List<string> entityScopes = entity.Scopes?.Select(s => s.Name).ToList();
@@ -171,7 +171,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             try
             {                
                 await StorageContext
-                    .SaveBlobWithHashedKeyAsync(entity.Name, JsonConvert.SerializeObject(entity), StorageContext.IdentityResourceBlobContainer)
+                    .SaveBlobWithHashedKeyAsync(entity.Name, JsonSerializer.Serialize(entity, StorageContext.JsonSerializerDefaultOptions), StorageContext.IdentityResourceBlobContainer)
                     .ConfigureAwait(false);
                 var entities = await GetAllIdentityResourceEntitiesAsync().ConfigureAwait(false);
                 entities = entities.Where(e => entity.Name != e.Name).Concat(new Entities.IdentityResource[] { entity });
@@ -197,7 +197,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             try
             {
                 await StorageContext
-                    .SaveBlobWithHashedKeyAsync(entity.Name, JsonConvert.SerializeObject(entity), StorageContext.ApiScopeBlobContainer)
+                    .SaveBlobWithHashedKeyAsync(entity.Name, JsonSerializer.Serialize(entity, StorageContext.JsonSerializerDefaultOptions), StorageContext.ApiScopeBlobContainer)
                     .ConfigureAwait(false);
                 var entities = await GetAllApiScopeEntitiesAsync().ConfigureAwait(false);
                 entities = entities.Where(e => entity.Name != e.Name).Concat(new Entities.ApiScope[] { entity });
@@ -262,20 +262,20 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             }
         }
 
-        private async Task DeleteScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, CloudTable table)
+        private async Task DeleteScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, TableClient table)
         {
             if (indexes != null )
             {                
-                await Task.WhenAll(indexes.Select((index) => StorageContext.GetAndDeleteTableEntityByKeysAsync(index.PartitionKey, index.RowKey, table)))
+                await Task.WhenAll(indexes.Select((index) => table.DeleteEntityAsync(index.PartitionKey, index.RowKey, KeyGeneratorHelper.ETagWildCard)))
                     .ConfigureAwait(false);
             }
         }
         
-        private async Task CreateScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, CloudTable table)
+        private async Task CreateScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, TableClient table)
         {
             if (indexes != null)
             {
-                await Task.WhenAll(indexes.Select((index) => table.ExecuteAsync(TableOperation.InsertOrReplace(index))))
+                await Task.WhenAll(indexes.Select((index) => table.UpdateEntityAsync(index, KeyGeneratorHelper.ETagWildCard, TableUpdateMode.Replace)))
                     .ConfigureAwait(false);
             }
         }
@@ -343,16 +343,16 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             return null;
         }
 
-        private Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, CloudTable table)
+        private async Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, TableClient table)
         {
             string partitionKeyFilter = TableQuery.GenerateFilterCondition("PartitionKey",
                 QueryComparisons.Equal,
                 KeyGeneratorHelper.GenerateHashValue(scope));
 
-            TableQuery<Entities.ResourceScopeIndexTblEntity> tq = new TableQuery<Entities.ResourceScopeIndexTblEntity>();
+            TableQuery tq = new TableQuery();
             tq.FilterString = partitionKeyFilter;
 
-            return StorageContext.GetAllByTableQueryAsync(tq, table);
+            return await StorageContext.GetAllByTableQueryAsync<Entities.ResourceScopeIndexTblEntity>(tq, table).ToListAsync();
         }
 
         private Entities.ResourceScopeIndexTblEntity GenerateResourceIndexEntity(string name, string scope)
@@ -401,7 +401,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             return entities.Select(s => s?.ToModel());
         }
 
-        private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, CloudTable table, BlobContainerClient container) where Entity : class, new()
+        private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, TableClient table, BlobContainerClient container) where Entity : class, new()
         {
             var scopeTasks = scopeNames.Distinct().Select(scope => GetResourceScopeIndexTblEntitiesAsync(scope, table));
 

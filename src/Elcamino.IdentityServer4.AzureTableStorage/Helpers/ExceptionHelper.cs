@@ -11,23 +11,27 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Helpers
 {
     public static class ExceptionHelper
     {
+        //TODO: Holy shit fix this before checking in.
         public static void LogStorageExceptions(AggregateException aggregate, 
-            Action<Microsoft.Azure.Cosmos.Table.StorageException> tableStorageLogger= null,
+            Action<RequestFailedException> tableStorageLogger= null,
             Action<RequestFailedException> blobStorageLogger = null)
         {
             if (aggregate.InnerExceptions != null)
             {
                 foreach (Exception ex in aggregate.InnerExceptions)
                 {
-                    Microsoft.Azure.Cosmos.Table.StorageException tableStorageException = ex as Microsoft.Azure.Cosmos.Table.StorageException;
-                    if (tableStorageException != null)
+                    RequestFailedException requestFailedException = ex as RequestFailedException;
+                    if (ex != null)
                     {
-                        tableStorageLogger?.Invoke(tableStorageException);
-                    }
-                    RequestFailedException blobException = ex as RequestFailedException;
-                    if (blobException != null)
-                    {
-                        blobStorageLogger?.Invoke(blobException);
+                        if (tableStorageLogger != null)
+                        {
+                            //Azure.Data.Tables.Models.TableErrorCode.
+                            //tableStorageLogger?.Invoke(tableStorageException);
+                        }
+                        if (blobStorageLogger != null)
+                        {
+                            //blobStorageLogger?.Invoke(blobException);
+                        }
                     }
                 }
             }

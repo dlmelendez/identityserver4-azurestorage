@@ -5,7 +5,6 @@ using ElCamino.Duende.IdentityServer.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
 using Azure.Storage;
 using Azure.Storage.Blobs;
-using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +13,8 @@ using System.Threading.Tasks;
 using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
 using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
 using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
+using Azure.Data.Tables;
+using Azure;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
 {
@@ -24,9 +25,9 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
 
         public string PersistedGrantTableName { get; private set; }
 
-        public CloudTable PersistedGrantTable { get; private set; }
+        public TableClient PersistedGrantTable { get; private set; }
 
-        public CloudTableClient TableClient { get; private set; }
+        public TableServiceClient TableClient { get; private set; }
 
         public BlobServiceClient BlobClient { get; private set; }
 
@@ -57,8 +58,8 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
 
         protected virtual void Initialize(PersistedGrantStorageConfig config)
         {
-            TableClient = Microsoft.Azure.Cosmos.Table.CloudStorageAccount.Parse(config.StorageConnectionString).CreateCloudTableClient();
-            TableClient.DefaultRequestOptions.PayloadFormat = TablePayloadFormat.Json;
+            TableClient = new TableServiceClient(config.StorageConnectionString);
+
             PersistedGrantTableName = config.PersistedGrantTableName;
 
             if (string.IsNullOrWhiteSpace(PersistedGrantTableName))
@@ -66,7 +67,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
                 throw new ArgumentException($"PersistedGrantTableName cannot be null or empty, check your configuration.", nameof(config.PersistedGrantTableName));
             }
 
-            PersistedGrantTable = TableClient.GetTableReference(PersistedGrantTableName);
+            PersistedGrantTable = TableClient.GetTableClient(PersistedGrantTableName);
 
             BlobClient = new BlobServiceClient(config.StorageConnectionString);
             BlobContainerName = config.BlobContainerName;
@@ -80,33 +81,29 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
 
         public async Task<IEnumerable<PersistedGrantTblEntity>> GetExpiredAsync(int maxResults)
         {
-            TableQuery<PersistedGrantTblEntity> tq = new TableQuery<PersistedGrantTblEntity>();
+            TableQuery tq = new TableQuery();
 
             tq.FilterString = TableQuery.GenerateFilterConditionForDate("Expiration",
                 QueryComparisons.LessThan,
                 DateTimeOffset.UtcNow);
             tq.TakeCount = maxResults;
-            return (await GetAllByTableQueryAsync(tq, PersistedGrantTable).ConfigureAwait(false)).ToArray();
+            return await GetAllByTableQueryAsync<PersistedGrantTblEntity>(tq, PersistedGrantTable).ToListAsync().ConfigureAwait(false);
 
         }
 
         public async Task<bool> RemoveAsync(string key)
         {
-            CloudTable table = PersistedGrantTable;
-            PersistedGrantTblEntity keyEntity = await GetEntityTableAsync<PersistedGrantTblEntity>(key, PersistedGrantTable);
+            TableClient table = PersistedGrantTable;
+            PersistedGrantTblEntity keyEntity = await GetEntityTableAsync<PersistedGrantTblEntity>(key, table);
             if (keyEntity != null)
             {
                 var entities = keyEntity.ToModel().ToEntities();
-                await Task.WhenAll(GetAndDeleteTableEntityByKeysAsync(entities.subjectGrant.PartitionKey, entities.subjectGrant.RowKey, PersistedGrantTable),
-                        table.ExecuteAsync(TableOperation.Delete(keyEntity)),
+                await Task.WhenAll(table.DeleteEntityAsync(entities.subjectGrant.PartitionKey, entities.subjectGrant.RowKey, KeyGeneratorHelper.ETagWildCard),
+                        table.DeleteEntityAsync(keyEntity.PartitionKey, keyEntity.RowKey, KeyGeneratorHelper.ETagWildCard),
                         DeleteBlobAsync(key, PersistedGrantBlobContainer)).ConfigureAwait(false);
                 return true;
             }
             return false;
         }
-
-       
-
-       
     }
 }

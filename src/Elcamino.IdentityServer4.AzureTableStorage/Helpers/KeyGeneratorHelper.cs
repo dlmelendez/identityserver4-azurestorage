@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using Azure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Helpers
     public static class KeyGeneratorHelper
     {
 
-        public const string ETagWildCard = "*";
+        public static readonly ETag ETagWildCard = ETag.All;
         public const string MinSha1Hash = "0000000000000000000000000000000000000000";
         public const string MaxSha1Hash = "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ";
         /// <summary>

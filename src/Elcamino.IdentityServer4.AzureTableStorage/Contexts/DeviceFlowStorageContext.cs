@@ -4,7 +4,6 @@
 using ElCamino.Duende.IdentityServer.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
 using Azure.Storage.Blobs;
-using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
 using System.Linq;

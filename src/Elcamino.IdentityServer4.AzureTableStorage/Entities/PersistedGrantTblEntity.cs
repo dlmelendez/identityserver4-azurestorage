@@ -2,14 +2,16 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
-using Microsoft.Azure.Cosmos.Table;
+using Azure;
+using Azure.Data.Tables;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
 {
-    public class PersistedGrantTblEntity : TableEntity
+    public class PersistedGrantTblEntity : ITableEntity
     {
         /// <summary>
         /// Gets or sets the key.
@@ -89,7 +91,11 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
         /// <value>
         /// The data.
         /// </value>
-        [IgnoreProperty]
+        [IgnoreDataMember]
         public string Data { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
 }

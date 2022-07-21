@@ -6,7 +6,6 @@
 using ElCamino.Duende.IdentityServer.AzureStorage.Configuration;
 using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
 using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
-using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

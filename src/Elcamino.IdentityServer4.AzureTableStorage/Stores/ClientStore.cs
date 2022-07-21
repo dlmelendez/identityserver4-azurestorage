@@ -9,14 +9,14 @@ using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Model = Duende.IdentityServer.Models;
-
+using Azure.Data.Tables;
+using System.Text.Json;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
 {
@@ -68,7 +68,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             Entities.Client entity = model.ToEntity();
             try
             {
-                await StorageContext.SaveBlobWithHashedKeyAsync(entity.ClientId, JsonConvert.SerializeObject(entity), StorageContext.ClientBlobContainer)
+                await StorageContext.SaveBlobWithHashedKeyAsync(entity.ClientId, JsonSerializer.Serialize(entity, StorageContext.JsonSerializerDefaultOptions), StorageContext.ClientBlobContainer)
                     .ConfigureAwait(false);
                 var entities = await GetAllClientEntities().ConfigureAwait(false);
                 entities = entities.Where(e => entity.ClientId != e.ClientId).Concat(new Entities.Client[] { entity });

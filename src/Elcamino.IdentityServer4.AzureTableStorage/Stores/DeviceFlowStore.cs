@@ -9,7 +9,6 @@ using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
 using Azure.Storage.Blobs;
-using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,7 +18,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using IdentityModel;
 using Duende.IdentityServer.Stores.Serialization;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
 {
@@ -70,7 +69,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
         /// <returns></returns>
         public virtual async Task StoreDeviceAuthorizationAsync(string deviceCode, string userCode, DeviceCode data)
         {
-            string entityJson = JsonConvert.SerializeObject(ToEntity(data, deviceCode, userCode));
+            string entityJson = JsonSerializer.Serialize(ToEntity(data, deviceCode, userCode), Context.JsonSerializerDefaultOptions);
             await Task.WhenAll(Context.SaveBlobWithHashedKeyAsync(deviceCode, entityJson, Context.DeviceCodeBlobContainer),
                                Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer))
                 .ConfigureAwait(false);
@@ -139,7 +138,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             existingUserCode.SubjectId = data.Subject?.FindFirst(JwtClaimTypes.Subject).Value;
             existingUserCode.Data = entity.Data;
 
-            string entityJson = JsonConvert.SerializeObject(existingUserCode);
+            string entityJson = JsonSerializer.Serialize(existingUserCode, Context.JsonSerializerDefaultOptions);
             await Task.WhenAll(Context.SaveBlobWithHashedKeyAsync(deviceCode, entityJson, Context.DeviceCodeBlobContainer),
                                Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer))
                 .ConfigureAwait(false);

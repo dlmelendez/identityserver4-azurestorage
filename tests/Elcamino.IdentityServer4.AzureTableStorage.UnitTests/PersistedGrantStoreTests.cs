@@ -31,16 +31,19 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             string type = null,
             string session = null)
         {
+            DateTime dateTime = DateTime.UtcNow;
             return new PersistedGrant
             {
-                Key = key??Guid.NewGuid().ToString(),
-                Type = type??"authorization_code",
-                ClientId = clientId??Guid.NewGuid().ToString(),
-                SubjectId = subjectId??Guid.NewGuid().ToString(),
-                CreationTime = new DateTime(2016, 08, 01),
-                Expiration = new DateTime(2016, 08, 31),
+                Key = key ?? Guid.NewGuid().ToString(),
+                Type = type ?? "authorization_code",
+                ClientId = clientId ?? Guid.NewGuid().ToString(),
+                SubjectId = subjectId ?? Guid.NewGuid().ToString(),
+                CreationTime = dateTime.AddDays(-31),
+                Expiration = dateTime.AddDays(31),
                 SessionId = session ?? Guid.NewGuid().ToString(),
-                Data = JsonConvert.SerializeObject(new Token())
+                Data = JsonConvert.SerializeObject(new Token()),
+                ConsumedTime = dateTime.AddMinutes(-6),
+                Description = "Test Grant"
             };
         }
 
