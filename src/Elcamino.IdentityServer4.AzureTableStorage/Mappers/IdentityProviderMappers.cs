@@ -1,22 +1,21 @@
-﻿// Copyright (c) Duende Software. All rights reserved.
+// Copyright (c) Duende Software. All rights reserved.
 // See LICENSE in the project root for license information.
 
 
 using AutoMapper;
-
 using Entities = ElCamino.Duende.IdentityServer.AzureStorage.Entities;
 using Models = Duende.IdentityServer.Models;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
 
 /// <summary>
-/// Extension methods to map to/from entity/model for clients.
+/// Extension methods to map to/from entity/model for identity providers.
 /// </summary>
-public static class ClientMappers
+public static class IdentityProviderMappers
 {
-    static ClientMappers()
+    static IdentityProviderMappers()
     {
-        Mapper = new MapperConfiguration(cfg => cfg.AddProfile<ClientMapperProfile>())
+        Mapper = new MapperConfiguration(cfg => cfg.AddProfile<IdentityProviderMapperProfile>())
             .CreateMapper();
     }
 
@@ -27,9 +26,9 @@ public static class ClientMappers
     /// </summary>
     /// <param name="entity">The entity.</param>
     /// <returns></returns>
-    public static Models.Client ToModel(this Entities.Client entity)
+    public static Models.IdentityProvider ToModel(this Entities.IdentityProvider entity)
     {
-        return Mapper.Map<Models.Client>(entity);
+        return entity == null ? null : Mapper.Map<Models.IdentityProvider>(entity);
     }
 
     /// <summary>
@@ -37,8 +36,8 @@ public static class ClientMappers
     /// </summary>
     /// <param name="model">The model.</param>
     /// <returns></returns>
-    public static Entities.Client ToEntity(this Models.Client model)
+    public static Entities.IdentityProvider ToEntity(this Models.IdentityProvider model)
     {
-        return Mapper.Map<Entities.Client>(model);
+        return model == null ? null : Mapper.Map<Entities.IdentityProvider>(model);
     }
 }

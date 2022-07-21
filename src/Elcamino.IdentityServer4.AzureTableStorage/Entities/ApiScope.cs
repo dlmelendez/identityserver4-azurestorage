@@ -5,6 +5,7 @@
 
 #pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
@@ -21,5 +22,9 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
         public bool ShowInDiscoveryDocument { get; set; } = true;
         public List<ApiScopeClaim> UserClaims { get; set; }
         public List<ApiScopeProperty> Properties { get; set; }
+        public DateTime Created { get; set; } = DateTime.UtcNow;
+        public DateTime? Updated { get; set; }
+        public DateTime? LastAccessed { get; set; }
+        public bool NonEditable { get; set; }
     }
 }

@@ -65,7 +65,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
 
         public async Task StoreAsync(Client model)
         {
-            var entity = model.ToEntity();
+            Entities.Client entity = model.ToEntity();
             try
             {
                 await StorageContext.SaveBlobWithHashedKeyAsync(entity.ClientId, JsonConvert.SerializeObject(entity), StorageContext.ClientBlobContainer)

@@ -60,12 +60,19 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
         public string PairWiseSubjectSalt { get; set; }
         public List<ClientCorsOrigin> AllowedCorsOrigins { get; set; }
         public List<ClientProperty> Properties { get; set; }
-        public DateTime Created { get; set; } = DateTime.UtcNow;
-        public DateTime? Updated { get; set; }
-        public DateTime? LastAccessed { get; set; }
         public int? UserSsoLifetime { get; set; }
         public string UserCodeType { get; set; }
         public int DeviceCodeLifetime { get; set; } = 300;
+
+        public int? CibaLifetime { get; set; }
+        public int? PollingInterval { get; set; }
+
+        public bool? CoordinateLifetimeWithUserSession { get; set; }
+
+        public DateTime Created { get; set; } = DateTime.UtcNow;
+        public DateTime? Updated { get; set; }
+        public DateTime? LastAccessed { get; set; }
         public bool NonEditable { get; set; }
+
     }
 }

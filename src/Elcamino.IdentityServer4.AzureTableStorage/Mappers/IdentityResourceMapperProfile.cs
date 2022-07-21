@@ -11,28 +11,26 @@ using Models = Duende.IdentityServer.Models;
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
 
 /// <summary>
-/// Defines entity/model mapping for scopes.
+/// Defines entity/model mapping for identity resources.
 /// </summary>
 /// <seealso cref="AutoMapper.Profile" />
-public class ScopeMapperProfile : Profile
+public class IdentityResourceMapperProfile : Profile
 {
     /// <summary>
-    /// <see cref="ScopeMapperProfile"/>
+    /// <see cref="IdentityResourceMapperProfile"/>
     /// </summary>
-    public ScopeMapperProfile()
+    public IdentityResourceMapperProfile()
     {
-        CreateMap<Entities.ApiScopeProperty, KeyValuePair<string, string>>()
+        CreateMap<Entities.IdentityResourceProperty, KeyValuePair<string, string>>()
             .ReverseMap();
 
-        CreateMap<Entities.ApiScopeClaim, string>()
+        CreateMap<Entities.IdentityResource, Models.IdentityResource>(MemberList.Destination)
+            .ConstructUsing(src => new Models.IdentityResource())
+            .ReverseMap();
+
+        CreateMap<Entities.IdentityResourceClaim, string>()
             .ConstructUsing(x => x.Type)
             .ReverseMap()
             .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src));
-
-        CreateMap<Entities.ApiScope, Models.ApiScope>(MemberList.Destination)
-            .ConstructUsing(src => new Models.ApiScope())
-            .ForMember(x => x.Properties, opts => opts.MapFrom(x => x.Properties))
-            .ForMember(x => x.UserClaims, opts => opts.MapFrom(x => x.UserClaims))
-            .ReverseMap();
     }
 }
