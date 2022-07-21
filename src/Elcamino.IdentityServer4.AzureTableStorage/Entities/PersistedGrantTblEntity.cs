@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Entities
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
 {
     public class PersistedGrantTblEntity : TableEntity
     {

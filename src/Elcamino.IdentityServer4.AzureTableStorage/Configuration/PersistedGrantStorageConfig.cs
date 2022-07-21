@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Configuration
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Configuration
 {
     [JsonObject("persistedGrantStorageConfig")]
     public class PersistedGrantStorageConfig

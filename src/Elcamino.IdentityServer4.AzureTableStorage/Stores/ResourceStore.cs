@@ -1,13 +1,13 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-// Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/IdentityServer4
+// Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using ElCamino.IdentityServer4.AzureStorage.Contexts;
-using ElCamino.IdentityServer4.AzureStorage.Helpers;
-using ElCamino.IdentityServer4.AzureStorage.Interfaces;
-using ElCamino.IdentityServer4.AzureStorage.Mappers;
-using IdentityServer4.Models;
-using IdentityServer4.Stores;
+using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
+using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
+using ElCamino.Duende.IdentityServer.AzureStorage.Interfaces;
+using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Stores;
 using Microsoft.Azure.Cosmos.Table;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
@@ -17,16 +17,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Model = IdentityServer4.Models;
-using ElCamino.IdentityServer4.AzureStorage.Entities;
+using Model = Duende.IdentityServer.Models;
+using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
 using Microsoft.OData.UriParser.Aggregation;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Stores
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
 {
     /// <summary>
     /// Implementation of IResourceStore thats uses EF.
     /// </summary>
-    /// <seealso cref="IdentityServer4.Stores.IResourceStore" />
+    /// <seealso cref="Duende.IdentityServer.Stores.IResourceStore" />
     public class ResourceStore : IResourceStore
     {
         public ResourceStorageContext StorageContext { get; private set; }

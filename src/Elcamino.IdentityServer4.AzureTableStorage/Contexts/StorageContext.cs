@@ -1,7 +1,7 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer4.AzureStorage.Helpers;
+using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
 using Microsoft.Azure.Cosmos.Table;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs.Models;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Contexts
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
 {
     public class StorageContext
     {

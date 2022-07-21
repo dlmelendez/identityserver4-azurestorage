@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Helpers
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Helpers
 {
     public static class IAsyncEnumerableExtensions
     {

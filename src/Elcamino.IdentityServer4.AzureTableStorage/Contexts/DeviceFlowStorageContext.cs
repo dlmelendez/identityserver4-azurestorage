@@ -1,7 +1,7 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer4.AzureStorage.Configuration;
+using ElCamino.Duende.IdentityServer.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
 using Azure.Storage.Blobs;
 using Microsoft.Azure.Cosmos.Table;
@@ -10,11 +10,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ElCamino.IdentityServer4.AzureStorage.Entities;
-using ElCamino.IdentityServer4.AzureStorage.Helpers;
-using ElCamino.IdentityServer4.AzureStorage.Mappers;
+using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
+using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
+using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Contexts
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
 {
     public class DeviceFlowStorageContext : StorageContext
     {

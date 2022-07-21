@@ -1,16 +1,16 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-// Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/IdentityServer4
+// Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
 using AutoMapper;
-using ElCamino.IdentityServer4.AzureStorage.Helpers;
-using ElCamino.IdentityServer4.AzureStorage.Entities;
-using IdentityServer4.Models;
+using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
+using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
+using Duende.IdentityServer.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Mappers
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Mappers
 {
     public static class PersistedGrantMappers
     {

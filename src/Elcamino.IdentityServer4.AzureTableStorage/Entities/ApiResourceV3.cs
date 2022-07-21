@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Entities
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
 {
     /// <summary>
     /// Used for migration only

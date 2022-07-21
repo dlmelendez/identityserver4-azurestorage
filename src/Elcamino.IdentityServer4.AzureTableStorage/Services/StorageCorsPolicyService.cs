@@ -1,19 +1,19 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-// Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/IdentityServer4
+// Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using ElCamino.IdentityServer4.AzureStorage.Stores;
-using IdentityServer4.Services;
+using ElCamino.Duende.IdentityServer.AzureStorage.Stores;
+using Duende.IdentityServer.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ElCamino.IdentityServer4.AzureStorage.Helpers;
-using ElCamino.IdentityServer4.AzureStorage.Interfaces;
+using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
+using ElCamino.Duende.IdentityServer.AzureStorage.Interfaces;
 
-namespace ElCamino.IdentityServer4.AzureStorage.Services
+namespace ElCamino.Duende.IdentityServer.AzureStorage.Services
 {
     public class StorageCorsPolicyService : ICorsPolicyService
     {

@@ -11,11 +11,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ElCamino.IdentityServer4.AzureStorage;
-using ElCamino.IdentityServer4.AzureStorage.Stores;
-using IdentityServer4.Stores.Serialization;
+using ElCamino.Duende.IdentityServer.AzureStorage;
+using ElCamino.Duende.IdentityServer.AzureStorage.Stores;
+using Duende.IdentityServer.Stores.Serialization;
 
-namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
+namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
 {
     public class BaseTests
     {
@@ -33,14 +33,14 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
 
             Services = new ServiceCollection();
 
-            Services.AddPersistedGrantContext(Configuration.GetSection("IdentityServer4:persistedGrantStorageConfig"))
+            Services.AddPersistedGrantContext(Configuration.GetSection("IdentityServer:persistedGrantStorageConfig"))
                 .CreatePersistedGrantStorage();
-            Services.AddClientContext(Configuration.GetSection("IdentityServer4:clientStorageConfig"))
+            Services.AddClientContext(Configuration.GetSection("IdentityServer:clientStorageConfig"))
                .CreateClientStorage();
-            Services.AddResourceContext(Configuration.GetSection("IdentityServer4:resourceStorageConfig"))
+            Services.AddResourceContext(Configuration.GetSection("IdentityServer:resourceStorageConfig"))
                .CreateResourceStorage();
             Services.AddTransient<IPersistentGrantSerializer>((f) =>  new PersistentGrantSerializer());
-            Services.AddDeviceFlowContext(Configuration.GetSection("IdentityServer4:deviceFlowStorageConfig"))
+            Services.AddDeviceFlowContext(Configuration.GetSection("IdentityServer:deviceFlowStorageConfig"))
                .CreateDeviceFlowStorage();
             Services.AddLogging();
 

@@ -1,10 +1,10 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer4.AzureStorage.Contexts;
-using ElCamino.IdentityServer4.AzureStorage.Stores;
-using IdentityServer4;
-using IdentityServer4.Models;
+using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
+using ElCamino.Duende.IdentityServer.AzureStorage.Stores;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,9 +14,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Model = IdentityServer4.Models;
+using Model = Duende.IdentityServer.Models;
 
-namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
+namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
 {
     [TestClass]
     public class ClientStoreTests : BaseTests
