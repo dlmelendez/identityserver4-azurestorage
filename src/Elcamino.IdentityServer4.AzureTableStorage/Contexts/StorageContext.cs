@@ -22,7 +22,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
     {
         protected StorageContext() { }
 
-        public JsonSerializerOptions JsonSerializerDefaultOptions => new(JsonSerializerDefaults.Web);
+        public virtual JsonSerializerOptions JsonSerializerDefaultOptions => new(JsonSerializerDefaults.Web);
 
         public async Task<string> GetBlobContentAsync(string keyNotHashed, BlobContainerClient container)
         {

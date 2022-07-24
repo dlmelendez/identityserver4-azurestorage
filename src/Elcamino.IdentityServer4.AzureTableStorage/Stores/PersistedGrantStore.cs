@@ -86,7 +86,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             TableQuery tq = new TableQuery();
             tq.FilterString = tableFilter;
 
-            _logger.LogDebug($"removing persisted grants from database for table filter {tableFilter} ");
+            _logger.LogDebug(message: $"removing persisted grants from database for table filter {tableFilter} ");
 
 
             var mainTasks = (await StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity>(tq, table)
@@ -123,7 +123,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
             }
         }
 
-        private string GetTableFilter(PersistedGrantFilter grantFilter)
+        private static string GetTableFilter(PersistedGrantFilter grantFilter)
         {
             string hashedSubject = KeyGeneratorHelper.GenerateHashValue(grantFilter.SubjectId);
 

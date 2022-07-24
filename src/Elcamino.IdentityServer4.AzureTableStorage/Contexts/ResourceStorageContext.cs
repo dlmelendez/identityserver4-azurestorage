@@ -86,7 +86,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
 
             if (string.IsNullOrWhiteSpace(ApiResourceTableName))
             {
-                throw new ArgumentException($"ApiResourceTableName cannot be null or empty, check your configuration.", nameof(config.ApiTableName));
+                throw new ArgumentException($"{nameof(config.ApiTableName)} cannot be null or empty, check your configuration.", nameof(config));
             }
 
             ApiResourceTable = TableClient.GetTableClient(ApiResourceTableName);
@@ -97,7 +97,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
             ApiBlobContainerName = config.ApiBlobContainerName;
             if (string.IsNullOrWhiteSpace(ApiBlobContainerName))
             {
-                throw new ArgumentException($"ApiBlobContainerName cannot be null or empty, check your configuration.", nameof(config.ApiBlobContainerName));
+                throw new ArgumentException($"{nameof(config.ApiBlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             ApiResourceBlobContainer = BlobClient.GetBlobContainerClient(ApiBlobContainerName);
 
@@ -108,7 +108,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
             ApiScopeBlobContainerName = config.ApiScopeBlobContainerName;
             if (string.IsNullOrWhiteSpace(ApiScopeBlobContainerName))
             {
-                throw new ArgumentException($"ApiScopeBlobContainerName cannot be null or empty, check your configuration.", nameof(config.ApiScopeBlobContainerName));
+                throw new ArgumentException($"{nameof(config.ApiScopeBlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             ApiScopeBlobContainer = BlobClient.GetBlobContainerClient(ApiScopeBlobContainerName);
 
@@ -119,7 +119,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
             IdentityBlobContainerName = config.IdentityBlobContainerName;
             if (string.IsNullOrWhiteSpace(IdentityBlobContainerName))
             {
-                throw new ArgumentException($"IdentityBlobContainerName cannot be null or empty, check your configuration.", nameof(config.IdentityBlobContainerName));
+                throw new ArgumentException($"{nameof(config.IdentityBlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             IdentityResourceBlobContainer = BlobClient.GetBlobContainerClient(IdentityBlobContainerName);
 

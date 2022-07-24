@@ -64,7 +64,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
 
             if (string.IsNullOrWhiteSpace(PersistedGrantTableName))
             {
-                throw new ArgumentException($"PersistedGrantTableName cannot be null or empty, check your configuration.", nameof(config.PersistedGrantTableName));
+                throw new ArgumentException($"{nameof(config.PersistedGrantTableName)} cannot be null or empty, check your configuration.", nameof(config));
             }
 
             PersistedGrantTable = TableClient.GetTableClient(PersistedGrantTableName);
@@ -73,7 +73,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
             BlobContainerName = config.BlobContainerName;
             if (string.IsNullOrWhiteSpace(BlobContainerName))
             {
-                throw new ArgumentException($"BlobContainerName cannot be null or empty, check your configuration.", nameof(config.BlobContainerName));
+                throw new ArgumentException($"{nameof(config.BlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             PersistedGrantBlobContainer = BlobClient.GetBlobContainerClient(BlobContainerName);
 

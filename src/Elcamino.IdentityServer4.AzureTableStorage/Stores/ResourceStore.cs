@@ -323,7 +323,6 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
 
         public async Task UpdateApiResourceCacheFileAsync(IEnumerable<Entities.ApiResource> entities)
         {
-            DateTime dateTimeNow = DateTime.UtcNow;
             (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.ApiResource>(entities, StorageContext.ApiResourceBlobCacheContainer)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateApiResourceCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
@@ -331,7 +330,6 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
 
         public async Task UpdateApiScopeCacheFileAsync(IEnumerable<Entities.ApiScope> entities)
         {
-            DateTime dateTimeNow = DateTime.UtcNow;
             (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.ApiScope>(entities, StorageContext.ApiScopeBlobCacheContainer)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateApiScopeCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
@@ -339,7 +337,6 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
 
         public async Task UpdateIdentityResourceCacheFileAsync(IEnumerable<Entities.IdentityResource> entities)
         {
-            DateTime dateTimeNow = DateTime.UtcNow;
             (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.IdentityResource>(entities, StorageContext.IdentityResourceBlobCacheContainer)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateIdentityResourceCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
