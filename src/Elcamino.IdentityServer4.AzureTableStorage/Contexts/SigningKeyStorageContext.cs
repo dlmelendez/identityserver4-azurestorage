@@ -17,13 +17,12 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
     {
         private SigningKeyStorageConfig _config = null;
         private string BlobContainerName = string.Empty;
-        private string BlobCacheContainerName = string.Empty;
 
         public BlobServiceClient BlobClient { get; private set; }
 
         public BlobContainerClient SigningKeyBlobContainer { get; private set; }
 
-        public override JsonSerializerOptions JsonSerializerDefaultOptions => new JsonSerializerOptions() { IncludeFields = true };
+        public override JsonSerializerOptions JsonSerializerDefaultOptions => new () { IncludeFields = true };
 
         public SigningKeyStorageContext(IOptions<SigningKeyStorageConfig> config) : this(config.Value)
         {

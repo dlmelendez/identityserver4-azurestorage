@@ -3,7 +3,6 @@
 
 using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
 using ElCamino.Duende.IdentityServer.AzureStorage.Stores;
-using Duende.IdentityServer;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
 using Microsoft.Extensions.DependencyInjection;
@@ -181,7 +180,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             stopwatch.Reset();
             stopwatch.Start();
             var resources = await store.GetAllResourcesAsync();
-            int count = resources.ApiResources.Count();
+            int count = resources.ApiResources.Count;
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.GetAllResourcesAsync().ApiResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
             Assert.IsTrue(count > 0);
@@ -221,7 +220,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             stopwatch.Reset();
             stopwatch.Start();
             var resources = await store.GetAllResourcesAsync();
-            int count = resources.ApiResources.Count();
+            int count = resources.ApiResources.Count;
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.GetAllResourcesAsync().ApiResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
             Assert.IsNotNull(resources.ApiResources.FirstOrDefault(f=> f.Name == name));
@@ -276,7 +275,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             stopwatch.Reset();
             stopwatch.Start();
             var resources = await store.GetAllResourcesAsync();
-            int count = resources.IdentityResources.Count();
+            int count = resources.IdentityResources.Count;
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.GetAllResourcesAsync().IdentityResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<int>(GetIdentityResources().Count(), count) ;
@@ -305,7 +304,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             stopwatch.Reset();
             stopwatch.Start();
             var resources = await store.GetAllResourcesAsync();
-            int count = resources.IdentityResources.Count();
+            int count = resources.IdentityResources.Count;
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.GetAllResourcesAsync().IdentityResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
             Assert.IsTrue(count > 0);

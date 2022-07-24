@@ -9,7 +9,6 @@ using Duende.IdentityServer.Stores.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,8 +31,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             string clientId = null,
             bool? isAuthorized = null,
             bool? isOpenId = null,
-            int? lifetime = null,
-            string type = null)
+            int? lifetime = null)
         {
             const string Issuer = "https://identityserver.com";
             var claims = new List<Claim> 
@@ -261,8 +259,6 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             string deviceCode = Guid.NewGuid().ToString("n");
             Console.WriteLine($"userCode: {userCode}");
             Console.WriteLine($"deviceCode: {deviceCode}");
-
-            DeviceCode deviceCodeData = CreateTestObject();
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();

@@ -1,4 +1,4 @@
-// Copyright (c) David Melendez. All rights reserved.
+﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
@@ -9,13 +9,13 @@ using Duende.IdentityServer.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Token = Duende.IdentityServer.Models.Token;
+using System.Text.Json;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
 {
@@ -24,7 +24,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
     {
         private ILogger<PersistedGrantStore> _logger;
 
-        private static PersistedGrant CreateTestObject(
+        private static PersistedGrant CreateTestObject(JsonSerializerOptions serializerOptions,
             string key = null,
             string subjectId = null, 
             string clientId = null, 
@@ -41,7 +41,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
                 CreationTime = dateTime.AddDays(-31),
                 Expiration = dateTime.AddDays(31),
                 SessionId = session ?? Guid.NewGuid().ToString(),
-                Data = JsonConvert.SerializeObject(new Token()),
+                Data = JsonSerializer.Serialize(new Token(), serializerOptions),
                 ConsumedTime = dateTime.AddMinutes(-6),
                 Description = "Test Grant"
             };
@@ -77,8 +77,8 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
 
             for (int iCounter = 0; iCounter < 10; iCounter++)
             {
-                var grant = CreateTestObject();
-                Console.WriteLine(JsonConvert.SerializeObject(grant));
+                var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions);
+                Console.WriteLine(JsonSerializer.Serialize(grant, storageContext.JsonSerializerDefaultOptions));
 
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
@@ -107,9 +107,9 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             var store = new PersistedGrantStore(storageContext, _logger);
             Assert.IsNotNull(store);
 
-            var grant = CreateTestObject();
+            var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions);
             grant.Expiration = DateTime.UtcNow.AddHours(-1);
-            Console.WriteLine(JsonConvert.SerializeObject(grant));
+            Console.WriteLine(JsonSerializer.Serialize(grant, storageContext.JsonSerializerDefaultOptions));
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -176,8 +176,8 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             var store = new PersistedGrantStore(storageContext, _logger);
             Assert.IsNotNull(store);
 
-            var grant = CreateTestObject();
-            Console.WriteLine(JsonConvert.SerializeObject(grant));
+            var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions);
+            Console.WriteLine(JsonSerializer.Serialize(grant, storageContext.JsonSerializerDefaultOptions));
 
             await store.StoreAsync(grant);
 
@@ -212,8 +212,8 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             List<PersistedGrant> grants = new List<PersistedGrant>();
             for (int iCounter = 0; iCounter < 10; iCounter++)
             {
-                var grant = CreateTestObject(subjectId: subject);
-                Console.WriteLine(JsonConvert.SerializeObject(grant));
+                var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions, subjectId: subject);
+                Console.WriteLine(JsonSerializer.Serialize(grant, storageContext.JsonSerializerDefaultOptions));
 
                 await store.StoreAsync(grant);
                 grants.Add(grant);
@@ -242,8 +242,8 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             List<PersistedGrant> grants = new List<PersistedGrant>();
             for (int iCounter = 0; iCounter < 10; iCounter++)
             {
-                var grant = CreateTestObject(subjectId: subject, clientId: client);
-                Console.WriteLine(JsonConvert.SerializeObject(grant));
+                var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions, subjectId: subject, clientId: client);
+                Console.WriteLine(JsonSerializer.Serialize(grant, storageContext.JsonSerializerDefaultOptions));
 
                 await store.StoreAsync(grant);
                 grants.Add(grant);
@@ -282,8 +282,8 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             List<PersistedGrant> grants = new List<PersistedGrant>();
             for (int iCounter = 0; iCounter < 10; iCounter++)
             {
-                var grant = CreateTestObject(subjectId: subject, clientId: client, type: type);
-                Console.WriteLine(JsonConvert.SerializeObject(grant));
+                var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions, subjectId: subject, clientId: client, type: type);
+                Console.WriteLine(JsonSerializer.Serialize(grant, storageContext.JsonSerializerDefaultOptions));
 
                 await store.StoreAsync(grant);
                 grants.Add(grant);
@@ -323,11 +323,11 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             List<PersistedGrant> grants = new List<PersistedGrant>();
             for (int iCounter = 0; iCounter < 10; iCounter++)
             {                
-                var grant = CreateTestObject(subjectId: subject, 
+                var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions, subjectId: subject, 
                     clientId: client, 
                     type: type,
                     session: (session + iCounter.ToString()));
-                Console.WriteLine(JsonConvert.SerializeObject(grant));
+                Console.WriteLine(JsonSerializer.Serialize(grant, storageContext.JsonSerializerDefaultOptions));
 
                 await store.StoreAsync(grant);
                 grants.Add(grant);
@@ -351,7 +351,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
 
         }
 
-        public void AssertGrantsEqual(PersistedGrant expected, PersistedGrant actual, bool checkData = true)
+        public static void AssertGrantsEqual(PersistedGrant expected, PersistedGrant actual, bool checkData = true)
         {
             Assert.IsNotNull(expected);
             Assert.IsNotNull(actual);

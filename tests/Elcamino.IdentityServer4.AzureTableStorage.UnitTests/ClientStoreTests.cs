@@ -8,13 +8,13 @@ using Duende.IdentityServer.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Model = Duende.IdentityServer.Models;
+using System.Text.Json;
 
 namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
 {
@@ -85,7 +85,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             Assert.IsNotNull(store);
 
             var client = CreateTestObject();
-            Console.WriteLine(JsonConvert.SerializeObject(client));
+            Console.WriteLine(JsonSerializer.Serialize(client, storageContext.JsonSerializerDefaultOptions));
 
             stopwatch.Start();
             await store.StoreAsync(client);
@@ -128,7 +128,7 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
 
             var client = CreateTestObject();
             client.ClientId = Guid.NewGuid().ToString();
-            Console.WriteLine(JsonConvert.SerializeObject(client));
+            Console.WriteLine(JsonSerializer.Serialize(client, storageContext.JsonSerializerDefaultOptions));
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
