@@ -1,5 +1,5 @@
-﻿// Copyright (c) Duende Software. All rights reserved.
-// See LICENSE in the project root for license information.
+﻿// Copyright (c) David Melendez. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
 using System;
@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores;
 
 /// <summary>
-/// Implementation of ISigningKeyStore thats uses EF.
+/// Implementation of ISigningKeyStore thats uses Azure Storage.
 /// </summary>
 /// <seealso cref="ISigningKeyStore" />
 public class SigningKeyStore : ISigningKeyStore
@@ -30,11 +30,6 @@ public class SigningKeyStore : ISigningKeyStore
     /// The StorageContext.
     /// </summary>
     protected readonly SigningKeyStorageContext StorageContext;
-
-    /// <summary>
-    /// The CancellationToken provider.
-    /// </summary>
-    protected readonly ICancellationTokenProvider CancellationTokenProvider;
 
     /// <summary>
     /// The logger.
@@ -48,11 +43,10 @@ public class SigningKeyStore : ISigningKeyStore
     /// <param name="logger">The logger.</param>
     /// <param name="cancellationTokenProvider"></param>
     /// <exception cref="ArgumentNullException">context</exception>
-    public SigningKeyStore(SigningKeyStorageContext context, ILogger<SigningKeyStore> logger, ICancellationTokenProvider cancellationTokenProvider)
+    public SigningKeyStore(SigningKeyStorageContext context, ILogger<SigningKeyStore> logger)
     {
         StorageContext = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger;
-        CancellationTokenProvider = cancellationTokenProvider;
     }
 
     /// <summary>

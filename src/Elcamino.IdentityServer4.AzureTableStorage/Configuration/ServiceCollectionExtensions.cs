@@ -101,6 +101,25 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
+        public static IServiceCollection AddSigningKeyContext(this IServiceCollection services,
+          IConfiguration signingKeyStorageConfigSection)
+        {
+            var signingKeyStorageContextType = typeof(SigningKeyStorageContext);
+            //IdSrv4 adds the store, Type signingKeyStoreType = typeof(SigningKeyStore);
+
+            services.Configure<SigningKeyStorageConfig>(signingKeyStorageConfigSection)
+                .AddScoped(signingKeyStorageContextType, signingKeyStorageContextType);
+            //IdSrv4 adds the store,.AddScoped(signingKeyStoreType, signingKeyStoreType);
+            return services;
+        }
+
+        public static IServiceCollection CreateSigningKeyStorage(this IServiceCollection services)
+        {
+            var storageContext = services.BuildServiceProvider().GetService<SigningKeyStorageContext>();
+            storageContext.CreateStorageIfNotExists().Wait();
+            return services;
+        }
+
         public static IServiceCollection MigrateResourceV3Storage(this IServiceCollection services)
         {
             ResourceStore resourceStore = services.BuildServiceProvider().GetService<IResourceStore>() as ResourceStore;

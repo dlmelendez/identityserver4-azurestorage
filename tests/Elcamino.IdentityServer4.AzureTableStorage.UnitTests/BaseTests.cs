@@ -42,6 +42,10 @@ namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
             Services.AddTransient<IPersistentGrantSerializer>((f) =>  new PersistentGrantSerializer());
             Services.AddDeviceFlowContext(Configuration.GetSection("IdentityServer:deviceFlowStorageConfig"))
                .CreateDeviceFlowStorage();
+            Services.AddSigningKeyContext(Configuration.GetSection("IdentityServer:signingKeyStorageConfig"))
+               .CreateSigningKeyStorage();
+            Services.AddIdentityServer()
+                .AddKeyManagement();
             Services.AddLogging();
 
         }
