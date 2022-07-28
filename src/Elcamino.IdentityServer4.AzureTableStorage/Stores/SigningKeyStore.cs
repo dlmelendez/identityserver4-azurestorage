@@ -129,7 +129,7 @@ public class SigningKeyStore : ISigningKeyStore
             ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
             {
                 _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-                _logger.LogWarning("exception updating {clientId} client in  storage: {error}", keyId, rfex.Message);
+                _logger.LogWarning("exception updating {keyId} signing key in  storage: {error}", keyId, rfex.Message);
             });
             throw;
         }
@@ -137,7 +137,7 @@ public class SigningKeyStore : ISigningKeyStore
         {
             _logger.LogError(rfex, rfex.Message);
             _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-            _logger.LogWarning("exception updating {clientId} client in  storage: {error}", keyId, rfex.Message);
+            _logger.LogWarning("exception updating {keyId} signing key in  storage: {error}", keyId, rfex.Message);
             throw;
         }
     }
