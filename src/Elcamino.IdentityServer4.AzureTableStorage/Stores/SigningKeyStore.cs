@@ -99,14 +99,14 @@ public class SigningKeyStore : ISigningKeyStore
             ExceptionHelper.LogStorageExceptions(agg, storageLogger: (rfex) =>
             {
                 _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-                _logger.LogWarning("exception updating {clientName} persisted grant in blob storage: {error}", model?.Id, rfex.Message);
+                _logger.LogWarning("exception updating {keyId} key in blob storage: {error}", model?.Id, rfex.Message);
             });
             throw;
         }
         catch (RequestFailedException rfex)
         {
             _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-            _logger.LogWarning("exception updating {clientName} persisted grant in blob storage: {error}", model?.Id, rfex.Message);
+            _logger.LogWarning("exception updating {keyId} key in blob storage: {error}", model?.Id, rfex.Message);
             throw;
         }
     }
@@ -129,7 +129,7 @@ public class SigningKeyStore : ISigningKeyStore
             ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
             {
                 _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-                _logger.LogWarning("exception updating {keyId} signing key in  storage: {error}", keyId, rfex.Message);
+                _logger.LogWarning("exception updating {keyId} key in  storage: {error}", keyId, rfex.Message);
             });
             throw;
         }
@@ -137,7 +137,7 @@ public class SigningKeyStore : ISigningKeyStore
         {
             _logger.LogError(rfex, rfex.Message);
             _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-            _logger.LogWarning("exception updating {keyId} signing key in  storage: {error}", keyId, rfex.Message);
+            _logger.LogWarning("exception updating {keyId} key in  storage: {error}", keyId, rfex.Message);
             throw;
         }
     }
