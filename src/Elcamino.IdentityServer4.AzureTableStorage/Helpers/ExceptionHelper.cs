@@ -3,6 +3,7 @@
 
 
 using Azure;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,26 +12,28 @@ namespace ElCamino.IdentityServer4.AzureStorage.Helpers
 {
     public static class ExceptionHelper
     {
-        public static void LogStorageExceptions(AggregateException aggregate, 
-            Action<Microsoft.Azure.Cosmos.Table.StorageException> tableStorageLogger= null,
-            Action<RequestFailedException> blobStorageLogger = null)
+        public static void LogStorageExceptions(AggregateException aggregate,
+            Action<RequestFailedException> storageLogger)
         {
             if (aggregate.InnerExceptions != null)
             {
                 foreach (Exception ex in aggregate.InnerExceptions)
                 {
-                    Microsoft.Azure.Cosmos.Table.StorageException tableStorageException = ex as Microsoft.Azure.Cosmos.Table.StorageException;
-                    if (tableStorageException != null)
+                    RequestFailedException storageException = ex as RequestFailedException;
+                    if (ex != null)
                     {
-                        tableStorageLogger?.Invoke(tableStorageException);
-                    }
-                    RequestFailedException blobException = ex as RequestFailedException;
-                    if (blobException != null)
-                    {
-                        blobStorageLogger?.Invoke(blobException);
+                        if (storageLogger != null)
+                        {
+                            storageLogger?.Invoke(storageException);
+                        }
                     }
                 }
             }
+        }
+
+        public static void LogStorageError(this ILogger logger, RequestFailedException rfex)
+        {
+            logger.LogError(rfex, "storage exception ErrorCode: {errorCode}, Http Status Code: {status}", rfex.ErrorCode ?? string.Empty, rfex.Status);
         }
     }
 }

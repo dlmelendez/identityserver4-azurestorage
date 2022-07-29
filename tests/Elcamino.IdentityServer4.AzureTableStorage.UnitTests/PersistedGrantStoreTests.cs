@@ -37,8 +37,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
                 Type = type??"authorization_code",
                 ClientId = clientId??Guid.NewGuid().ToString(),
                 SubjectId = subjectId??Guid.NewGuid().ToString(),
-                CreationTime = new DateTime(2016, 08, 01),
-                Expiration = new DateTime(2016, 08, 31),
+                CreationTime = new DateTime(2016, 08, 01, 0, 0, 0, DateTimeKind.Utc),
+                Expiration = new DateTime(2016, 08, 31, 0, 0, 0, DateTimeKind.Utc),
                 SessionId = session ?? Guid.NewGuid().ToString(),
                 Data = JsonConvert.SerializeObject(new Token())
             };

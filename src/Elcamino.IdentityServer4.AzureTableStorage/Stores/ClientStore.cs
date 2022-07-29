@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/IdentityServer4
 
+using Azure;
+using Azure.Data.Tables;
 using ElCamino.IdentityServer4.AzureStorage.Contexts;
 using ElCamino.IdentityServer4.AzureStorage.Helpers;
 using ElCamino.IdentityServer4.AzureStorage.Interfaces;
@@ -64,7 +66,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
         public async Task StoreAsync(Client model)
         {
-            var entity = model.ToEntity();
+            Entities.Client entity = model.ToEntity();
             try
             {
                 await StorageContext.SaveBlobWithHashedKeyAsync(entity.ClientId, JsonConvert.SerializeObject(entity), StorageContext.ClientBlobContainer)
@@ -75,13 +77,22 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, tableStorageLogger:null, (blobEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, storageLogger: (rfex) =>
                 {
-                    _logger.LogWarning("exception updating {clientName} persisted grant in blob storage: {error}", model.ClientName, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception updating {clientName} persisted grant in blob storage: {error}", model.ClientName, rfex.Message);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception updating {clientName} persisted grant in blob storage: {error}", model.ClientName, rfex.Message);
+                throw;
             }
 
-        }      
+        }
 
         public async Task UpdateClientCacheFileAsync(IEnumerable<Entities.Client> entities)
         {
@@ -115,7 +126,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         {
             try
             {
-                await  StorageContext.DeleteBlobAsync(clientId, StorageContext.ClientBlobContainer)
+                await StorageContext.DeleteBlobAsync(clientId, StorageContext.ClientBlobContainer)
                     .ConfigureAwait(false);
                 var entities = await GetAllClientEntities().ConfigureAwait(false);
                 entities = entities.Where(e => clientId != e.ClientId);
@@ -123,15 +134,20 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, tableStorageLogger:null, (blobEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning("exception updating {clientId} client in blob storage: {error}", clientId, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception updating {clientId} client in  storage: {error}", clientId, rfex.Message);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception updating {clientId} client in  storage: {error}", clientId, rfex.Message);
+                throw;
             }
         }
-
-        
-       
-        
     }
 }

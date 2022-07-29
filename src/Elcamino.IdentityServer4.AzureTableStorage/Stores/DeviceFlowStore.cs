@@ -9,7 +9,7 @@ using ElCamino.IdentityServer4.AzureStorage.Entities;
 using IdentityServer4.Models;
 using IdentityServer4.Stores;
 using Azure.Storage.Blobs;
-using Microsoft.Azure.Cosmos.Table;
+using Azure.Data.Tables;
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -8,13 +8,14 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Azure;
 
 namespace ElCamino.IdentityServer4.AzureStorage.Helpers
 {
     public static class KeyGeneratorHelper
     {
 
-        public const string ETagWildCard = "*";
+        public static readonly ETag ETagWildCard = ETag.All;
         public const string MinSha1Hash = "0000000000000000000000000000000000000000";
         public const string MaxSha1Hash = "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ";
         /// <summary>

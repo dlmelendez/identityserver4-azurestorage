@@ -9,7 +9,7 @@ using ElCamino.IdentityServer4.AzureStorage.Entities;
 using IdentityServer4.Models;
 using IdentityServer4.Stores;
 using Azure.Storage.Blobs;
-using Microsoft.Azure.Cosmos.Table;
+using Azure.Data.Tables;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using IdentityServer4.Extensions;
+using Azure;
 
 namespace ElCamino.IdentityServer4.AzureStorage.Stores
 {
@@ -34,26 +35,32 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
         public async Task<IEnumerable<PersistedGrant>> GetAllAsync(PersistedGrantFilter grantFilter)
         {
+            return await GetAllExAsync(grantFilter).ToListAsync();
+        }
+
+        public async IAsyncEnumerable<PersistedGrant> GetAllExAsync(PersistedGrantFilter grantFilter)
+        {
+            int counter = 0;
             grantFilter.Validate();
             string tableFilter = GetTableFilter(grantFilter);
 
-            TableQuery<PersistedGrantTblEntity> tq = new TableQuery<PersistedGrantTblEntity>();
+            TableQuery tq = new TableQuery();
             tq.FilterString = tableFilter;
 
-            var list = (await StorageContext.GetAllByTableQueryAsync(tq, StorageContext.PersistedGrantTable).ConfigureAwait(false))
-                .Select(s => s.ToModel()).ToArray(); //without .ToArray() error occurs. 
-
-            await Task.WhenAll(list.Select(m =>
+            await foreach (var model in StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
+                (tq, StorageContext.PersistedGrantTable, p => p.ToModel()).ConfigureAwait(false))
             {
-                return StorageContext.GetBlobContentAsync(m.Key, StorageContext.PersistedGrantBlobContainer)
+                await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer)
                         .ContinueWith((blobTask) =>
-                       {
-                           m.Data = blobTask.Result;
-                       });
-            })).ConfigureAwait(false);
-            _logger.LogDebug($"{list.Count()} persisted grants found for table filter {tableFilter}");
-            return list;
+                        {
+                            model.Data = blobTask.Result;
+                        }).ConfigureAwait(false);
+                counter++;
+                yield return model;
+            }
+            _logger.LogDebug($"{counter} persisted grants found for table filter {tableFilter}");
         }
+
 
         public async Task<PersistedGrant> GetAsync(string key)
         {
@@ -74,21 +81,23 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         public async Task RemoveAllAsync(PersistedGrantFilter grantFilter)
         {
             grantFilter.Validate();
-            CloudTable table = StorageContext.PersistedGrantTable;
+            TableClient table = StorageContext.PersistedGrantTable;
 
             string tableFilter = GetTableFilter(grantFilter);
-            TableQuery<PersistedGrantTblEntity> tq = new TableQuery<PersistedGrantTblEntity>();
+            TableQuery tq = new TableQuery();
             tq.FilterString = tableFilter;
 
-            _logger.LogDebug($"removing persisted grants from database for table filter {tableFilter} ");
+            _logger.LogDebug(message: $"removing persisted grants from database for table filter {tableFilter} ");
 
 
-            var mainTasks = (await StorageContext.GetAllByTableQueryAsync(tq, StorageContext.PersistedGrantTable).ConfigureAwait(false))
+            var mainTasks = (await StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity>(tq, table)
+                .ToListAsync()
+                .ConfigureAwait(false))
                 .Select(subjectEntity =>
                 {
                     var deletes = subjectEntity.ToModel().ToEntities();
-                    return Task.WhenAll(StorageContext.GetAndDeleteTableEntityByKeysAsync(deletes.keyGrant.PartitionKey, deletes.keyGrant.RowKey, StorageContext.PersistedGrantTable),
-                                table.ExecuteAsync(TableOperation.Delete(subjectEntity)),
+                    return Task.WhenAll(table.DeleteEntityAsync(deletes.keyGrant.PartitionKey, deletes.keyGrant.RowKey, KeyGeneratorHelper.ETagWildCard),
+                                table.DeleteEntityAsync(subjectEntity.PartitionKey, subjectEntity.RowKey, KeyGeneratorHelper.ETagWildCard),
                                 StorageContext.DeleteBlobAsync(subjectEntity.Key, StorageContext.PersistedGrantBlobContainer));
                 });
             try
@@ -97,13 +106,19 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, (tableEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogDebug($"error removing persisted grants from table storage for table filter {tableFilter} ");
-                }, (blobEx) =>
-                {
-                    _logger.LogDebug($"error removing persisted grants from blob storage for table filter {tableFilter} ");
+                    _logger.LogStorageError(rfex);
+                    _logger.LogDebug("error removing persisted grants from storage for table filter {tableFilter} ", tableFilter);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogDebug($"error removing persisted grants from storage for table filter {tableFilter} ");
+                throw;
             }
         }
 
@@ -154,42 +169,51 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, (tableEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning("exception removing {persistedGrantKey} persisted grant in table storage: {error}", key?? string.Empty, tableEx.Message);
-                }, (blobEx) =>
-                {
-                    _logger.LogWarning("exception removing {persistedGrantKey} persisted grant in blob storage: {error}", key?? string.Empty, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception removing {persistedGrantKey} persisted grant in storage: {error}", key ?? string.Empty, rfex.Message);
                 });
+                throw;
             }
-           
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception removing {persistedGrantKey} persisted grant in storage: {error}", key ?? string.Empty, rfex.Message);
+                throw;
+            }
         }
 
-        
+
         public async Task StoreAsync(PersistedGrant grant)
         {
             var entities = grant.ToEntities();
-            CloudTable table = StorageContext.PersistedGrantTable;
+            TableClient table = StorageContext.PersistedGrantTable;
             try
             {
-                await Task.WhenAll(table.ExecuteAsync(TableOperation.InsertOrReplace(entities.keyGrant)),
-                    table.ExecuteAsync(TableOperation.InsertOrReplace(entities.subjectGrant)),
+                await Task.WhenAll(table.UpsertEntityAsync(entities.keyGrant, TableUpdateMode.Replace),
+                    table.UpsertEntityAsync(entities.subjectGrant, TableUpdateMode.Replace),
                     StorageContext.SaveBlobWithHashedKeyAsync(grant.Key, grant.Data, StorageContext.PersistedGrantBlobContainer))
                     .ConfigureAwait(false);
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, (tableEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning("exception updating {persistedGrantKey} persisted grant in table storage: {error}", grant.Key, tableEx.Message);
-                }, (blobEx) =>
-                {
-                    _logger.LogWarning("exception updating {persistedGrantKey} persisted grant in blob storage: {error}", grant.Key, blobEx.Message);
-                });                
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception updating {persistedGrantKey} persisted grant in blob storage: {error}", grant.Key, rfex.Message);
+                });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception updating {persistedGrantKey} persisted grant in blob storage: {error}", grant.Key, rfex.Message);
+                throw;
             }
 
-        }        
-
-        
+        }
     }
 }

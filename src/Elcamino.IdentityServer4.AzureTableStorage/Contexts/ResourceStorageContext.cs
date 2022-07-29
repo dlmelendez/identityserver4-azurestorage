@@ -3,7 +3,7 @@
 
 using ElCamino.IdentityServer4.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.Azure.Cosmos.Table;
+using Azure.Data.Tables;
 using Azure.Storage.Blobs;
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public string ApiResourceTableName { get; private set; }
 
-        public CloudTable ApiResourceTable { get; private set; }
+        public TableClient ApiResourceTable { get; private set; }
 
 
         public BlobContainerClient ApiResourceBlobContainer { get; private set; }
@@ -45,7 +45,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 
         public BlobContainerClient IdentityResourceBlobCacheContainer { get; private set; }
 
-        public CloudTableClient TableClient { get; private set; }
+        public TableServiceClient TableClient { get; private set; }
 
         public BlobServiceClient BlobClient { get; private set; }
 
@@ -79,18 +79,17 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         protected virtual void Initialize(ResourceStorageConfig config)
         {
             _config = config;
-            TableClient = Microsoft.Azure.Cosmos.Table.CloudStorageAccount.Parse(_config.StorageConnectionString).CreateCloudTableClient();
-            TableClient.DefaultRequestOptions.PayloadFormat = TablePayloadFormat.Json;
+            TableClient = new TableServiceClient(_config.StorageConnectionString);
 
             //ApiResourceTableName
             ApiResourceTableName = config.ApiTableName;
 
             if (string.IsNullOrWhiteSpace(ApiResourceTableName))
             {
-                throw new ArgumentException($"ApiResourceTableName cannot be null or empty, check your configuration.", nameof(config.ApiTableName));
+                throw new ArgumentException($"{nameof(config.ApiTableName)} cannot be null or empty, check your configuration.", nameof(config));
             }
 
-            ApiResourceTable = TableClient.GetTableReference(ApiResourceTableName);
+            ApiResourceTable = TableClient.GetTableClient(ApiResourceTableName);
 
             BlobClient = new BlobServiceClient(_config.StorageConnectionString);
 
@@ -98,7 +97,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             ApiBlobContainerName = config.ApiBlobContainerName;
             if (string.IsNullOrWhiteSpace(ApiBlobContainerName))
             {
-                throw new ArgumentException($"ApiBlobContainerName cannot be null or empty, check your configuration.", nameof(config.ApiBlobContainerName));
+                throw new ArgumentException($"{nameof(config.ApiBlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             ApiResourceBlobContainer = BlobClient.GetBlobContainerClient(ApiBlobContainerName);
 
@@ -109,7 +108,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             ApiScopeBlobContainerName = config.ApiScopeBlobContainerName;
             if (string.IsNullOrWhiteSpace(ApiScopeBlobContainerName))
             {
-                throw new ArgumentException($"ApiScopeBlobContainerName cannot be null or empty, check your configuration.", nameof(config.ApiScopeBlobContainerName));
+                throw new ArgumentException($"{nameof(config.ApiScopeBlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             ApiScopeBlobContainer = BlobClient.GetBlobContainerClient(ApiScopeBlobContainerName);
 
@@ -120,7 +119,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             IdentityBlobContainerName = config.IdentityBlobContainerName;
             if (string.IsNullOrWhiteSpace(IdentityBlobContainerName))
             {
-                throw new ArgumentException($"IdentityBlobContainerName cannot be null or empty, check your configuration.", nameof(config.IdentityBlobContainerName));
+                throw new ArgumentException($"{nameof(config.IdentityBlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             IdentityResourceBlobContainer = BlobClient.GetBlobContainerClient(IdentityBlobContainerName);
 

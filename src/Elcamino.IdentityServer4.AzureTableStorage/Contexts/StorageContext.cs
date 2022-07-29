@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 using ElCamino.IdentityServer4.AzureStorage.Helpers;
-using Microsoft.Azure.Cosmos.Table;
+using Azure.Data.Tables;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs.Models;
+using Azure.Data.Tables.Models;
 
 namespace ElCamino.IdentityServer4.AzureStorage.Contexts
 {
@@ -32,10 +33,8 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             try
             {
                 Response<BlobDownloadInfo> download = await blob.DownloadAsync();
-                using (StreamReader sr = new StreamReader(download.Value.Content, Encoding.UTF8))
-                {
-                    return await sr.ReadToEndAsync().ConfigureAwait(false);
-                }
+                using StreamReader sr = new StreamReader(download.Value.Content, Encoding.UTF8);
+                return await sr.ReadToEndAsync().ConfigureAwait(false);
             }
             catch (RequestFailedException ex)
                when (ex.ErrorCode == BlobErrorCode.BlobNotFound)
@@ -104,17 +103,11 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
             try
             {
                 var download = await blobJson.DownloadAsync().ConfigureAwait(false);
-                using (Stream s = download.Value.Content)
-                {
-                    using (StreamReader sr = new StreamReader(s, Encoding.UTF8))
-                    {
-                        using (JsonReader reader = new JsonTextReader(sr))
-                        {
-                            JsonSerializer serializer = new JsonSerializer();
-                            return serializer.Deserialize<Entity>(reader);
-                        }
-                    }
-                }
+                using Stream s = download.Value.Content;
+                using StreamReader sr = new StreamReader(s, Encoding.UTF8);
+                using JsonReader reader = new JsonTextReader(sr);
+                JsonSerializer serializer = new JsonSerializer();
+                return serializer.Deserialize<Entity>(reader);
             }
             catch (RequestFailedException ex)
                when (ex.ErrorCode == BlobErrorCode.BlobNotFound)
@@ -219,33 +212,30 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
                 ContentType = "application/json"
             });
         }
-       
+
         /// <summary>
         /// Get table entity where the partition and row key are the hash of the entity key provided
         /// </summary>
         /// <typeparam name="Entity"></typeparam>
         /// <param name="keyNotHashed">Key of the entity (not hashed)</param>
         /// <returns></returns>
-        public async Task<Entity> GetEntityTableAsync<Entity>(string keyNotHashed, CloudTable table) 
+        public async Task<Entity> GetEntityTableAsync<Entity>(string keyNotHashed, TableClient table)
             where Entity : class, ITableEntity, new()
         {
-            string hashedKey = KeyGeneratorHelper.GenerateHashValue(keyNotHashed);
-            var r = await table.ExecuteAsync(TableOperation.Retrieve<Entity>(hashedKey, hashedKey))
-                .ConfigureAwait(false);
-            return r.Result as Entity;
-        }
-
-        public async Task GetAndDeleteTableEntityByKeysAsync(string partitionKey, string rowKey, CloudTable table)
-        {
-            var entity = (await table.ExecuteAsync(TableOperation.Retrieve(partitionKey, rowKey)).ConfigureAwait(false)).Result as ITableEntity;
-            if (entity != null)
+            try
             {
-                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
+                string hashedKey = KeyGeneratorHelper.GenerateHashValue(keyNotHashed);
+                var r = await table.GetEntityAsync<Entity>(hashedKey, hashedKey)
+                    .ConfigureAwait(false);
+                return r.Value;
             }
-
+            catch (RequestFailedException ex)
+                when (ex.ErrorCode == TableErrorCode.ResourceNotFound)
+            {
+                return null;
+            }
         }
 
-        
         /// <summary>
         /// Performs better than using ExecuteQuerySegmentedAsync and building an internal list
         /// </summary>
@@ -253,24 +243,18 @@ namespace ElCamino.IdentityServer4.AzureStorage.Contexts
         /// <param name="tableQuery"></param>
         /// <param name="table"></param>
         /// <returns></returns>
-        public Task<IEnumerable<Entity>> GetAllByTableQueryAsync<Entity>(TableQuery<Entity> tableQuery, CloudTable table)
+        public IAsyncEnumerable<Entity> GetAllByTableQueryAsync<Entity>(TableQuery tableQuery, TableClient table)
            where Entity : class, ITableEntity, new()
         {
-            return Task.Run<IEnumerable<Entity>>(() => GetAllByTableQuery(tableQuery, table));
+            return table.ExecuteQueryAsync<Entity>(tableQuery);
         }
 
-        public IEnumerable<Entity> GetAllByTableQuery<Entity>(TableQuery<Entity> tableQuery, CloudTable table)
+        public async IAsyncEnumerable<Model> GetAllByTableQueryAsync<Entity, Model>(TableQuery tableQuery, TableClient table, Func<Entity, Model> mapFunc)
            where Entity : class, ITableEntity, new()
         {
-            TableContinuationToken continuationToken = new TableContinuationToken();
-            while (continuationToken != null)
+            await foreach (var entity in table.ExecuteQueryAsync<Entity>(tableQuery))
             {
-                var tableResults = table.ExecuteQuerySegmented<Entity>(tableQuery, continuationToken);
-                foreach (var result in tableResults.Results)
-                {
-                    yield return result;
-                }
-                continuationToken = tableResults.ContinuationToken;
+                yield return mapFunc(entity);
             }
         }
     }

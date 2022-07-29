@@ -8,7 +8,7 @@ using ElCamino.IdentityServer4.AzureStorage.Interfaces;
 using ElCamino.IdentityServer4.AzureStorage.Mappers;
 using IdentityServer4.Models;
 using IdentityServer4.Stores;
-using Microsoft.Azure.Cosmos.Table;
+using Azure.Data.Tables;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -19,7 +19,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Model = IdentityServer4.Models;
 using ElCamino.IdentityServer4.AzureStorage.Entities;
-using Microsoft.OData.UriParser.Aggregation;
+using Azure;
 
 namespace ElCamino.IdentityServer4.AzureStorage.Stores
 {
@@ -46,7 +46,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             {
                 // Remove old scope indexes
                 var existingEntity = await StorageContext.GetEntityBlobAsync<Entities.ApiResource>(entity.Name, StorageContext.ApiResourceBlobContainer).ConfigureAwait(false);
-                if (existingEntity != null 
+                if (existingEntity != null
                     && existingEntity.Scopes != null
                     && existingEntity.Scopes.Count > 0)
                 {
@@ -57,17 +57,17 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
                 // Add new scope indexes
                 var newIndexes = entity?.Scopes?.Select(s => s.Name).Distinct().Select(i => GenerateResourceIndexEntity(entity.Name, i));
                 await CreateScopeIndexesAsync(newIndexes, StorageContext.ApiResourceTable).ConfigureAwait(false);
-                await StorageContext.SaveBlobWithHashedKeyAsync(entity.Name, 
+                await StorageContext.SaveBlobWithHashedKeyAsync(entity.Name,
                     JsonConvert.SerializeObject(entity), StorageContext.ApiResourceBlobContainer)
                     .ConfigureAwait(false);
                 //Create ApiScopes that don't exist
                 List<string> entityScopes = entity.Scopes?.Select(s => s.Name).ToList();
-                if(entityScopes.Count > 0)
+                if (entityScopes.Count > 0)
                 {
-                    List<Model.ApiScope> existingApiScopes  = (await FindApiScopesByNameAsync(entityScopes).ConfigureAwait(false)).ToList();
-                    foreach(string entityScope in entityScopes.Where(w => !String.IsNullOrEmpty(w)).Distinct())
+                    List<Model.ApiScope> existingApiScopes = (await FindApiScopesByNameAsync(entityScopes).ConfigureAwait(false)).ToList();
+                    foreach (string entityScope in entityScopes.Where(w => !String.IsNullOrEmpty(w)).Distinct())
                     {
-                        if(!existingApiScopes.Any(a => entityScope.Equals(a.Name, StringComparison.Ordinal)))
+                        if (!existingApiScopes.Any(a => entityScope.Equals(a.Name, StringComparison.Ordinal)))
                         {
                             await StoreAsync(new Model.ApiScope() { Name = entityScope }).ConfigureAwait(false);
                         }
@@ -79,13 +79,18 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, (tblEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning("exception updating {apiName} api resource in table storage: {error}", model.Name, tblEx.Message);
-                }, (blobEx) =>
-                {
-                    _logger.LogWarning("exception updating {apiName} api resource in blob storage: {error}", model.Name, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception updating {apiName} api resource in storage: {error}", model.Name, rfex.Message);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception updating {apiName} api resource in storage: {error}", model.Name, rfex.Message);
                 throw;
             }
 
@@ -145,7 +150,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
                 {
                     foreach (Entities.ApiScope entityScope in entityScopes)
                     {
-                        if (!String.IsNullOrWhiteSpace(entityScope.Name))
+                        if (!string.IsNullOrWhiteSpace(entityScope.Name))
                         {
                             await StoreAsync(entityScope.ToModel()).ConfigureAwait(false);
                         }
@@ -154,13 +159,18 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, (tblEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning("exception updating {apiName} api resource in table storage: {error}", entity.Name, tblEx.Message);
-                }, (blobEx) =>
-                {
-                    _logger.LogWarning("exception updating {apiName} api resource in blob storage: {error}", entity.Name, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception updating {apiName} api resource in storage: {error}", entity.Name, rfex.Message);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogError(rfex, rfex.Message);
+                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
                 throw;
             }
         }
@@ -169,7 +179,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
         {
             var entity = model.ToEntity();
             try
-            {                
+            {
                 await StorageContext
                     .SaveBlobWithHashedKeyAsync(entity.Name, JsonConvert.SerializeObject(entity), StorageContext.IdentityResourceBlobContainer)
                     .ConfigureAwait(false);
@@ -179,19 +189,24 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, (tblEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning("exception updating {apiName} identity resource in table storage: {error}", model.Name, tblEx.Message);
-                }, (blobEx) =>
-                {
-                    _logger.LogWarning("exception updating {apiName} identity resource in blob storage: {error}", model.Name, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception updating {apiName} identity resource in storage: {error}", model.Name, rfex.Message);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception updating {apiName} identity resource in storage: {error}", model.Name, rfex.Message);
                 throw;
             }
 
         }
 
-        public async Task StoreAsync(Model.ApiScope model) 
+        public async Task StoreAsync(Model.ApiScope model)
         {
             var entity = model.ToEntity();
             try
@@ -205,13 +220,18 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, (tblEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning("exception updating {apiName} identity resource in table storage: {error}", model.Name, tblEx.Message);
-                }, (blobEx) =>
-                {
-                    _logger.LogWarning("exception updating {apiName} identity resource in blob storage: {error}", model.Name, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception updating {apiName} identity resource in storage: {error}", model.Name, rfex.Message);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception updating {apiName} identity resource in storage: {error}", model.Name, rfex.Message);
                 throw;
             }
         }
@@ -227,10 +247,19 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, tableStorageLogger: null, (blobEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, storageLogger: (rfex) =>
                 {
-                    _logger.LogWarning("exception removing {clientId} client in blob storage: {error}", name, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception removing {clientId} client in blob storage: {error}", name, rfex.Message);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception removing {clientId} client in blob storage: {error}", name, rfex.Message);
+                throw;
             }
         }
 
@@ -255,27 +284,37 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             }
             catch (AggregateException agg)
             {
-                ExceptionHelper.LogStorageExceptions(agg, tableStorageLogger: null, (blobEx) =>
+                _logger.LogError(agg, agg.Message);
+                ExceptionHelper.LogStorageExceptions(agg, storageLogger: (rfex) =>
                 {
-                    _logger.LogWarning("exception removing {0} client in blob storage: {1}", name, blobEx.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception removing {name} client in blob storage", name);
                 });
+                throw;
+            }
+            catch (RequestFailedException rfex)
+            {
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception removing {name} client in blob storage", name);
+
+                throw;
             }
         }
 
-        private async Task DeleteScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, CloudTable table)
+        private async Task DeleteScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, TableClient table)
         {
             if (indexes != null )
             {                
-                await Task.WhenAll(indexes.Select((index) => StorageContext.GetAndDeleteTableEntityByKeysAsync(index.PartitionKey, index.RowKey, table)))
+                await Task.WhenAll(indexes.Select((index) => table.DeleteEntityAsync(index.PartitionKey, index.RowKey, KeyGeneratorHelper.ETagWildCard)))
                     .ConfigureAwait(false);
             }
         }
         
-        private async Task CreateScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, CloudTable table)
+        private async Task CreateScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, TableClient table)
         {
             if (indexes != null)
             {
-                await Task.WhenAll(indexes.Select((index) => table.ExecuteAsync(TableOperation.InsertOrReplace(index))))
+                await Task.WhenAll(indexes.Select((index) => table.UpsertEntityAsync(index, TableUpdateMode.Replace)))
                     .ConfigureAwait(false);
             }
         }
@@ -343,16 +382,16 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             return null;
         }
 
-        private Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, CloudTable table)
+        private async Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, TableClient table)
         {
             string partitionKeyFilter = TableQuery.GenerateFilterCondition("PartitionKey",
                 QueryComparisons.Equal,
                 KeyGeneratorHelper.GenerateHashValue(scope));
 
-            TableQuery<Entities.ResourceScopeIndexTblEntity> tq = new TableQuery<Entities.ResourceScopeIndexTblEntity>();
+            TableQuery tq = new TableQuery();
             tq.FilterString = partitionKeyFilter;
 
-            return StorageContext.GetAllByTableQueryAsync(tq, table);
+            return await StorageContext.GetAllByTableQueryAsync<Entities.ResourceScopeIndexTblEntity>(tq, table).ToListAsync();
         }
 
         private Entities.ResourceScopeIndexTblEntity GenerateResourceIndexEntity(string name, string scope)
@@ -401,7 +440,7 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
             return entities.Select(s => s?.ToModel());
         }
 
-        private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, CloudTable table, BlobContainerClient container) where Entity : class, new()
+        private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, TableClient table, BlobContainerClient container) where Entity : class, new()
         {
             var scopeTasks = scopeNames.Distinct().Select(scope => GetResourceScopeIndexTblEntitiesAsync(scope, table));
 

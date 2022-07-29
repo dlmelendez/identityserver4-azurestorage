@@ -25,6 +25,8 @@
 
 
   <ItemGroup>
+    <PackageReference Include="Azure.Data.Tables" Version="12.6.0" />
+    <PackageReference Include="ElCamino.Azure.Data.Tables" Version="6.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.27" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.27" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.27" />
@@ -35,7 +37,6 @@
     <PackageReference Include="IdentityServer4.Storage" Version="4.1.2" />
     <PackageReference Include="AutoMapper" Version="11.0.1" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.13.0" />
-    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.6" />
   </ItemGroup>
 
   <ItemGroup>

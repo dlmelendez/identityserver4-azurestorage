@@ -6,7 +6,7 @@
 using ElCamino.IdentityServer4.AzureStorage.Configuration;
 using ElCamino.IdentityServer4.AzureStorage.Contexts;
 using ElCamino.IdentityServer4.AzureStorage.Entities;
-using Microsoft.Azure.Cosmos.Table;
+using Azure.Data.Tables;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
