@@ -80,7 +80,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, storageLogger: (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception updating {clientName} persisted grant in blob storage: {error}", model.ClientName, rfex.Message);
                 });
                 throw;
@@ -137,15 +137,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception updating {clientId} client in  storage: {error}", clientId, rfex.Message);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogError(rfex, rfex.Message);
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogWarning("exception updating {clientId} client in  storage: {error}", clientId, rfex.Message);
                 throw;
             }

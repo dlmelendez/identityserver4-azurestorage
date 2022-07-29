@@ -34,7 +34,7 @@ class PropertiesConverter :
     IValueConverter<Dictionary<string, string>, string>,
     IValueConverter<string, Dictionary<string, string>>
 {
-    public static PropertiesConverter Converter = new PropertiesConverter();
+    public static PropertiesConverter Converter = new();
 
     public string Convert(Dictionary<string, string> sourceMember, ResolutionContext context)
     {

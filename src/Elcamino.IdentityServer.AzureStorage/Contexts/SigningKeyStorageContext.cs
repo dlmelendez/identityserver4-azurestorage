@@ -47,7 +47,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             BlobContainerName = config.BlobContainerName;
             if (string.IsNullOrWhiteSpace(BlobContainerName))
             {
-                throw new ArgumentException($"BlobContainerName cannot be null or empty, check your configuration.", nameof(config.BlobContainerName));
+                throw new ArgumentException($"{nameof(config.BlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             SigningKeyBlobContainer = BlobClient.GetBlobContainerClient(BlobContainerName);
 

@@ -13,7 +13,7 @@ class AllowedSigningAlgorithmsConverter :
     IValueConverter<ICollection<string>, string>,
     IValueConverter<string, ICollection<string>>
 {
-    public static AllowedSigningAlgorithmsConverter Converter = new AllowedSigningAlgorithmsConverter();
+    public static AllowedSigningAlgorithmsConverter Converter = new();
 
     public string Convert(ICollection<string> sourceMember, ResolutionContext context)
     {

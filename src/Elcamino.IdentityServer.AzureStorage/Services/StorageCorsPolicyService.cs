@@ -54,11 +54,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Services
 
             if (result)
             {
-                Logger.LogDebug("Client list checked and origin: {0} is allowed", origin);
+                Logger.LogDebug("Client list checked and origin: {origin} is allowed", origin);
             }
             else
             {
-                Logger.LogDebug("Client list checked and origin: {0} is not allowed", origin);
+                Logger.LogDebug("Client list checked and origin: {origin} is not allowed", origin);
             }
 
             return result;

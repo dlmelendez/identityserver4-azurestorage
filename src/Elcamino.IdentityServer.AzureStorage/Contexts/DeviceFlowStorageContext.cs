@@ -44,13 +44,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             BlobClient = new BlobServiceClient(config.StorageConnectionString);
             if (string.IsNullOrWhiteSpace(config.BlobUserContainerName))
             {
-                throw new ArgumentException($"{nameof(config.BlobUserContainerName)} cannot be null or empty, check your configuration.", nameof(config.BlobUserContainerName));
+                throw new ArgumentException($"{nameof(config.BlobUserContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             UserCodeBlobContainer = BlobClient.GetBlobContainerClient(config.BlobUserContainerName);
 
             if (string.IsNullOrWhiteSpace(config.BlobDeviceContainerName))
             {
-                throw new ArgumentException($"{nameof(config.BlobDeviceContainerName)} cannot be null or empty, check your configuration.", nameof(config.BlobDeviceContainerName));
+                throw new ArgumentException($"{nameof(config.BlobDeviceContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             DeviceCodeBlobContainer = BlobClient.GetBlobContainerClient(config.BlobDeviceContainerName);
 

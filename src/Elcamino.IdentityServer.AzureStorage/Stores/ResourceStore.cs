@@ -82,15 +82,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception updating {apiName} api resource in storage: {error}", model.Name, rfex.Message);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogError(rfex, rfex.Message);
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception updating {apiName} api resource in storage: {error}", model.Name, rfex.Message);
                 throw;
             }
 
@@ -162,7 +162,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception updating {apiName} api resource in storage: {error}", entity.Name, rfex.Message);
                 });
                 throw;
@@ -192,15 +192,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception updating {apiName} identity resource in storage: {error}", model.Name, rfex.Message);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogError(rfex, rfex.Message);
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogWarning("exception updating {apiName} identity resource in storage: {error}", model.Name, rfex.Message);
                 throw;
             }
@@ -224,15 +223,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception updating {apiName} identity resource in storage: {error}", model.Name, rfex.Message);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogError(rfex, rfex.Message);
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogWarning("exception updating {apiName} identity resource in storage: {error}", model.Name, rfex.Message);
                 throw;
             }
@@ -252,14 +250,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, storageLogger: (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception removing {clientId} client in blob storage: {error}", name, rfex.Message);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogWarning("exception removing {clientId} client in blob storage: {error}", name, rfex.Message);
                 throw;
             }
@@ -289,15 +287,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, storageLogger:(rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-                    _logger.LogWarning("exception removing {0} client in blob storage: {1}", name, rfex.Message);
+                    _logger.LogStorageError(rfex);
+                    _logger.LogWarning("exception removing {name} client in blob storage", name);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-                _logger.LogWarning("exception removing {0} client in blob storage: {1}", name, rfex.Message);
+                _logger.LogStorageError(rfex);
+                _logger.LogWarning("exception removing {name} client in blob storage", name);
 
                 throw;
             }

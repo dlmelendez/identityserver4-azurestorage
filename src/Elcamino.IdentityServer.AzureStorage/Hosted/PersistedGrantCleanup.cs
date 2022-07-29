@@ -103,7 +103,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Task.Delay exception: {0}. Exiting.", ex.Message);
+                    _logger.LogError(ex, "Task.Delay exception: {message}. Exiting.", ex.Message);
                     break;
                 }
 

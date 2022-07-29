@@ -98,14 +98,14 @@ public class SigningKeyStore : ISigningKeyStore
             _logger.LogError(agg, agg.Message);
             ExceptionHelper.LogStorageExceptions(agg, storageLogger: (rfex) =>
             {
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogWarning("exception updating {keyId} key in blob storage: {error}", model?.Id, rfex.Message);
             });
             throw;
         }
         catch (RequestFailedException rfex)
         {
-            _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+            _logger.LogStorageError(rfex);
             _logger.LogWarning("exception updating {keyId} key in blob storage: {error}", model?.Id, rfex.Message);
             throw;
         }
@@ -128,15 +128,14 @@ public class SigningKeyStore : ISigningKeyStore
             _logger.LogError(agg, agg.Message);
             ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
             {
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogWarning("exception updating {keyId} key in  storage: {error}", keyId, rfex.Message);
             });
             throw;
         }
         catch (RequestFailedException rfex)
         {
-            _logger.LogError(rfex, rfex.Message);
-            _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+            _logger.LogStorageError(rfex);
             _logger.LogWarning("exception updating {keyId} key in  storage: {error}", keyId, rfex.Message);
             throw;
         }

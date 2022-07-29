@@ -108,17 +108,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
-                    _logger.LogDebug($"error removing persisted grants from storage for table filter {tableFilter} ");
+                    _logger.LogStorageError(rfex);
+                    _logger.LogDebug("error removing persisted grants from storage for table filter {tableFilter} ", tableFilter);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogError(rfex, rfex.Message);
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogDebug($"error removing persisted grants from storage for table filter {tableFilter} ");
-
                 throw;
             }
         }
@@ -173,17 +171,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception removing {persistedGrantKey} persisted grant in storage: {error}", key?? string.Empty, rfex.Message);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogError(rfex, rfex.Message);
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogWarning("exception removing {persistedGrantKey} persisted grant in storage: {error}", key ?? string.Empty, rfex.Message);
-
                 throw;
             }
         }
@@ -205,15 +201,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogError(agg, agg.Message);
                 ExceptionHelper.LogStorageExceptions(agg, (rfex) =>
                 {
-                    _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                    _logger.LogStorageError(rfex);
                     _logger.LogWarning("exception updating {persistedGrantKey} persisted grant in blob storage: {error}", grant.Key, rfex.Message);
                 });
                 throw;
             }
             catch (RequestFailedException rfex)
             {
-                _logger.LogError(rfex, rfex.Message);
-                _logger.LogWarning($"storage exception ErrorCode: {rfex.ErrorCode ?? string.Empty}, Http Status Code: {rfex.Status}");
+                _logger.LogStorageError(rfex);
                 _logger.LogWarning("exception updating {persistedGrantKey} persisted grant in blob storage: {error}", grant.Key, rfex.Message);
                 throw;
             }

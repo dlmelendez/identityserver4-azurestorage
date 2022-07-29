@@ -3,6 +3,7 @@
 
 
 using Azure;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +12,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Helpers
 {
     public static class ExceptionHelper
     {
-        public static void LogStorageExceptions(AggregateException aggregate, 
+        public static void LogStorageExceptions(AggregateException aggregate,
             Action<RequestFailedException> storageLogger)
         {
             if (aggregate.InnerExceptions != null)
@@ -28,6 +29,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Helpers
                     }
                 }
             }
+        }
+
+        public static void LogStorageError(this ILogger logger, RequestFailedException rfex)
+        {
+            logger.LogError(rfex, "storage exception ErrorCode: {errorCode}, Http Status Code: {status}", rfex.ErrorCode ?? string.Empty, rfex.Status);
         }
     }
 }

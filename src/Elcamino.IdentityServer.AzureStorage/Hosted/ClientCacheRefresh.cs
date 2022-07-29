@@ -102,7 +102,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Task.Delay exception: {0}. Exiting.", ex.Message);
+                    _logger.LogError(ex, "Task.Delay exception: {message}. Exiting.", ex.Message);
                     break;
                 }
 
@@ -138,7 +138,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
         {
             IAsyncEnumerable<Client> entities = context.GetAllBlobEntitiesAsync<Entities.Client>(context.ClientBlobContainer, _logger);
             (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.Client>(entities, context.ClientCacheBlobContainer);
-            _logger.LogInformation($"{nameof(RefreshCacheAsync)} client count {count} saved in blob storage: {blobName}");
+            _logger.LogInformation("{RefreshCacheAsync} client count {count} saved in blob storage: {blobName}", nameof(RefreshCacheAsync), count, blobName);
             await context.DeleteBlobCacheFilesAsync(blobName, context.ClientCacheBlobContainer, _logger);
         }
 
