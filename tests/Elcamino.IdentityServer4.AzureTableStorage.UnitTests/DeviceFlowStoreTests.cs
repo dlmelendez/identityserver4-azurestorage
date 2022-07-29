@@ -262,8 +262,6 @@ namespace ElCamino.IdentityServer4.AzureStorage.UnitTests
             Console.WriteLine($"userCode: {userCode}");
             Console.WriteLine($"deviceCode: {deviceCode}");
 
-            DeviceCode deviceCodeData = CreateTestObject();
-
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
