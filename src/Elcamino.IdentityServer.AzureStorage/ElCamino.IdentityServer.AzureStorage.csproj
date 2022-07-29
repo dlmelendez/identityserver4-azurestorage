@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net6.0</TargetFrameworks>
     <LangVersion>10.0</LangVersion>
-    <AssemblyName>ElCamino.IdentityServer4.AzureStorage</AssemblyName>
-    <RootNamespace>ElCamino.IdentityServer4.AzureStorage</RootNamespace>
+    <AssemblyName>ElCamino.IdentityServer.AzureStorage</AssemblyName>
+    <RootNamespace>ElCamino.IdentityServer.AzureStorage</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Copyright>Copyright ©  2022 David Melendez, Apache 2.0 License</Copyright>
