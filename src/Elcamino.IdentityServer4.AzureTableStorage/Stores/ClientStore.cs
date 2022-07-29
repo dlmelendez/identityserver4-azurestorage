@@ -54,10 +54,9 @@ namespace ElCamino.IdentityServer4.AzureStorage.Stores
 
         public async Task<Client> FindClientByIdAsync(string clientId)
         {
-            Model.Client model = null;
             Entities.Client entity = await StorageContext.GetEntityBlobAsync<Entities.Client>(clientId, StorageContext.ClientBlobContainer)
                 .ConfigureAwait(false);
-            model = entity?.ToModel();
+            Client model = entity?.ToModel();
             _logger.LogDebug("{clientName} found in blob storage: {clientFound}", clientId, model != null);
 
             return model;
