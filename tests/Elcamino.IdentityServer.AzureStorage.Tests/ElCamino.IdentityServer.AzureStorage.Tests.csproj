@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elcamino.IdentityServer4.AzureTableStorage\ElCamino.IdentityServer.AzureStorage.csproj" />
+    <ProjectReference Include="..\..\src\Elcamino.IdentityServer.AzureStorage\ElCamino.IdentityServer.AzureStorage.csproj" />
   </ItemGroup>
 
   <ItemGroup>
