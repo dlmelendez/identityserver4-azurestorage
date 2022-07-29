@@ -18,7 +18,7 @@
     <Authors>David Melendez</Authors>
     <Company>David Melendez</Company>
     <Description>Uses Azure Blob and Table Storage services as an alternative to Entity Framework/SQL data access for IdentityServer4.</Description>
-    <Version>2.0.1</Version>
+    <Version>2.1</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
