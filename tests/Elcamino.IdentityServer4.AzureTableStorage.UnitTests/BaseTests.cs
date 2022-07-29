@@ -11,11 +11,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ElCamino.Duende.IdentityServer.AzureStorage;
-using ElCamino.Duende.IdentityServer.AzureStorage.Stores;
+using ElCamino.IdentityServer.AzureStorage;
+using ElCamino.IdentityServer.AzureStorage.Stores;
 using Duende.IdentityServer.Stores.Serialization;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
+namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 {
     public class BaseTests
     {

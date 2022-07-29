@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
-using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
-using ElCamino.Duende.IdentityServer.AzureStorage.Interfaces;
-using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Interfaces;
+using ElCamino.IdentityServer.AzureStorage.Mappers;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
 using Microsoft.Extensions.Logging;
@@ -19,7 +19,7 @@ using Azure.Data.Tables;
 using System.Text.Json;
 using Azure;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
+namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
     public class ClientStore : IClientStore, IClientStorageStore
     {

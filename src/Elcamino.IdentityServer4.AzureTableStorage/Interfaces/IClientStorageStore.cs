@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Interfaces
+namespace ElCamino.IdentityServer.AzureStorage.Interfaces
 {
     public interface IClientStorageStore
     {

@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Configuration
+namespace ElCamino.IdentityServer.AzureStorage.Configuration
 {
     public class SigningKeyStorageConfig
     {

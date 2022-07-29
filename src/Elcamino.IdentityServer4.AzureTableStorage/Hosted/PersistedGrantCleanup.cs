@@ -3,9 +3,9 @@
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Configuration;
-using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
-using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
+using ElCamino.IdentityServer.AzureStorage.Configuration;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,7 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Hosted
+namespace ElCamino.IdentityServer.AzureStorage.Hosted
 {
     /// <summary>
     /// Helper to periodically cleanup expired persisted grants.

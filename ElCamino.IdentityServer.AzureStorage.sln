@@ -10,9 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElCamino.IdentityServer4.AzureStorage", "src\Elcamino.IdentityServer4.AzureTableStorage\ElCamino.IdentityServer4.AzureStorage.csproj", "{F40F3D95-410B-4661-A556-09ADE25E59EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElCamino.IdentityServer.AzureStorage", "src\Elcamino.IdentityServer4.AzureTableStorage\ElCamino.IdentityServer.AzureStorage.csproj", "{F40F3D95-410B-4661-A556-09ADE25E59EC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElCamino.IdentityServer4.AzureStorage.Tests", "tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\ElCamino.IdentityServer4.AzureStorage.Tests.csproj", "{93D82675-3942-41AC-A5E5-AB3188CA18E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElCamino.IdentityServer.AzureStorage.Tests", "tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\ElCamino.IdentityServer.AzureStorage.Tests.csproj", "{93D82675-3942-41AC-A5E5-AB3188CA18E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

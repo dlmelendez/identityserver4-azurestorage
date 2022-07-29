@@ -1,8 +1,8 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
-using ElCamino.Duende.IdentityServer.AzureStorage.Stores;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Stores;
 using Duende.IdentityServer;
 using Duende.IdentityServer.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +18,7 @@ using System.Text.Json;
 using Duende.IdentityServer.Configuration;
 using Duende.IdentityServer.Services.KeyManagement;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
+namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 {
     [TestClass]
     public class SigningKeyStoreTests : BaseTests

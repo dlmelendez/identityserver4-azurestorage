@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Helpers
+namespace ElCamino.IdentityServer.AzureStorage.Helpers
 {
     public static class ExceptionHelper
     {

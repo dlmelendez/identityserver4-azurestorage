@@ -1,9 +1,9 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
-using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
-using ElCamino.Duende.IdentityServer.AzureStorage.Stores;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Stores;
 using Duende.IdentityServer;
 using Duende.IdentityServer.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +16,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Model = Duende.IdentityServer.Models;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Tests
+namespace ElCamino.IdentityServer.AzureStorage.Tests
 {
     [TestClass]
     public class KeyGeneratorHelperTests

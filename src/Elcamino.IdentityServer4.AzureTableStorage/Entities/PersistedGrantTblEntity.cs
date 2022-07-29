@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
+namespace ElCamino.IdentityServer.AzureStorage.Entities
 {
     public class PersistedGrantTblEntity : ITableEntity
     {

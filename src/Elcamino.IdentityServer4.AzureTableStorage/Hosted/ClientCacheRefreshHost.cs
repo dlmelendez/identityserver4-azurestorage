@@ -3,8 +3,8 @@
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Configuration;
-using ElCamino.Duende.IdentityServer.AzureStorage.Hosted;
+using ElCamino.IdentityServer.AzureStorage.Configuration;
+using ElCamino.IdentityServer.AzureStorage.Hosted;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System;

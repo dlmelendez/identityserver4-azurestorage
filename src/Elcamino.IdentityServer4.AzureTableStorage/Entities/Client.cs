@@ -6,7 +6,7 @@ using Duende.IdentityServer.Models;
 using System;
 using System.Collections.Generic;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
+namespace ElCamino.IdentityServer.AzureStorage.Entities
 {
     public class Client
     {

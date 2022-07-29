@@ -1,4 +1,4 @@
-// Copyright (c) Duende Software. All rights reserved.
+﻿// Copyright (c) Duende Software. All rights reserved.
 // See LICENSE in the project root for license information.
 
 
@@ -7,10 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-using Entities = ElCamino.Duende.IdentityServer.AzureStorage.Entities;
+using Entities = ElCamino.IdentityServer.AzureStorage.Entities;
 using Models = Duende.IdentityServer.Models;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
+namespace ElCamino.IdentityServer.AzureStorage.Mappers;
 
 /// <summary>
 /// Defines entity/model mapping for identity provider.

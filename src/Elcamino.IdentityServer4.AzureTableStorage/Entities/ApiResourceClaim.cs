@@ -5,7 +5,7 @@
 
 
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Entities
+namespace ElCamino.IdentityServer.AzureStorage.Entities
 {
     public class ApiResourceClaim : UserClaim
     {

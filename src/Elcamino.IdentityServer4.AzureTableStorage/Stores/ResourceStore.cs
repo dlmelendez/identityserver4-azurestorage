@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
-using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
-using ElCamino.Duende.IdentityServer.AzureStorage.Interfaces;
-using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Interfaces;
+using ElCamino.IdentityServer.AzureStorage.Mappers;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
 using Azure.Storage.Blobs;
@@ -16,15 +16,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Model = Duende.IdentityServer.Models;
-using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
+using ElCamino.IdentityServer.AzureStorage.Entities;
 using Azure.Data.Tables;
 using Azure;
 using System.Text.Json;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
+namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
     /// <summary>
-    /// Implementation of IResourceStore thats uses EF.
+    /// Implementation of IResourceStore thats uses Azure Storage.
     /// </summary>
     /// <seealso cref="Duende.IdentityServer.Stores.IResourceStore" />
     public class ResourceStore : IResourceStore

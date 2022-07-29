@@ -12,11 +12,11 @@ using Azure.Data.Tables;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
-using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
-using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
 using Microsoft.Extensions.Logging;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores;
+namespace ElCamino.IdentityServer.AzureStorage.Stores;
 
 /// <summary>
 /// Implementation of ISigningKeyStore thats uses Azure Storage.

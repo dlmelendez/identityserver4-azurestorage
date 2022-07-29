@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
+namespace ElCamino.IdentityServer.AzureStorage.Mappers;
 
 class AllowedSigningAlgorithmsConverter : 
     IValueConverter<ICollection<string>, string>,

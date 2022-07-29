@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
-using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
-using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
-using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Mappers;
+using ElCamino.IdentityServer.AzureStorage.Entities;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
 using Azure.Storage.Blobs;
@@ -20,7 +20,7 @@ using Duende.IdentityServer.Extensions;
 using Azure.Data.Tables;
 using Azure;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Stores
+namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
     public class PersistedGrantStore : IPersistedGrantStore
     {

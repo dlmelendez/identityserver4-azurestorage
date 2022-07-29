@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Helpers
+namespace ElCamino.IdentityServer.AzureStorage.Helpers
 {
     public static class KeyGeneratorHelper
     {

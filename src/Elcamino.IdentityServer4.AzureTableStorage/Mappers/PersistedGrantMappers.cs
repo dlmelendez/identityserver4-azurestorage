@@ -3,14 +3,14 @@
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
 using AutoMapper;
-using ElCamino.Duende.IdentityServer.AzureStorage.Helpers;
-using ElCamino.Duende.IdentityServer.AzureStorage.Entities;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Entities;
 using Duende.IdentityServer.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Mappers
+namespace ElCamino.IdentityServer.AzureStorage.Mappers
 {
     public static class PersistedGrantMappers
     {

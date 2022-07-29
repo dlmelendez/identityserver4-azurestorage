@@ -1,7 +1,7 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Configuration;
+using ElCamino.IdentityServer.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
 using Azure.Storage.Blobs;
 using System;
@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Azure.Data.Tables;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Contexts
+namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
     public class ResourceStorageContext : StorageContext
     {

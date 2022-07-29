@@ -1,9 +1,9 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.Duende.IdentityServer.AzureStorage.Contexts;
-using ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
-using ElCamino.Duende.IdentityServer.AzureStorage.Stores;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Mappers;
+using ElCamino.IdentityServer.AzureStorage.Stores;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using Token = Duende.IdentityServer.Models.Token;
 using System.Text.Json;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.UnitTests
+namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 {
     [TestClass]
     public class PersistedGrantStoreTests : BaseTests

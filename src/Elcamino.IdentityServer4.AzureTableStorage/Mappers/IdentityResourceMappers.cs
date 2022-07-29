@@ -3,10 +3,10 @@
 
 
 using AutoMapper;
-using Entities = ElCamino.Duende.IdentityServer.AzureStorage.Entities;
+using Entities = ElCamino.IdentityServer.AzureStorage.Entities;
 using Models = Duende.IdentityServer.Models;
 
-namespace ElCamino.Duende.IdentityServer.AzureStorage.Mappers;
+namespace ElCamino.IdentityServer.AzureStorage.Mappers;
 
 /// <summary>
 /// Extension methods to map to/from entity/model for identity resources.
