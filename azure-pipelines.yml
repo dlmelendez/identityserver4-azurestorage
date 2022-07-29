@@ -14,26 +14,22 @@ steps:
   displayName: 'PowerShell Script'
   inputs:
     scriptType: inlineScript
-    inlineScript: '(Get-Content .\tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', ''$(STORAGECONNECTION)'' } | Set-Content .\tests\Elcamino.IdentityServer4.AzureTableStorage.UnitTests\appsettings.json'
+    inlineScript: '(Get-Content .\tests\ElCamino.IdentityServer.AzureStorage.Tests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', ''$(STORAGECONNECTION)'' } | Set-Content .\tests\ElCamino.IdentityServer.AzureStorage.Tests\appsettings.json'
 
 - task: UseDotNet@2
-  displayName: 'Use .Net Core sdk 2.1.x'
+  displayName: 'Use .Net Core sdk 6.x'
   inputs:
-    version: 2.1.x
-- task: UseDotNet@2
-  displayName: 'Use .Net Core sdk 3.1.x'
-  inputs:
-    version: 3.1.x
+    version: 6.x
 - task: DotNetCoreCLI@2
   displayName: 'dotnet build'
   inputs:
-    projects: '**/ElCamino.IdentityServer4.AzureStorage.sln'
+    projects: '**/ElCamino.IdentityServer.AzureStorage.sln'
     arguments: '-c $(BuildConfiguration) '
 - task: VSTest@2
   inputs:
     testSelector: 'testAssemblies'
     testAssemblyVer2: |
-      **\ElCamino.IdentityServer4.AzureStorage.Tests.dll
+      **\ElCamino.IdentityServer.AzureStorage.Tests.dll
       !**\*TestAdapter.dll
       !**\obj\**
     searchFolder: '$(System.DefaultWorkingDirectory)'
