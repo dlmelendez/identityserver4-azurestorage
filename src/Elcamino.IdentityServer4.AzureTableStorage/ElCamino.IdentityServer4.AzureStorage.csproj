@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1</TargetFrameworks>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
     <AssemblyName>ElCamino.IdentityServer4.AzureStorage</AssemblyName>
     <RootNamespace>ElCamino.IdentityServer4.AzureStorage</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright ©  2020 David Melendez, Apache 2.0 License</Copyright>
+    <Copyright>Copyright ©  2022 David Melendez, Apache 2.0 License</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/dlmelendez/identityserver4-azurestorage</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dlmelendez/identityserver4-azurestorage.git</RepositoryUrl>
