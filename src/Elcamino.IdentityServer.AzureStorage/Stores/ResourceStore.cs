@@ -314,7 +314,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         {
             if (indexes != null)
             {
-                await Task.WhenAll(indexes.Select((index) => table.UpdateEntityAsync(index, KeyGeneratorHelper.ETagWildCard, TableUpdateMode.Replace)))
+                await Task.WhenAll(indexes.Select((index) => table.UpsertEntityAsync(index, TableUpdateMode.Replace)))
                     .ConfigureAwait(false);
             }
         }
