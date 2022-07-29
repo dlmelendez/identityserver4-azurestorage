@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <AssemblyName>ElCamino.IdentityServer4.AzureStorage</AssemblyName>
     <RootNamespace>ElCamino.IdentityServer4.AzureStorage</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -32,11 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="IdentityServer4.Storage" Version="4.0.4" />
-    <PackageReference Include="AutoMapper" Version="8.0.0" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
+    <PackageReference Include="IdentityServer4.Storage" Version="4.1.2" />
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.13.0" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.6" />
-    <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
