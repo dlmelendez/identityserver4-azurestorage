@@ -1,12 +1,21 @@
 # identityserver4-azurestorage
-Uses Azure Blob and Table Storage services as an alternative to [Entity Framework/SQL data access for IdentityServer4](https://identityserver4.readthedocs.io/en/latest/quickstarts/5_entityframework.html).
+Uses Azure Blob and Table Storage services as an alternative to [Entity Framework/SQL data access for IdentityServer4](https://identityserver4.readthedocs.io/en/latest/quickstarts/5_entityframework.html) and [Entity Framework/SQL data access for Duende IdentityServer](https://docs.duendesoftware.com/identityserver/v6/quickstarts/4_ef/).
 Use the unit tests as a guide to seeding operational and configuration data.
-- ElCamino.IdentityServer4.AzureStorage v1.x uses IdentityServer4 2.x & 3.x
+
+- ElCamino.IdentityServer.AzureStorage v6.x match major version of Duende IdentityServer 
 - ElCamino.IdentityServer4.AzureStorage v2.x uses IdentityServer4 >= 4.x 
+- ElCamino.IdentityServer4.AzureStorage v1.x uses IdentityServer4 2.x & 3.x
 
 [![Build Status](https://dev.azure.com/elcamino/Azure%20OpenSource/_apis/build/status/dlmelendez.identityserver4-azurestorage?branchName=master)](https://dev.azure.com/elcamino/Azure%20OpenSource/_build/latest?definitionId=11&branchName=master)
 
 [![NuGet Badge](https://buildstats.info/nuget/ElCamino.IdentityServer4.AzureStorage)](https://www.nuget.org/packages/ElCamino.IdentityServer4.AzureStorage/)
+
+[![NuGet Badge](https://buildstats.info/nuget/ElCamino.IdentityServer.AzureStorage)](https://www.nuget.org/packages/ElCamino.IdentityServer.AzureStorage/)
+
+# Duende IdentityServer v6
+- Removed Newtonsoft.Json
+- Updated to Azure.Data.Tables SDK
+- Added support for SignedKeys Store
 
 # IdentityServer4 v3 to v4
 There are breaking changes when moving to IdentityServer4 v3 to v4. and respectively upgrading ElCamino.IdentityServer4.AzureStorage v1.x to v2.x.
@@ -14,8 +23,7 @@ There are breaking changes when moving to IdentityServer4 v3 to v4. and respecti
 ## Config changes to support ApiScope blobs
 New config settings, complete settings further down.
 ```json
-{
-  "IdentityServer4": {
+{": {
    ...
     "resourceStorageConfig": {
       "apiScopeBlobContainerName": "idsrv4apiscopes",
@@ -32,24 +40,26 @@ Shown below in complete context, add .MigrateResourceV3Storage() into the startu
 # Getting Started
 ## startup.cs
 ```C#
-using ElCamino.IdentityServer4.AzureStorage.Stores;
-using ElCamino.IdentityServer4.AzureStorage.Services;
-using IdentityServer4;
+using ElCamino.IdentityServer.AzureStorage.Stores;
+using ElCamino.IdentityServer.AzureStorage.Services;
+using Duende.IdentityServer;
 ...
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc();
 ...
             //Add the Custom IdentityServer PersistentGrantStorageContext/Create Storage Table
-            services.AddPersistedGrantContext(Configuration.GetSection("IdentityServer4:persistedGrantStorageConfig"))
+            services.AddPersistedGrantContext(Configuration.GetSection("IdentityServer:persistedGrantStorageConfig"))
                 .CreatePersistedGrantStorage() //Can be removed after first run.
-                .AddClientContext(Configuration.GetSection("IdentityServer4:clientStorageConfig"))
+                .AddClientContext(Configuration.GetSection("IdentityServer:clientStorageConfig"))
                 .CreateClientStorage() //Can be removed after first run.
-                .AddResourceContext(Configuration.GetSection("IdentityServer4:resourceStorageConfig"))
+                .AddResourceContext(Configuration.GetSection("IdentityServer:resourceStorageConfig"))
                 .CreateResourceStorage() //Can be removed after first run.
-                .AddDeviceFlowContext(Configuration.GetSection("IdentityServer4:deviceFlowStorageConfig"))
-                .CreateDeviceFlowStorage(); //Can be removed after first run.
+                .AddDeviceFlowContext(Configuration.GetSection("IdentityServer:deviceFlowStorageConfig"))
+                .CreateDeviceFlowStorage() //Can be removed after first run.
+                .AddSigningKeyContext(Configuration.GetSection("IdentityServer:signingKeyStorageConfig"))
+                .CreateSigningKeyStorage(); //Can be removed after first run.
 
 	    // Adds IdentityServer
             services.AddIdentityServer()
@@ -59,6 +69,7 @@ using IdentityServer4;
             .AddCorsPolicyService<StorageCorsPolicyService>()
             .AddPersistedGrantStore<PersistedGrantStore>()
             .AddDeviceFlowStore<DeviceFlowStore>()
+            .AddSigningKeyStore<SigningKeyStore>()
 ...            
             //Use for migrating ApiScopes from IdentityServer4 v3 ApiResources
             //Must be added after services.AddIdentityServer().AddResourceStore() in the pipeline
@@ -69,7 +80,7 @@ using IdentityServer4;
 ## appsettings.json
 ```json
 {
-  "IdentityServer4": {
+  "IdentityServer": {
     "persistedGrantStorageConfig": {
       "storageConnectionString": "UseDevelopmentStorage=true;",
       "blobContainerName": "idsrv4persistedgrants",
@@ -80,27 +91,31 @@ using IdentityServer4;
     },
     "clientStorageConfig": {
       "storageConnectionString": "UseDevelopmentStorage=true;",
-      "blobContainerName": "idsrv4clientconfig",
-	  "blobCacheContainerName": "idsrv4clientconfigcache",
+      "blobContainerName": "idsrvclientconfig",
+	  "blobCacheContainerName": "idsrvclientconfigcache",
 	  "enableCacheRefresh": true,
 	  "cacheRefreshInterval": 1800
     },
     "resourceStorageConfig": {
      "storageConnectionString": "UseDevelopmentStorage=true;",
-      "apiTableName": "idsrv4apiscopeindex",
-      "apiBlobContainerName": "idsrv4apiresources",
-      "apiScopeBlobContainerName": "idsrv4apiscopes",
-      "identityBlobContainerName": "idsrv4identityresources",
-      "apiBlobCacheContainerName": "idsrv4apiresourcescache",
-      "apiScopeBlobCacheContainerName": "idsrv4apiscopescache",
-      "identityBlobCacheContainerName": "idsrv4identityresourcescache",
+      "apiTableName": "idsrvapiscopeindex",
+      "apiBlobContainerName": "idsrvapiresources",
+      "apiScopeBlobContainerName": "idsrvapiscopes",
+      "identityBlobContainerName": "idsrvidentityresources",
+      "apiBlobCacheContainerName": "idsrvapiresourcescache",
+      "apiScopeBlobCacheContainerName": "idsrvapiscopescache",
+      "identityBlobCacheContainerName": "idsrvidentityresourcescache",
 	  "enableCacheRefresh": true,
 	  "cacheRefreshInterval": 1800
     },
     "deviceFlowStorageConfig": {
       "storageConnectionString": "UseDevelopmentStorage=true;",
-      "blobUserContainerName": "deviceflowusercodes",
-      "blobDeviceContainerName": "deviceflowdevicecodes"
+      "blobUserContainerName": "idsrvdeviceflowusercodes",
+      "blobDeviceContainerName": "idsrvdeviceflowdevicecodes"
+    },
+    "signingKeyStorageConfig": {
+      "storageConnectionString": "UseDevelopmentStorage=true;",
+      "blobContainerName": "idsrvsigningkeys"
     }
   }
 }
