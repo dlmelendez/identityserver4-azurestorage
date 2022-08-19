@@ -22,8 +22,10 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
     public class ClientStoreTests : BaseTests
     {
         private ILogger<ClientStore> _logger;
+        public const string DefaultAllowedCors = "https://localhost:44328";
 
-        private static Model.Client CreateTestObject(string clientid = null)
+    public static Model.Client CreateTestObject(string clientid = null, 
+            string allowedCors = DefaultAllowedCors)
         {
             return new Model.Client
             {
@@ -38,10 +40,10 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
                 RequireConsent = false,
                 RedirectUris = { "https://localhost:44328/" },
                 PostLogoutRedirectUris = {
-                        "https://localhost:44328//unauthorized/",
+                        "https://localhost:44328/unauthorized/",
                         "https://localhost:44328/"
                     },
-                AllowedCorsOrigins = {  "https://localhost:44328" },
+                AllowedCorsOrigins = { allowedCors },
                 AllowedScopes =
                     {
                         IdentityServerConstants.StandardScopes.OpenId,

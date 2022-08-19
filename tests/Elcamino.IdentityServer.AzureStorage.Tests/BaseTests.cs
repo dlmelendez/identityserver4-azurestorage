@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ElCamino.IdentityServer.AzureStorage;
 using ElCamino.IdentityServer.AzureStorage.Stores;
 using Duende.IdentityServer.Stores.Serialization;
+using ElCamino.IdentityServer.AzureStorage.Services;
 
 namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 {
@@ -45,7 +46,8 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             Services.AddSigningKeyContext(Configuration.GetSection("IdentityServer:signingKeyStorageConfig"))
                .CreateSigningKeyStorage();
             Services.AddIdentityServer()
-                .AddKeyManagement();
+                .AddKeyManagement()
+                .AddCorsPolicyService<StorageCorsPolicyService>();
             Services.AddLogging();
 
         }
