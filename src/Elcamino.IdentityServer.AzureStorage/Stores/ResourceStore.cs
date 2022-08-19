@@ -389,7 +389,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             TableQuery tq = new TableQuery();
             tq.FilterString = partitionKeyFilter;
 
-            return await StorageContext.GetAllByTableQueryAsync<Entities.ResourceScopeIndexTblEntity>(tq, table, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await table.QueryAsync<Entities.ResourceScopeIndexTblEntity>(filter: partitionKeyFilter, cancellationToken: cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         private static Entities.ResourceScopeIndexTblEntity GenerateResourceIndexEntity(string name, string scope)

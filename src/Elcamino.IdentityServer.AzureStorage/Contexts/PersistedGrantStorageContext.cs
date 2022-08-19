@@ -16,6 +16,7 @@ using ElCamino.IdentityServer.AzureStorage.Mappers;
 using Azure.Data.Tables;
 using Azure;
 using System.Threading;
+using IdentityModel;
 
 namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
@@ -88,8 +89,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
                 QueryComparisons.LessThan,
                 DateTimeOffset.UtcNow);
             tq.TakeCount = maxResults;
-            return await GetAllByTableQueryAsync<PersistedGrantTblEntity>(tq, PersistedGrantTable, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
-
+            
+            return await PersistedGrantTable.ExecuteQueryAsync<PersistedGrantTblEntity>(tq, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default)

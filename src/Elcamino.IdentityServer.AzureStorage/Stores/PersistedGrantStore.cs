@@ -46,11 +46,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             grantFilter.Validate();
             string tableFilter = GetTableFilter(grantFilter);
 
-            TableQuery tq = new TableQuery();
-            tq.FilterString = tableFilter;
-
             await foreach (var model in StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
-                (tq, StorageContext.PersistedGrantTable, p => p.ToModel(), cancellationToken).ConfigureAwait(false))
+                (tableFilter, StorageContext.PersistedGrantTable, p => p.ToModel(), cancellationToken).ConfigureAwait(false))
             {
                 await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer, cancellationToken)
                         .ContinueWith((blobTask) =>
@@ -94,13 +91,9 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             TableClient table = StorageContext.PersistedGrantTable;
 
             string tableFilter = GetTableFilter(grantFilter);
-            TableQuery tq = new TableQuery();
-            tq.FilterString = tableFilter;
-
             _logger.LogDebug(message: $"removing persisted grants from database for table filter {tableFilter} ");
 
-
-            var mainTasks = (await StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity>(tq, table, cancellationToken)
+            var mainTasks = (await table.QueryAsync<PersistedGrantTblEntity>(filter: tableFilter, cancellationToken: cancellationToken)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false))
                 .Select(subjectEntity =>

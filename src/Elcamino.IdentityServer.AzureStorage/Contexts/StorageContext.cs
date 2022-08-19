@@ -253,10 +253,10 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             return table.ExecuteQueryAsync<Entity>(tableQuery, cancellationToken);
         }
 
-        public async IAsyncEnumerable<Model> GetAllByTableQueryAsync<Entity, Model>(TableQuery tableQuery, TableClient table, Func<Entity, Model> mapFunc, [EnumeratorCancellation]CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<Model> GetAllByTableQueryAsync<Entity, Model>(string tableQuery, TableClient table, Func<Entity, Model> mapFunc, [EnumeratorCancellation]CancellationToken cancellationToken = default)
            where Entity : class, ITableEntity, new()
         {
-            await foreach (var entity in table.ExecuteQueryAsync<Entity>(tableQuery, cancellationToken))
+            await foreach (var entity in table.QueryAsync<Entity>(filter: tableQuery, cancellationToken: cancellationToken))
             {
                 yield return mapFunc(entity);
             }
