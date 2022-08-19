@@ -19,6 +19,8 @@ using Microsoft.Extensions.Logging;
 using Duende.IdentityServer.Extensions;
 using Azure.Data.Tables;
 using Azure;
+using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
@@ -33,12 +35,12 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             _logger = logger;
         }
 
-        public async Task<IEnumerable<PersistedGrant>> GetAllAsync(PersistedGrantFilter grantFilter)
+        async Task<IEnumerable<PersistedGrant>> IPersistedGrantStore.GetAllAsync(PersistedGrantFilter grantFilter)
         {
-            return await GetAllExAsync(grantFilter).ToListAsync();
+            return await GetAllAsync(grantFilter, default).ToListAsync();
         }
 
-        public async IAsyncEnumerable<PersistedGrant> GetAllExAsync(PersistedGrantFilter grantFilter)
+        public async IAsyncEnumerable<PersistedGrant> GetAllAsync(PersistedGrantFilter grantFilter, [EnumeratorCancellation]CancellationToken cancellationToken = default)
         {
             int counter = 0;
             grantFilter.Validate();
@@ -48,24 +50,29 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             tq.FilterString = tableFilter;
 
             await foreach (var model in StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
-                (tq, StorageContext.PersistedGrantTable, p => p.ToModel()).ConfigureAwait(false))
+                (tq, StorageContext.PersistedGrantTable, p => p.ToModel(), cancellationToken).ConfigureAwait(false))
             {
-                await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer)
+                await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer, cancellationToken)
                         .ContinueWith((blobTask) =>
                         {
                             model.Data = blobTask.Result;
-                        }).ConfigureAwait(false);
+                        }, cancellationToken).ConfigureAwait(false);
                 counter++;
                 yield return model;
             }
             _logger.LogDebug($"{counter} persisted grants found for table filter {tableFilter}");
         }
 
-        public async Task<PersistedGrant> GetAsync(string key)
+        Task<PersistedGrant> IPersistedGrantStore.GetAsync(string key)
+        { 
+            return GetAsync(key, default);
+        }
+
+        public async Task<PersistedGrant> GetAsync(string key, CancellationToken cancellationToken = default)
         {
             //Getting greedy
-            Task<PersistedGrantTblEntity> entityTask = StorageContext.GetEntityTableAsync<PersistedGrantTblEntity>(key, StorageContext.PersistedGrantTable);
-            Task<string> tokenDataTask =  StorageContext.GetBlobContentAsync(key, StorageContext.PersistedGrantBlobContainer);
+            Task<PersistedGrantTblEntity> entityTask = StorageContext.GetEntityTableAsync<PersistedGrantTblEntity>(key, StorageContext.PersistedGrantTable, cancellationToken);
+            Task<string> tokenDataTask =  StorageContext.GetBlobContentAsync(key, StorageContext.PersistedGrantBlobContainer, cancellationToken);
             await Task.WhenAll(entityTask, tokenDataTask).ConfigureAwait(false);
             var model = entityTask.Result?.ToModel();
             if (model != null)
@@ -76,8 +83,12 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return model;
         }
 
+        Task IPersistedGrantStore.RemoveAllAsync(PersistedGrantFilter grantFilter)
+        {
+            return RemoveAllAsync(grantFilter, default);
+        }
 
-        public async Task RemoveAllAsync(PersistedGrantFilter grantFilter)
+        public async Task RemoveAllAsync(PersistedGrantFilter grantFilter, CancellationToken cancellationToken = default)
         {
             grantFilter.Validate();
             TableClient table = StorageContext.PersistedGrantTable;
@@ -89,15 +100,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             _logger.LogDebug(message: $"removing persisted grants from database for table filter {tableFilter} ");
 
 
-            var mainTasks = (await StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity>(tq, table)
-                .ToListAsync()
+            var mainTasks = (await StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity>(tq, table, cancellationToken)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false))
                 .Select(subjectEntity =>
                 {
                     var deletes = subjectEntity.ToModel().ToEntities();
-                    return Task.WhenAll(table.DeleteEntityAsync(deletes.keyGrant.PartitionKey, deletes.keyGrant.RowKey, KeyGeneratorHelper.ETagWildCard),
-                                table.DeleteEntityAsync(subjectEntity.PartitionKey, subjectEntity.RowKey, KeyGeneratorHelper.ETagWildCard),
-                                StorageContext.DeleteBlobAsync(subjectEntity.Key, StorageContext.PersistedGrantBlobContainer));
+                    return Task.WhenAll(table.DeleteEntityAsync(deletes.keyGrant.PartitionKey, deletes.keyGrant.RowKey, KeyGeneratorHelper.ETagWildCard, cancellationToken),
+                                table.DeleteEntityAsync(subjectEntity.PartitionKey, subjectEntity.RowKey, KeyGeneratorHelper.ETagWildCard, cancellationToken),
+                                StorageContext.DeleteBlobAsync(subjectEntity.Key, StorageContext.PersistedGrantBlobContainer, cancellationToken));
                 });
             try
             {
@@ -156,11 +167,16 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return tableFilter;
         }
 
-        public async Task RemoveAsync(string key)
+        Task IPersistedGrantStore.RemoveAsync(string key)
+        {
+            return RemoveAsync(key, default);
+        }
+
+        public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
         {
             try
             {
-                bool entityFound = await StorageContext.RemoveAsync(key).ConfigureAwait(false);
+                bool entityFound = await StorageContext.RemoveAsync(key, cancellationToken).ConfigureAwait(false);
                 if (!entityFound)
                 {
                     _logger.LogDebug($"no {key} persisted grant found in table storage to remove");
@@ -184,16 +200,21 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }
 
-        
-        public async Task StoreAsync(PersistedGrant grant)
+
+        Task IPersistedGrantStore.StoreAsync(PersistedGrant grant)
+        {
+            return StoreAsync(grant, default);
+        }
+
+        public async Task StoreAsync(PersistedGrant grant, CancellationToken cancellationToken = default)
         {
             var entities = grant.ToEntities();
             TableClient table = StorageContext.PersistedGrantTable;
             try
             {
-                await Task.WhenAll(table.UpsertEntityAsync(entities.keyGrant, TableUpdateMode.Replace),
-                    table.UpsertEntityAsync(entities.subjectGrant, TableUpdateMode.Replace),
-                    StorageContext.SaveBlobWithHashedKeyAsync(grant.Key, grant.Data, StorageContext.PersistedGrantBlobContainer))
+                await Task.WhenAll(table.UpsertEntityAsync(entities.keyGrant, TableUpdateMode.Replace, cancellationToken),
+                    table.UpsertEntityAsync(entities.subjectGrant, TableUpdateMode.Replace, cancellationToken),
+                    StorageContext.SaveBlobWithHashedKeyAsync(grant.Key, grant.Data, StorageContext.PersistedGrantBlobContainer, cancellationToken))
                     .ConfigureAwait(false);
             }
             catch (AggregateException agg)
@@ -214,7 +235,5 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
 
         }        
-
-        
     }
 }

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Data.Tables;
@@ -53,9 +54,14 @@ public class SigningKeyStore : ISigningKeyStore
     /// Loads all keys from store.
     /// </summary>
     /// <returns></returns>
-    public async Task<IEnumerable<SerializedKey>> LoadKeysAsync()
+    Task<IEnumerable<SerializedKey>> ISigningKeyStore.LoadKeysAsync()
     {
-        var entities = await GetAllSigningKeyEntities().ConfigureAwait(false);
+        return LoadKeysAsync(default);
+    }
+
+    public async Task<IEnumerable<SerializedKey>> LoadKeysAsync(CancellationToken cancellationToken = default)
+    {
+        var entities = await GetAllSigningKeyEntities(cancellationToken).ConfigureAwait(false);
 
         return entities.Select(key => new SerializedKey
         {
@@ -75,7 +81,12 @@ public class SigningKeyStore : ISigningKeyStore
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public async Task StoreKeyAsync(SerializedKey model)
+    Task ISigningKeyStore.StoreKeyAsync(SerializedKey key)
+    {
+        return StoreKeyAsync(key, default);
+    }
+
+    public async Task StoreKeyAsync(SerializedKey model, CancellationToken cancellationToken = default)
     {
         Entities.Key entity = new()
         {
@@ -90,7 +101,7 @@ public class SigningKeyStore : ISigningKeyStore
         };
         try
         {
-            await StorageContext.SaveBlobWithHashedKeyAsync(entity.Id, JsonSerializer.Serialize(entity, StorageContext.JsonSerializerDefaultOptions), StorageContext.SigningKeyBlobContainer)
+            await StorageContext.SaveBlobWithHashedKeyAsync(entity.Id, JsonSerializer.Serialize(entity, StorageContext.JsonSerializerDefaultOptions), StorageContext.SigningKeyBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (AggregateException agg)
@@ -116,11 +127,16 @@ public class SigningKeyStore : ISigningKeyStore
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public async Task DeleteKeyAsync(string keyId)
+    Task ISigningKeyStore.DeleteKeyAsync(string keyId)
+    {
+        return DeleteKeyAsync(keyId, default);
+    }
+
+    public async Task DeleteKeyAsync(string keyId, CancellationToken cancellationToken = default)
     {
         try
         {
-            await StorageContext.DeleteBlobAsync(keyId, StorageContext.SigningKeyBlobContainer)
+            await StorageContext.DeleteBlobAsync(keyId, StorageContext.SigningKeyBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (AggregateException agg)
@@ -141,10 +157,10 @@ public class SigningKeyStore : ISigningKeyStore
         }
     }
 
-    private async Task<IEnumerable<Entities.Key>> GetAllSigningKeyEntities()
+    private async Task<IEnumerable<Entities.Key>> GetAllSigningKeyEntities(CancellationToken cancellationToken)
     {
-        return await StorageContext.GetAllBlobEntitiesAsync<Entities.Key>(StorageContext.SigningKeyBlobContainer, _logger)
-                .ToListAsync()
+        return await StorageContext.GetAllBlobEntitiesAsync<Entities.Key>(StorageContext.SigningKeyBlobContainer, _logger, cancellationToken)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
     }
 

@@ -113,7 +113,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                     break;
                 }
 
-                await RemoveExpiredGrantsAsync();
+                await RemoveExpiredGrantsAsync(cancellationToken);
             }
         }
 
@@ -121,13 +121,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
         /// Method to clear expired persisted grants.
         /// </summary>
         /// <returns></returns>
-        public async Task RemoveExpiredGrantsAsync()
+        public async Task RemoveExpiredGrantsAsync(CancellationToken cancellationToken)
         {
             try
             {
                 _logger.LogTrace("Querying for expired grants to remove");
                 var context = _serviceProvider.CreateScope().ServiceProvider.GetService<PersistedGrantStorageContext>();
-                await RemoveGrants(context);
+                await RemoveGrants(context, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -135,13 +135,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             }
         }
 
-        private async Task RemoveGrants(PersistedGrantStorageContext context)
+        private async Task RemoveGrants(PersistedGrantStorageContext context, CancellationToken cancellationToken)
         {
             var found = Int32.MaxValue;
 
             while (found >= _config.TokenCleanupBatchSize)
             {
-                var expiredGrants = await context.GetExpiredAsync(_config.TokenCleanupBatchSize);
+                var expiredGrants = await context.GetExpiredAsync(_config.TokenCleanupBatchSize, cancellationToken);
                
                 found = expiredGrants.Count();
                 _logger.LogInformation("Removing {grantCount} grants", found);
@@ -152,7 +152,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                     {
                         try
                         {
-                            await context.RemoveAsync(expiredGrant.Key);
+                            await context.RemoveAsync(expiredGrant.Key, cancellationToken);
                         }
                         catch (Exception ex)
                         {

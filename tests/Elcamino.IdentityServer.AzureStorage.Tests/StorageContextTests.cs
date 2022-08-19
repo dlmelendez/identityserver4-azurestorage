@@ -32,7 +32,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
         public async Task StorageContext_SuppressBlobNotFoundErrorTest()
         {
             var storageContext = Services.BuildServiceProvider().GetService<PersistedGrantStorageContext>();
-            string strBlob = await storageContext.GetBlobContentAsync(Guid.NewGuid().ToString(), storageContext.PersistedGrantBlobContainer);
+            string strBlob = await storageContext.GetBlobContentAsync(Guid.NewGuid().ToString(), storageContext.PersistedGrantBlobContainer, default);
             Assert.AreEqual<string>(string.Empty, strBlob);
         }
 
