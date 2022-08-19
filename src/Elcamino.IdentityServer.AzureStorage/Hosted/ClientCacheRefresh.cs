@@ -112,7 +112,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                     break;
                 }
 
-                await RefreshCacheAsync(cancellationToken);
+                await RefreshCacheAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -126,7 +126,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             {
                 _logger.LogTrace($"Querying for {nameof(ClientStorageContext)} cache refresh");
                 ClientStorageContext context = _serviceProvider.CreateScope().ServiceProvider.GetService<ClientStorageContext>();
-                await RefreshCacheAsync(context, cancellationToken);
+                await RefreshCacheAsync(context, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -137,7 +137,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
         private async Task RefreshCacheAsync(ClientStorageContext context, CancellationToken cancellationToken = default)
         {
             IAsyncEnumerable<Client> entities = context.GetAllBlobEntitiesAsync<Entities.Client>(context.ClientBlobContainer, _logger, cancellationToken);
-            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.Client>(entities, context.ClientCacheBlobContainer, cancellationToken);
+            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.Client>(entities, context.ClientCacheBlobContainer, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("{RefreshCacheAsync} client count {count} saved in blob storage: {blobName}", nameof(RefreshCacheAsync), count, blobName);
             await context.DeleteBlobCacheFilesAsync(blobName, context.ClientCacheBlobContainer, _logger, cancellationToken).ConfigureAwait(false);
         }

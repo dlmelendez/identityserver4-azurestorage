@@ -41,7 +41,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Services
         /// <returns></returns>
         public virtual async Task<bool> IsOriginAllowedAsync(string origin)
         {
-            var clients = await _clientStore.GetAllClients();
+            var clients = await _clientStore.GetAllClients().ConfigureAwait(false);
             var query =
                 from client in clients
                 from url in client.AllowedCorsOrigins

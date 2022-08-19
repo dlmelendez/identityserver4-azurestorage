@@ -37,7 +37,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
 
         public async Task<IEnumerable<PersistedGrant>> GetAllAsync(PersistedGrantFilter grantFilter)
         {
-            return await GetAllAsync(grantFilter, default).ToListAsync();
+            return await GetAllAsync(grantFilter, default).ToListAsync().ConfigureAwait(false);
         }
 
         public async IAsyncEnumerable<PersistedGrant> GetAllAsync(PersistedGrantFilter grantFilter, [EnumeratorCancellation]CancellationToken cancellationToken = default)
@@ -46,14 +46,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             grantFilter.Validate();
             string tableFilter = GetTableFilter(grantFilter);
 
-            await foreach (var model in StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
+            await foreach (var model in Contexts.StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
                 (tableFilter, StorageContext.PersistedGrantTable, p => p.ToModel(), cancellationToken).ConfigureAwait(false))
             {
                 await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer, cancellationToken)
                         .ContinueWith((blobTask) =>
                         {
                             model.Data = blobTask.Result;
-                        }, cancellationToken).ConfigureAwait(false);
+                        }, cancellationToken)
+                        .ConfigureAwait(false);
                 counter++;
                 yield return model;
             }
@@ -68,7 +69,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         public async Task<PersistedGrant> GetAsync(string key, CancellationToken cancellationToken = default)
         {
             //Getting greedy
-            Task<PersistedGrantTblEntity> entityTask = StorageContext.GetEntityTableAsync<PersistedGrantTblEntity>(key, StorageContext.PersistedGrantTable, cancellationToken);
+            Task<PersistedGrantTblEntity> entityTask = Contexts.StorageContext.GetEntityTableAsync<PersistedGrantTblEntity>(key, StorageContext.PersistedGrantTable, cancellationToken);
             Task<string> tokenDataTask =  StorageContext.GetBlobContentAsync(key, StorageContext.PersistedGrantBlobContainer, cancellationToken);
             await Task.WhenAll(entityTask, tokenDataTask).ConfigureAwait(false);
             var model = entityTask.Result?.ToModel();

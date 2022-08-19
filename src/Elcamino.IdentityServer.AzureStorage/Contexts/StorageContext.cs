@@ -36,7 +36,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         {
             try
             {
-                Response<BlobDownloadInfo> download = await blob.DownloadAsync(cancellationToken);
+                Response<BlobDownloadInfo> download = await blob.DownloadAsync(cancellationToken).ConfigureAwait(false);
                 using (StreamReader sr = new StreamReader(download.Value.Content, Encoding.UTF8))
                 {
                     return await sr.ReadToEndAsync().ConfigureAwait(false);
@@ -123,7 +123,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public async IAsyncEnumerable<Entity> GetAllBlobEntitiesAsync<Entity>(BlobContainerClient container, ILogger logger, [EnumeratorCancellation]CancellationToken cancellationToken = default) where Entity : class, new()
         {
-            await foreach(var blobJson in GetAllBlobsAsync(container, cancellationToken))
+            await foreach(var blobJson in GetAllBlobsAsync(container, cancellationToken).ConfigureAwait(false))
             {
                 Entity e = await GetEntityBlobAsync<Entity>(blobJson, cancellationToken).ConfigureAwait(false);
                 if (e != null)
@@ -142,7 +142,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         /// <returns></returns>
         public async IAsyncEnumerable<Entity> SafeGetAllBlobEntitiesAsync<Entity>(BlobContainerClient container, ILogger logger, [EnumeratorCancellation]CancellationToken cancellationToken = default) where Entity : class, new()
         {
-            await foreach (var blobJson in GetAllBlobsAsync(container, cancellationToken))
+            await foreach (var blobJson in GetAllBlobsAsync(container, cancellationToken).ConfigureAwait(false))
             {
                 Entity e = null;
                 try
@@ -180,7 +180,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             AsyncPageable<BlobItem> pageable = container.GetBlobsAsync(BlobTraits.None, BlobStates.None, string.Empty, cancellationToken: cancellationToken);
             IAsyncEnumerable<Page<BlobItem>> pages = pageable.AsPages(pageSizeHint:1);
 
-            var blobList = (await pages?.FirstOrDefaultAsync(cancellationToken))?.Values;
+            var blobList = (await pages.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false))?.Values;
             if (blobList.Count > 0)
             {
                 BlobItem blob = blobList[0];
@@ -223,7 +223,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         /// <typeparam name="Entity"></typeparam>
         /// <param name="keyNotHashed">Key of the entity (not hashed)</param>
         /// <returns></returns>
-        public async Task<Entity> GetEntityTableAsync<Entity>(string keyNotHashed, TableClient table, CancellationToken cancellationToken = default) 
+        public static async Task<Entity> GetEntityTableAsync<Entity>(string keyNotHashed, TableClient table, CancellationToken cancellationToken = default) 
             where Entity : class, ITableEntity, new()
         {
             string hashedKey = KeyGeneratorHelper.GenerateHashValue(keyNotHashed);
@@ -231,10 +231,10 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
                 .ConfigureAwait(false);
         }
         
-        public async IAsyncEnumerable<Model> GetAllByTableQueryAsync<Entity, Model>(string tableQuery, TableClient table, Func<Entity, Model> mapFunc, [EnumeratorCancellation]CancellationToken cancellationToken = default)
+        public static async IAsyncEnumerable<Model> GetAllByTableQueryAsync<Entity, Model>(string tableQuery, TableClient table, Func<Entity, Model> mapFunc, [EnumeratorCancellation]CancellationToken cancellationToken = default)
            where Entity : class, ITableEntity, new()
         {
-            await foreach (var entity in table.QueryAsync<Entity>(filter: tableQuery, cancellationToken: cancellationToken))
+            await foreach (var entity in table.QueryAsync<Entity>(filter: tableQuery, cancellationToken: cancellationToken).ConfigureAwait(false))
             {
                 yield return mapFunc(entity);
             }

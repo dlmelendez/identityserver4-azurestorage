@@ -94,7 +94,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
 
                 try
                 {
-                    await Task.Delay(CleanupInterval, cancellationToken);
+                    await Task.Delay(CleanupInterval, cancellationToken).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException)
                 {
@@ -113,7 +113,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                     break;
                 }
 
-                await RemoveExpiredGrantsAsync(cancellationToken);
+                await RemoveExpiredGrantsAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -127,7 +127,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             {
                 _logger.LogTrace("Querying for expired grants to remove");
                 var context = _serviceProvider.CreateScope().ServiceProvider.GetService<PersistedGrantStorageContext>();
-                await RemoveGrants(context, cancellationToken);
+                await RemoveGrants(context, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -141,7 +141,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
 
             while (found >= _config.TokenCleanupBatchSize)
             {
-                var expiredGrants = await context.GetExpiredAsync(_config.TokenCleanupBatchSize, cancellationToken);
+                var expiredGrants = await context.GetExpiredAsync(_config.TokenCleanupBatchSize, cancellationToken).ConfigureAwait(false);
                
                 found = expiredGrants.Count();
                 _logger.LogInformation("Removing {grantCount} grants", found);
@@ -152,7 +152,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                     {
                         try
                         {
-                            await context.RemoveAsync(expiredGrant.Key, cancellationToken);
+                            await context.RemoveAsync(expiredGrant.Key, cancellationToken).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {

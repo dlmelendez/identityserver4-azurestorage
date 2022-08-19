@@ -112,7 +112,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                     break;
                 }
 
-                await RefreshCacheAsync(cancellationToken);
+                await RefreshCacheAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -128,7 +128,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                 var context = _serviceProvider.CreateScope().ServiceProvider.GetService<ResourceStorageContext>();
                 await Task.WhenAll(RefreshApiCacheAsync(context, cancellationToken), 
                     RefreshIdentityCacheAsync(context, cancellationToken),
-                    RefreshApiScopeCacheAsync(context, cancellationToken));
+                    RefreshApiScopeCacheAsync(context, cancellationToken)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
