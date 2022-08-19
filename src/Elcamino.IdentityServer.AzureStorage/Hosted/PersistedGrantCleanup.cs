@@ -121,7 +121,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
         /// Method to clear expired persisted grants.
         /// </summary>
         /// <returns></returns>
-        public async Task RemoveExpiredGrantsAsync(CancellationToken cancellationToken)
+        public async Task RemoveExpiredGrantsAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -135,7 +135,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             }
         }
 
-        private async Task RemoveGrants(PersistedGrantStorageContext context, CancellationToken cancellationToken)
+        private async Task RemoveGrants(PersistedGrantStorageContext context, CancellationToken cancellationToken = default)
         {
             var found = Int32.MaxValue;
 

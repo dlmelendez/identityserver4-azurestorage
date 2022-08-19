@@ -80,7 +80,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         }
 
-        public async Task<IEnumerable<PersistedGrantTblEntity>> GetExpiredAsync(int maxResults, CancellationToken cancellationToken)
+        public async Task<IEnumerable<PersistedGrantTblEntity>> GetExpiredAsync(int maxResults, CancellationToken cancellationToken = default)
         {
             TableQuery tq = new TableQuery();
 
@@ -92,7 +92,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         }
 
-        public async Task<bool> RemoveAsync(string key, CancellationToken cancellationToken)
+        public async Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default)
         {
             TableClient table = PersistedGrantTable;
             PersistedGrantTblEntity keyEntity = await GetEntityTableAsync<PersistedGrantTblEntity>(key, table, cancellationToken: cancellationToken).ConfigureAwait(false);

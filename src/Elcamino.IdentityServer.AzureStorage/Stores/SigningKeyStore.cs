@@ -157,7 +157,7 @@ public class SigningKeyStore : ISigningKeyStore
         }
     }
 
-    private async Task<IEnumerable<Entities.Key>> GetAllSigningKeyEntities(CancellationToken cancellationToken)
+    private async Task<IEnumerable<Entities.Key>> GetAllSigningKeyEntities(CancellationToken cancellationToken = default)
     {
         return await StorageContext.GetAllBlobEntitiesAsync<Entities.Key>(StorageContext.SigningKeyBlobContainer, _logger, cancellationToken)
                 .ToListAsync(cancellationToken)

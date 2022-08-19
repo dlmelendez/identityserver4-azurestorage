@@ -302,7 +302,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }
 
-        private async Task DeleteScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, TableClient table, CancellationToken cancellationToken)
+        private async Task DeleteScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, TableClient table, CancellationToken cancellationToken = default)
         {
             if (indexes != null )
             {                
@@ -311,7 +311,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }
         
-        private async Task CreateScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, TableClient table, CancellationToken cancellationToken)
+        private async Task CreateScopeIndexesAsync(IEnumerable<Entities.ResourceScopeIndexTblEntity> indexes, TableClient table, CancellationToken cancellationToken = default)
         {
             if (indexes != null)
             {
@@ -320,28 +320,28 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }
 
-        public async Task UpdateApiResourceCacheFileAsync(IEnumerable<Entities.ApiResource> entities, CancellationToken cancellationToken)
+        public async Task UpdateApiResourceCacheFileAsync(IEnumerable<Entities.ApiResource> entities, CancellationToken cancellationToken = default)
         {
             (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.ApiResource>(entities, StorageContext.ApiResourceBlobCacheContainer, cancellationToken)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateApiResourceCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
         }
 
-        public async Task UpdateApiScopeCacheFileAsync(IEnumerable<Entities.ApiScope> entities, CancellationToken cancellationToken)
+        public async Task UpdateApiScopeCacheFileAsync(IEnumerable<Entities.ApiScope> entities, CancellationToken cancellationToken = default)
         {
             (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.ApiScope>(entities, StorageContext.ApiScopeBlobCacheContainer, cancellationToken)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateApiScopeCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
         }
 
-        public async Task UpdateIdentityResourceCacheFileAsync(IEnumerable<Entities.IdentityResource> entities, CancellationToken cancellationToken)
+        public async Task UpdateIdentityResourceCacheFileAsync(IEnumerable<Entities.IdentityResource> entities, CancellationToken cancellationToken = default)
         {
             (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.IdentityResource>(entities, StorageContext.IdentityResourceBlobCacheContainer, cancellationToken)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateIdentityResourceCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
         }
 
-        public async Task<IEnumerable<Entities.ApiResource>> GetLatestApiResourceCacheAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Entities.ApiResource>> GetLatestApiResourceCacheAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -354,7 +354,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return null;
         }
 
-        public async Task<IEnumerable<Entities.ApiScope>> GetLatestApiScopeCacheAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Entities.ApiScope>> GetLatestApiScopeCacheAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -367,7 +367,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return null;
         }
 
-        public async Task<IEnumerable<Entities.IdentityResource>> GetLatestIdentityResourceCacheAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Entities.IdentityResource>> GetLatestIdentityResourceCacheAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -380,7 +380,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return null;
         }
 
-        private async Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, TableClient table, CancellationToken cancellationToken)
+        private async Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, TableClient table, CancellationToken cancellationToken = default)
         {
             string partitionKeyFilter = TableQuery.GenerateFilterCondition(nameof(TableEntity.PartitionKey),
                 QueryComparisons.Equal,
@@ -409,7 +409,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns></returns>
-        private async Task<Model.ApiResource> FindApiResourceAsync(string name, CancellationToken cancellationToken)
+        private async Task<Model.ApiResource> FindApiResourceAsync(string name, CancellationToken cancellationToken = default)
         {
             var api = await StorageContext.GetEntityBlobAsync<Entities.ApiResource>(name, StorageContext.ApiResourceBlobContainer, cancellationToken).ConfigureAwait(false);
 
@@ -435,7 +435,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return FindApiResourcesByScopeNameAsync(scopeNames, default);
         }
 
-        public async Task<IEnumerable<Model.ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Model.ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
         {
             var entities = await GetResourcesByScopeAsync<Entities.ApiResource>(scopeNames, StorageContext.ApiResourceTable, StorageContext.ApiResourceBlobContainer, cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Found {scopes} API scopes in blob storage", entities.Count());
@@ -443,7 +443,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return entities.Select(s => s?.ToModel());
         }
 
-        private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, TableClient table, BlobContainerClient container, CancellationToken cancellationToken) where Entity : class, new()
+        private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, TableClient table, BlobContainerClient container, CancellationToken cancellationToken = default) where Entity : class, new()
         {
             var scopeTasks = scopeNames.Distinct().Select(scope => GetResourceScopeIndexTblEntitiesAsync(scope, table, cancellationToken));
 
@@ -473,7 +473,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return FindIdentityResourcesByScopeNameAsync(scopeNames, default);
         }
 
-        public async Task<IEnumerable<Model.IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Model.IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
         {
             var scopes = scopeNames.Where(w => !string.IsNullOrWhiteSpace(w)).Distinct();
 
@@ -499,7 +499,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return GetAllResourcesAsync(default);
         }
 
-        public async Task<Resources> GetAllResourcesAsync(CancellationToken cancellationToken)
+        public async Task<Resources> GetAllResourcesAsync(CancellationToken cancellationToken = default)
         {
             var identityTask = GetAllIdentityResourceEntitiesAsync(cancellationToken);
 
@@ -523,7 +523,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return result;
         }
 
-        private async Task<IEnumerable<Entities.ApiResource>> GetAllApiResourceEntitiesAsync(CancellationToken cancellationToken)
+        private async Task<IEnumerable<Entities.ApiResource>> GetAllApiResourceEntitiesAsync(CancellationToken cancellationToken = default)
         {
             var entities = await GetLatestApiResourceCacheAsync(cancellationToken).ConfigureAwait(false);
             if (entities == null)
@@ -537,7 +537,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return entities;
         }
         
-        private async Task<IEnumerable<Entities.IdentityResource>> GetAllIdentityResourceEntitiesAsync(CancellationToken cancellationToken)
+        private async Task<IEnumerable<Entities.IdentityResource>> GetAllIdentityResourceEntitiesAsync(CancellationToken cancellationToken = default)
         {
             var entities = await GetLatestIdentityResourceCacheAsync(cancellationToken).ConfigureAwait(false);
             if (entities == null)
@@ -551,7 +551,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return entities;
         }
 
-        private async Task<IEnumerable<Entities.ApiScope>> GetAllApiScopeEntitiesAsync(CancellationToken cancellationToken)
+        private async Task<IEnumerable<Entities.ApiScope>> GetAllApiScopeEntitiesAsync(CancellationToken cancellationToken = default)
         {
             var entities = await GetLatestApiScopeCacheAsync(cancellationToken).ConfigureAwait(false);
             if (entities == null)
@@ -570,7 +570,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return FindApiScopesByNameAsync(scopeNames, default);
         }
 
-        public async Task<IEnumerable<Model.ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Model.ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
         {
             var scopes = scopeNames.Where(w => !string.IsNullOrWhiteSpace(w)).Distinct();
 
@@ -590,7 +590,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return FindApiResourcesByNameAsync(apiResourceNames, default);
         }
 
-        public async Task<IEnumerable<Model.ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Model.ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames, CancellationToken cancellationToken = default)
         {
             IEnumerable<string> apiResources = apiResourceNames.Where(w => !string.IsNullOrWhiteSpace(w)).Distinct();
 

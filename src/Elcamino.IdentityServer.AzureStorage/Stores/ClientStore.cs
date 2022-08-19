@@ -59,7 +59,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return FindClientByIdAsync(clientId, default);
         }
 
-        public async Task<Client> FindClientByIdAsync(string clientId, CancellationToken cancellationToken)
+        public async Task<Client> FindClientByIdAsync(string clientId, CancellationToken cancellationToken = default)
         {
             Model.Client model = null;
             Entities.Client entity = await StorageContext.GetEntityBlobAsync<Entities.Client>(clientId, StorageContext.ClientBlobContainer, cancellationToken)
@@ -99,21 +99,21 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }      
 
-        public async Task UpdateClientCacheFileAsync(IEnumerable<Entities.Client> entities, CancellationToken cancellationToken)
+        public async Task UpdateClientCacheFileAsync(IEnumerable<Entities.Client> entities, CancellationToken cancellationToken = default)
         {
             (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
         }
 
-        public async Task UpdateClientCacheFileAsync(IAsyncEnumerable<Entities.Client> entities, CancellationToken cancellationToken)
+        public async Task UpdateClientCacheFileAsync(IAsyncEnumerable<Entities.Client> entities, CancellationToken cancellationToken = default)
         {
             (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
         }
 
-        public async Task<IEnumerable<Entities.Client>> GetLatestClientCacheAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Entities.Client>> GetLatestClientCacheAsync(CancellationToken cancellationToken = default)
         {
             try
             {

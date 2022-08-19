@@ -26,13 +26,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public virtual JsonSerializerOptions JsonSerializerDefaultOptions => new(JsonSerializerDefaults.Web);
 
-        public async Task<string> GetBlobContentAsync(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken)
+        public async Task<string> GetBlobContentAsync(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken = default)
         {
             BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
             return await GetBlobContentAsync(blob, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<string> GetBlobContentAsync(BlobClient blob, CancellationToken cancellationToken)
+        public async Task<string> GetBlobContentAsync(BlobClient blob, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -50,7 +50,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         }
 
-        public async Task<(string blobName, int count)> UpdateBlobCacheFileAsync<Entity>(IEnumerable<Entity> entities, BlobContainerClient cacheContainer, CancellationToken cancellationToken)
+        public async Task<(string blobName, int count)> UpdateBlobCacheFileAsync<Entity>(IEnumerable<Entity> entities, BlobContainerClient cacheContainer, CancellationToken cancellationToken = default)
         {
             DateTime dateTimeNow = DateTime.UtcNow;
             string blobName = KeyGeneratorHelper.GenerateDateTimeDecendingId(dateTimeNow);
@@ -59,7 +59,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             return (blobName, count: entities.Count());
         }
 
-        public async Task<(string blobName, int count)> UpdateBlobCacheFileAsync<Entity>(IAsyncEnumerable<Entity> entities, BlobContainerClient cacheContainer, CancellationToken cancellationToken)
+        public async Task<(string blobName, int count)> UpdateBlobCacheFileAsync<Entity>(IAsyncEnumerable<Entity> entities, BlobContainerClient cacheContainer, CancellationToken cancellationToken = default)
         {
             return await UpdateBlobCacheFileAsync(await entities.ToListAsync(cancellationToken).ConfigureAwait(false), cacheContainer, cancellationToken)
                 .ConfigureAwait(false);
@@ -71,7 +71,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         /// <param name="latestBlobName"></param>
         /// <param name="cacheContainer"></param>
         /// <returns></returns>
-        public async Task DeleteBlobCacheFilesAsync(string latestBlobName, BlobContainerClient cacheContainer, ILogger logger, CancellationToken cancellationToken)
+        public async Task DeleteBlobCacheFilesAsync(string latestBlobName, BlobContainerClient cacheContainer, ILogger logger, CancellationToken cancellationToken = default)
         {
             await foreach (BlobItem blobName in cacheContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, cancellationToken: cancellationToken))
             {
@@ -84,7 +84,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             }
         }
 
-        public async Task<IEnumerable<Entity>> GetLatestFromCacheBlobAsync<Entity>(BlobContainerClient cacheContainer, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Entity>> GetLatestFromCacheBlobAsync<Entity>(BlobContainerClient cacheContainer, CancellationToken cancellationToken = default)
         {
             BlobClient blob = await GetFirstBlobAsync(cacheContainer, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (blob != null)
@@ -98,13 +98,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             return null;
         }
 
-        public async Task<Entity> GetEntityBlobAsync<Entity>(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken) where Entity : class, new()
+        public async Task<Entity> GetEntityBlobAsync<Entity>(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken = default) where Entity : class, new()
         {
             BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
             return await GetEntityBlobAsync<Entity>(blob, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<Entity> GetEntityBlobAsync<Entity>(BlobClient blobJson, CancellationToken cancellationToken) where Entity : class, new()
+        public async Task<Entity> GetEntityBlobAsync<Entity>(BlobClient blobJson, CancellationToken cancellationToken = default) where Entity : class, new()
         {
             try
             {
@@ -121,7 +121,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             }
         }
 
-        public async IAsyncEnumerable<Entity> GetAllBlobEntitiesAsync<Entity>(BlobContainerClient container, ILogger logger, [EnumeratorCancellation]CancellationToken cancellationToken) where Entity : class, new()
+        public async IAsyncEnumerable<Entity> GetAllBlobEntitiesAsync<Entity>(BlobContainerClient container, ILogger logger, [EnumeratorCancellation]CancellationToken cancellationToken = default) where Entity : class, new()
         {
             await foreach(var blobJson in GetAllBlobsAsync(container, cancellationToken))
             {
@@ -162,7 +162,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             }
         }
 
-        public async IAsyncEnumerable<BlobClient> GetAllBlobsAsync(BlobContainerClient container, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<BlobClient> GetAllBlobsAsync(BlobContainerClient container, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             AsyncPageable<BlobItem> pageable = container.GetBlobsAsync(BlobTraits.None, BlobStates.None, string.Empty, cancellationToken: cancellationToken);
             IAsyncEnumerable<Page<BlobItem>> pages = pageable.AsPages();
@@ -175,7 +175,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             }
         }
 
-        public async Task<BlobClient> GetFirstBlobAsync(BlobContainerClient container, CancellationToken cancellationToken)
+        public async Task<BlobClient> GetFirstBlobAsync(BlobContainerClient container, CancellationToken cancellationToken = default)
         {
             AsyncPageable<BlobItem> pageable = container.GetBlobsAsync(BlobTraits.None, BlobStates.None, string.Empty, cancellationToken: cancellationToken);
             IAsyncEnumerable<Page<BlobItem>> pages = pageable.AsPages(pageSizeHint:1);
@@ -192,7 +192,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             return null;
         }       
 
-        public Task DeleteBlobAsync(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken)
+        public Task DeleteBlobAsync(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken = default)
         {
             BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
             return blob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
@@ -208,7 +208,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             }, cancellationToken: cancellationToken);
         }
 
-        public Task SaveBlobAsync(string blobName, string jsonEntityContent, BlobContainerClient container, CancellationToken cancellationToken)
+        public Task SaveBlobAsync(string blobName, string jsonEntityContent, BlobContainerClient container, CancellationToken cancellationToken = default)
         {
             BlobClient blob = container.GetBlobClient(blobName);
             return blob.UploadAsync(new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent)), new BlobHttpHeaders()
@@ -223,7 +223,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         /// <typeparam name="Entity"></typeparam>
         /// <param name="keyNotHashed">Key of the entity (not hashed)</param>
         /// <returns></returns>
-        public async Task<Entity> GetEntityTableAsync<Entity>(string keyNotHashed, TableClient table, CancellationToken cancellationToken) 
+        public async Task<Entity> GetEntityTableAsync<Entity>(string keyNotHashed, TableClient table, CancellationToken cancellationToken = default) 
             where Entity : class, ITableEntity, new()
         {
             try
@@ -247,13 +247,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         /// <param name="tableQuery"></param>
         /// <param name="table"></param>
         /// <returns></returns>
-        public IAsyncEnumerable<Entity> GetAllByTableQueryAsync<Entity>(TableQuery tableQuery, TableClient table, CancellationToken cancellationToken)
+        public IAsyncEnumerable<Entity> GetAllByTableQueryAsync<Entity>(TableQuery tableQuery, TableClient table, CancellationToken cancellationToken = default)
            where Entity : class, ITableEntity, new()
         {
             return table.ExecuteQueryAsync<Entity>(tableQuery, cancellationToken);
         }
 
-        public async IAsyncEnumerable<Model> GetAllByTableQueryAsync<Entity, Model>(TableQuery tableQuery, TableClient table, Func<Entity, Model> mapFunc, [EnumeratorCancellation]CancellationToken cancellationToken)
+        public async IAsyncEnumerable<Model> GetAllByTableQueryAsync<Entity, Model>(TableQuery tableQuery, TableClient table, Func<Entity, Model> mapFunc, [EnumeratorCancellation]CancellationToken cancellationToken = default)
            where Entity : class, ITableEntity, new()
         {
             await foreach (var entity in table.ExecuteQueryAsync<Entity>(tableQuery, cancellationToken))

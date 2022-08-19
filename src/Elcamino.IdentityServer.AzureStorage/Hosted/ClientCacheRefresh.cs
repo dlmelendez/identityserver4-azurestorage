@@ -120,7 +120,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
         /// Method to refresh cache
         /// </summary>
         /// <returns></returns>
-        public async Task RefreshCacheAsync(CancellationToken cancellationToken)
+        public async Task RefreshCacheAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -134,7 +134,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             }
         }
 
-        private async Task RefreshCacheAsync(ClientStorageContext context, CancellationToken cancellationToken)
+        private async Task RefreshCacheAsync(ClientStorageContext context, CancellationToken cancellationToken = default)
         {
             IAsyncEnumerable<Client> entities = context.GetAllBlobEntitiesAsync<Entities.Client>(context.ClientBlobContainer, _logger, cancellationToken);
             (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.Client>(entities, context.ClientCacheBlobContainer, cancellationToken);

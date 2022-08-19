@@ -86,7 +86,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return FindByUserCodeAsync(userCode, default);
         }
 
-        public virtual async Task<DeviceCode> FindByUserCodeAsync(string userCode, CancellationToken cancellationToken)
+        public virtual async Task<DeviceCode> FindByUserCodeAsync(string userCode, CancellationToken cancellationToken = default)
         {
             DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
@@ -107,7 +107,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return FindByDeviceCodeAsync(deviceCode, default);
         }
 
-        public virtual async Task<DeviceCode> FindByDeviceCodeAsync(string deviceCode, CancellationToken cancellationToken)
+        public virtual async Task<DeviceCode> FindByDeviceCodeAsync(string deviceCode, CancellationToken cancellationToken = default)
         {
             DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
@@ -129,7 +129,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return UpdateByUserCodeAsync(userCode, data, default);
         }
 
-        public virtual async Task UpdateByUserCodeAsync(string userCode, DeviceCode data, CancellationToken cancellationToken)
+        public virtual async Task UpdateByUserCodeAsync(string userCode, DeviceCode data, CancellationToken cancellationToken = default)
         {
             DeviceFlowCodes existingUserCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
@@ -171,7 +171,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return RemoveByDeviceCodeAsync(deviceCode, default);
         }
 
-        public virtual async Task RemoveByDeviceCodeAsync(string deviceCode, CancellationToken cancellationToken)
+        public virtual async Task RemoveByDeviceCodeAsync(string deviceCode, CancellationToken cancellationToken = default)
         {
             DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);

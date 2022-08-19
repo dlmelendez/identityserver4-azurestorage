@@ -35,7 +35,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             _logger = logger;
         }
 
-        async Task<IEnumerable<PersistedGrant>> IPersistedGrantStore.GetAllAsync(PersistedGrantFilter grantFilter)
+        public async Task<IEnumerable<PersistedGrant>> GetAllAsync(PersistedGrantFilter grantFilter)
         {
             return await GetAllAsync(grantFilter, default).ToListAsync();
         }
@@ -63,7 +63,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             _logger.LogDebug($"{counter} persisted grants found for table filter {tableFilter}");
         }
 
-        Task<PersistedGrant> IPersistedGrantStore.GetAsync(string key)
+        public Task<PersistedGrant> GetAsync(string key)
         { 
             return GetAsync(key, default);
         }
@@ -83,7 +83,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return model;
         }
 
-        Task IPersistedGrantStore.RemoveAllAsync(PersistedGrantFilter grantFilter)
+        public Task RemoveAllAsync(PersistedGrantFilter grantFilter)
         {
             return RemoveAllAsync(grantFilter, default);
         }
@@ -167,7 +167,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return tableFilter;
         }
 
-        Task IPersistedGrantStore.RemoveAsync(string key)
+        public Task RemoveAsync(string key)
         {
             return RemoveAsync(key, default);
         }
@@ -201,7 +201,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         }
 
 
-        Task IPersistedGrantStore.StoreAsync(PersistedGrant grant)
+        public Task StoreAsync(PersistedGrant grant)
         {
             return StoreAsync(grant, default);
         }
