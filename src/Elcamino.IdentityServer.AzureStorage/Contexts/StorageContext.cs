@@ -226,33 +226,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         public async Task<Entity> GetEntityTableAsync<Entity>(string keyNotHashed, TableClient table, CancellationToken cancellationToken = default) 
             where Entity : class, ITableEntity, new()
         {
-            try
-            {
-                string hashedKey = KeyGeneratorHelper.GenerateHashValue(keyNotHashed);
-                var r = await table.GetEntityAsync<Entity>(hashedKey, hashedKey, cancellationToken: cancellationToken)
-                    .ConfigureAwait(false);
-                return r.Value;
-            }
-            catch (RequestFailedException ex)
-                when (ex.ErrorCode == TableErrorCode.ResourceNotFound)
-            {
-                return null;
-            }
+            string hashedKey = KeyGeneratorHelper.GenerateHashValue(keyNotHashed);
+            return await table.GetEntityOrDefaultAsync<Entity>(hashedKey, hashedKey, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
         
-        /// <summary>
-        /// Performs better than using ExecuteQuerySegmentedAsync and building an internal list
-        /// </summary>
-        /// <typeparam name="Entity"></typeparam>
-        /// <param name="tableQuery"></param>
-        /// <param name="table"></param>
-        /// <returns></returns>
-        public IAsyncEnumerable<Entity> GetAllByTableQueryAsync<Entity>(TableQuery tableQuery, TableClient table, CancellationToken cancellationToken = default)
-           where Entity : class, ITableEntity, new()
-        {
-            return table.ExecuteQueryAsync<Entity>(tableQuery, cancellationToken);
-        }
-
         public async IAsyncEnumerable<Model> GetAllByTableQueryAsync<Entity, Model>(string tableQuery, TableClient table, Func<Entity, Model> mapFunc, [EnumeratorCancellation]CancellationToken cancellationToken = default)
            where Entity : class, ITableEntity, new()
         {
