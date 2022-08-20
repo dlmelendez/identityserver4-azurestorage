@@ -93,7 +93,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
 
                 try
                 {
-                    await Task.Delay(CleanupInterval, cancellationToken);
+                    await Task.Delay(CleanupInterval, cancellationToken).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException)
                 {
@@ -112,7 +112,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                     break;
                 }
 
-                await RefreshCacheAsync();
+                await RefreshCacheAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -120,15 +120,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
         /// Method to refresh cache
         /// </summary>
         /// <returns></returns>
-        public async Task RefreshCacheAsync()
+        public async Task RefreshCacheAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 _logger.LogTrace($"Querying for {nameof(ResourceStorageContext)} cache refresh");
                 var context = _serviceProvider.CreateScope().ServiceProvider.GetService<ResourceStorageContext>();
-                await Task.WhenAll(RefreshApiCacheAsync(context), 
-                    RefreshIdentityCacheAsync(context),
-                    RefreshApiScopeCacheAsync(context));
+                await Task.WhenAll(RefreshApiCacheAsync(context, cancellationToken), 
+                    RefreshIdentityCacheAsync(context, cancellationToken),
+                    RefreshApiScopeCacheAsync(context, cancellationToken)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -136,28 +136,28 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             }
         }
 
-        private async Task RefreshApiCacheAsync(ResourceStorageContext context)
+        private async Task RefreshApiCacheAsync(ResourceStorageContext context, CancellationToken cancellationToken = default)
         {
-            IAsyncEnumerable<ApiResource> apiEntities = context.GetAllBlobEntitiesAsync<Entities.ApiResource>(context.ApiResourceBlobContainer, _logger);
-            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.ApiResource>(apiEntities, context.ApiResourceBlobCacheContainer);
+            IAsyncEnumerable<ApiResource> apiEntities = context.GetAllBlobEntitiesAsync<Entities.ApiResource>(context.ApiResourceBlobContainer, _logger, cancellationToken);
+            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.ApiResource>(apiEntities, context.ApiResourceBlobCacheContainer, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("{RefreshApiCacheAsync} api resource count {count} saved in blob storage: {blobName}", nameof(RefreshApiCacheAsync), count, blobName);
-            await context.DeleteBlobCacheFilesAsync(blobName, context.ApiResourceBlobCacheContainer, _logger);
+            await context.DeleteBlobCacheFilesAsync(blobName, context.ApiResourceBlobCacheContainer, _logger, cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task RefreshApiScopeCacheAsync(ResourceStorageContext context)
+        private async Task RefreshApiScopeCacheAsync(ResourceStorageContext context, CancellationToken cancellationToken = default)
         {
-            IAsyncEnumerable<ApiScope> apiEntities = context.GetAllBlobEntitiesAsync<Entities.ApiScope>(context.ApiScopeBlobContainer, _logger);
-            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.ApiScope>(apiEntities, context.ApiScopeBlobCacheContainer);
+            IAsyncEnumerable<ApiScope> apiEntities = context.GetAllBlobEntitiesAsync<Entities.ApiScope>(context.ApiScopeBlobContainer, _logger, cancellationToken);
+            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.ApiScope>(apiEntities, context.ApiScopeBlobCacheContainer, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("{RefreshApiScopeCacheAsync} api scope count {count} saved in blob storage: {blobName}", nameof(RefreshApiScopeCacheAsync), count, blobName);
-            await context.DeleteBlobCacheFilesAsync(blobName, context.ApiScopeBlobCacheContainer, _logger);
+            await context.DeleteBlobCacheFilesAsync(blobName, context.ApiScopeBlobCacheContainer, _logger, cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task RefreshIdentityCacheAsync(ResourceStorageContext context)
+        private async Task RefreshIdentityCacheAsync(ResourceStorageContext context, CancellationToken cancellationToken = default)
         {
-            IAsyncEnumerable<IdentityResource> identityEntities = context.GetAllBlobEntitiesAsync<Entities.IdentityResource>(context.IdentityResourceBlobContainer, _logger);
-            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.IdentityResource>(identityEntities, context.IdentityResourceBlobCacheContainer);
+            IAsyncEnumerable<IdentityResource> identityEntities = context.GetAllBlobEntitiesAsync<Entities.IdentityResource>(context.IdentityResourceBlobContainer, _logger, cancellationToken);
+            (string blobName, int count) = await context.UpdateBlobCacheFileAsync<Entities.IdentityResource>(identityEntities, context.IdentityResourceBlobCacheContainer, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("{RefreshIdentityCacheAsync} identity resource count {count} saved in blob storage: {blobName}", nameof(RefreshIdentityCacheAsync), count, blobName);
-            await context.DeleteBlobCacheFilesAsync(blobName, context.IdentityResourceBlobCacheContainer, _logger);
+            await context.DeleteBlobCacheFilesAsync(blobName, context.IdentityResourceBlobCacheContainer, _logger, cancellationToken).ConfigureAwait(false);
         }
 
     }

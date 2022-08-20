@@ -18,6 +18,7 @@ using Model = Duende.IdentityServer.Models;
 using Azure.Data.Tables;
 using System.Text.Json;
 using Azure;
+using System.Threading;
 
 namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
@@ -39,24 +40,29 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return entities.Select(s => s?.ToModel()).ToArray();
         }
 
-        private async Task<IEnumerable<Entities.Client>> GetAllClientEntities()
+        private async Task<IEnumerable<Entities.Client>> GetAllClientEntities(CancellationToken cancellationToken = default)
         {
-            var entities = await GetLatestClientCacheAsync().ConfigureAwait(false);
+            var entities = await GetLatestClientCacheAsync(cancellationToken).ConfigureAwait(false);
             if (entities == null)
             {
-                entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.Client>(StorageContext.ClientBlobContainer, _logger)
-                    .ToListAsync()
+                entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.Client>(StorageContext.ClientBlobContainer, _logger, cancellationToken: cancellationToken)
+                    .ToListAsync(cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
-                await UpdateClientCacheFileAsync(entities).ConfigureAwait(false);
+                await UpdateClientCacheFileAsync(entities, cancellationToken).ConfigureAwait(false);
             }
 
             return entities;
         }
 
-        public async Task<Client> FindClientByIdAsync(string clientId)
+        public Task<Client> FindClientByIdAsync(string clientId)
+        {
+            return FindClientByIdAsync(clientId, default);
+        }
+
+        public async Task<Client> FindClientByIdAsync(string clientId, CancellationToken cancellationToken = default)
         {
             Model.Client model = null;
-            Entities.Client entity = await StorageContext.GetEntityBlobAsync<Entities.Client>(clientId, StorageContext.ClientBlobContainer)
+            Entities.Client entity = await StorageContext.GetEntityBlobAsync<Entities.Client>(clientId, StorageContext.ClientBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             model = entity?.ToModel();
             _logger.LogDebug("{clientName} found in blob storage: {clientFound}", clientId, model != null);
@@ -64,16 +70,16 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return model;
         }
 
-        public async Task StoreAsync(Client model)
+        public async Task StoreAsync(Client model, CancellationToken cancellationToken = default)
         {
             Entities.Client entity = model.ToEntity();
             try
             {
-                await StorageContext.SaveBlobWithHashedKeyAsync(entity.ClientId, JsonSerializer.Serialize(entity, StorageContext.JsonSerializerDefaultOptions), StorageContext.ClientBlobContainer)
+                await StorageContext.SaveBlobWithHashedKeyAsync(entity.ClientId, JsonSerializer.Serialize(entity, StorageContext.JsonSerializerDefaultOptions), StorageContext.ClientBlobContainer, cancellationToken)
                     .ConfigureAwait(false);
-                var entities = await GetAllClientEntities().ConfigureAwait(false);
+                var entities = await GetAllClientEntities(cancellationToken).ConfigureAwait(false);
                 entities = entities.Where(e => entity.ClientId != e.ClientId).Concat(new Entities.Client[] { entity });
-                await UpdateClientCacheFileAsync(entities).ConfigureAwait(false);
+                await UpdateClientCacheFileAsync(entities, cancellationToken).ConfigureAwait(false);
             }
             catch (AggregateException agg)
             {
@@ -91,28 +97,27 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 _logger.LogWarning("exception updating {clientName} persisted grant in blob storage: {error}", model.ClientName, rfex.Message);
                 throw;
             }
-
         }      
 
-        public async Task UpdateClientCacheFileAsync(IEnumerable<Entities.Client> entities)
+        public async Task UpdateClientCacheFileAsync(IEnumerable<Entities.Client> entities, CancellationToken cancellationToken = default)
         {
-            (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer)
+            (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
         }
 
-        public async Task UpdateClientCacheFileAsync(IAsyncEnumerable<Entities.Client> entities)
+        public async Task UpdateClientCacheFileAsync(IAsyncEnumerable<Entities.Client> entities, CancellationToken cancellationToken = default)
         {
-            (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer)
+            (string blobName, int count) = await StorageContext.UpdateBlobCacheFileAsync<Entities.Client>(entities, StorageContext.ClientCacheBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             _logger.LogInformation($"{nameof(UpdateClientCacheFileAsync)} client count {count} saved in blob storage: {blobName}");
         }
 
-        public async Task<IEnumerable<Entities.Client>> GetLatestClientCacheAsync()
+        public async Task<IEnumerable<Entities.Client>> GetLatestClientCacheAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                return await StorageContext.GetLatestFromCacheBlobAsync<Entities.Client>(StorageContext.ClientCacheBlobContainer)
+                return await StorageContext.GetLatestFromCacheBlobAsync<Entities.Client>(StorageContext.ClientCacheBlobContainer, cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -122,15 +127,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return null;
         }
 
-        public async Task RemoveAsync(string clientId)
+        public async Task RemoveAsync(string clientId, CancellationToken cancellationToken = default)
         {
             try
             {
-                await  StorageContext.DeleteBlobAsync(clientId, StorageContext.ClientBlobContainer)
+                await  StorageContext.DeleteBlobAsync(clientId, StorageContext.ClientBlobContainer, cancellationToken)
                     .ConfigureAwait(false);
-                var entities = await GetAllClientEntities().ConfigureAwait(false);
+                var entities = await GetAllClientEntities(cancellationToken).ConfigureAwait(false);
                 entities = entities.Where(e => clientId != e.ClientId);
-                await UpdateClientCacheFileAsync(entities).ConfigureAwait(false);
+                await UpdateClientCacheFileAsync(entities, cancellationToken).ConfigureAwait(false);
             }
             catch (AggregateException agg)
             {
@@ -149,9 +154,5 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 throw;
             }
         }
-
-        
-       
-        
     }
 }

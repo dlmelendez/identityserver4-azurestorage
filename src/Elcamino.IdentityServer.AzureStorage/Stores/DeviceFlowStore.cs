@@ -19,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using IdentityModel;
 using Duende.IdentityServer.Stores.Serialization;
 using System.Text.Json;
+using System.Threading;
 
 namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
@@ -80,9 +81,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="userCode">The user code.</param>
         /// <returns></returns>
-        public virtual async Task<DeviceCode> FindByUserCodeAsync(string userCode)
+        public virtual Task<DeviceCode> FindByUserCodeAsync(string userCode) 
         {
-            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer)
+            return FindByUserCodeAsync(userCode, default);
+        }
+
+        public virtual async Task<DeviceCode> FindByUserCodeAsync(string userCode, CancellationToken cancellationToken = default)
+        {
+            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             DeviceCode model = ToModel(deviceFlowCodes?.Data);
 
@@ -96,9 +102,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="deviceCode">The device code.</param>
         /// <returns></returns>
-        public virtual async Task<DeviceCode> FindByDeviceCodeAsync(string deviceCode)
+        public virtual Task<DeviceCode> FindByDeviceCodeAsync(string deviceCode)
         {
-            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer)
+            return FindByDeviceCodeAsync(deviceCode, default);
+        }
+
+        public virtual async Task<DeviceCode> FindByDeviceCodeAsync(string deviceCode, CancellationToken cancellationToken = default)
+        {
+            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             DeviceCode model = ToModel(deviceFlowCodes?.Data);
 
@@ -113,9 +124,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// <param name="userCode">The user code.</param>
         /// <param name="data">The data.</param>
         /// <returns></returns>
-        public virtual async Task UpdateByUserCodeAsync(string userCode, DeviceCode data)
+        public virtual Task UpdateByUserCodeAsync(string userCode, DeviceCode data)
         {
-            DeviceFlowCodes existingUserCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer)
+            return UpdateByUserCodeAsync(userCode, data, default);
+        }
+
+        public virtual async Task UpdateByUserCodeAsync(string userCode, DeviceCode data, CancellationToken cancellationToken = default)
+        {
+            DeviceFlowCodes existingUserCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             if (existingUserCode == null)
             {
@@ -124,7 +140,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
 
             string deviceCode = existingUserCode.DeviceCode;
-            DeviceFlowCodes existingDeviceCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer)
+            DeviceFlowCodes existingDeviceCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
             if (existingDeviceCode == null)
             {
@@ -139,8 +155,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             existingUserCode.Data = entity.Data;
 
             string entityJson = JsonSerializer.Serialize(existingUserCode, Context.JsonSerializerDefaultOptions);
-            await Task.WhenAll(Context.SaveBlobWithHashedKeyAsync(deviceCode, entityJson, Context.DeviceCodeBlobContainer),
-                               Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer))
+            await Task.WhenAll(Context.SaveBlobWithHashedKeyAsync(deviceCode, entityJson, Context.DeviceCodeBlobContainer, cancellationToken),
+                               Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer, cancellationToken))
                 .ConfigureAwait(false);
 
         }
@@ -150,17 +166,22 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="deviceCode">The device code.</param>
         /// <returns></returns>
-        public virtual async Task RemoveByDeviceCodeAsync(string deviceCode)
+        public virtual Task RemoveByDeviceCodeAsync(string deviceCode)
         {
-            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer)
+            return RemoveByDeviceCodeAsync(deviceCode, default);
+        }
+
+        public virtual async Task RemoveByDeviceCodeAsync(string deviceCode, CancellationToken cancellationToken = default)
+        {
+            DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer, cancellationToken)
                 .ConfigureAwait(false);
 
             if (deviceFlowCodes != null)
             {
                 Logger.LogDebug("removing {deviceCode} device code from blob storage", deviceCode);
 
-                await Task.WhenAll(Context.DeleteBlobAsync(deviceCode, Context.DeviceCodeBlobContainer),
-                                   Context.DeleteBlobAsync(deviceFlowCodes.UserCode, Context.UserCodeBlobContainer))
+                await Task.WhenAll(Context.DeleteBlobAsync(deviceCode, Context.DeviceCodeBlobContainer, cancellationToken),
+                                   Context.DeleteBlobAsync(deviceFlowCodes.UserCode, Context.UserCodeBlobContainer, cancellationToken))
                     .ConfigureAwait(false);
             }
             else

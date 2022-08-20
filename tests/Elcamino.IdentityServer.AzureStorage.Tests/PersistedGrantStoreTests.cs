@@ -119,7 +119,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 
             stopwatch.Reset();
             stopwatch.Start();
-            var returnGrants = await store.StorageContext.GetExpiredAsync(1000);
+            var returnGrants = await store.StorageContext.GetExpiredAsync(1000, default);
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStorageContext.GetExpiredAsync(): {stopwatch.ElapsedMilliseconds} ms");
             AssertGrantsEqual(grant, returnGrants.FirstOrDefault(f => f.Key == grant.Key).ToModel(), false);
@@ -273,6 +273,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             Assert.IsNotNull(storageContext);
 
             var store = new PersistedGrantStore(storageContext, _logger);
+
             Assert.IsNotNull(store);
 
             string subject = Guid.NewGuid().ToString();

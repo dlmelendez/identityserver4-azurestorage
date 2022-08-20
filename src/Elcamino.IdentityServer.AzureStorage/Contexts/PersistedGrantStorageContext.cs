@@ -15,6 +15,8 @@ using ElCamino.IdentityServer.AzureStorage.Helpers;
 using ElCamino.IdentityServer.AzureStorage.Mappers;
 using Azure.Data.Tables;
 using Azure;
+using System.Threading;
+using IdentityModel;
 
 namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
@@ -79,7 +81,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         }
 
-        public async Task<IEnumerable<PersistedGrantTblEntity>> GetExpiredAsync(int maxResults)
+        public async Task<IEnumerable<PersistedGrantTblEntity>> GetExpiredAsync(int maxResults, CancellationToken cancellationToken = default)
         {
             TableQuery tq = new TableQuery();
 
@@ -87,20 +89,20 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
                 QueryComparisons.LessThan,
                 DateTimeOffset.UtcNow);
             tq.TakeCount = maxResults;
-            return await GetAllByTableQueryAsync<PersistedGrantTblEntity>(tq, PersistedGrantTable).ToListAsync().ConfigureAwait(false);
-
+            
+            return await PersistedGrantTable.ExecuteQueryAsync<PersistedGrantTblEntity>(tq, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<bool> RemoveAsync(string key)
+        public async Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default)
         {
             TableClient table = PersistedGrantTable;
-            PersistedGrantTblEntity keyEntity = await GetEntityTableAsync<PersistedGrantTblEntity>(key, table);
+            PersistedGrantTblEntity keyEntity = await GetEntityTableAsync<PersistedGrantTblEntity>(key, table, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (keyEntity != null)
             {
                 var entities = keyEntity.ToModel().ToEntities();
-                await Task.WhenAll(table.DeleteEntityAsync(entities.subjectGrant.PartitionKey, entities.subjectGrant.RowKey, KeyGeneratorHelper.ETagWildCard),
-                        table.DeleteEntityAsync(keyEntity.PartitionKey, keyEntity.RowKey, KeyGeneratorHelper.ETagWildCard),
-                        DeleteBlobAsync(key, PersistedGrantBlobContainer)).ConfigureAwait(false);
+                await Task.WhenAll(table.DeleteEntityAsync(entities.subjectGrant.PartitionKey, entities.subjectGrant.RowKey, KeyGeneratorHelper.ETagWildCard, cancellationToken: cancellationToken),
+                        table.DeleteEntityAsync(keyEntity.PartitionKey, keyEntity.RowKey, KeyGeneratorHelper.ETagWildCard, cancellationToken: cancellationToken),
+                        DeleteBlobAsync(key, PersistedGrantBlobContainer, cancellationToken)).ConfigureAwait(false);
                 return true;
             }
             return false;
