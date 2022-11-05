@@ -5,4 +5,4 @@ Uses Azure Blob and Table Storage services as an alternative to [Entity Framewor
 [![NuGet Badge](https://buildstats.info/nuget/ElCamino.IdentityServer4.AzureStorage)](https://www.nuget.org/packages/ElCamino.IdentityServer4.AzureStorage/)
 [![NuGet Badge](https://buildstats.info/nuget/ElCamino.IdentityServer.AzureStorage)](https://www.nuget.org/packages/ElCamino.IdentityServer.AzureStorage/)
 
-Project site https://elcamino.cloud/projects/docs/identitycosmosdb/.
+Project site https://elcamino.cloud/projects/docs/identityserverstorage/.
