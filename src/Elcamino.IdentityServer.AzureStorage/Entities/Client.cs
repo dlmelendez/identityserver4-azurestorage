@@ -28,6 +28,9 @@ namespace ElCamino.IdentityServer.AzureStorage.Entities
         public bool AllowPlainTextPkce { get; set; }
         public bool RequireRequestObject { get; set; }
         public bool AllowAccessTokensViaBrowser { get; set; }
+        public bool RequireDPoP { get; set; }
+        public DPoPTokenExpirationValidationMode DPoPValidationMode { get; set; }
+        public TimeSpan DPoPClockSkew { get; set; } = TimeSpan.FromMinutes(5);
         public List<ClientRedirectUri> RedirectUris { get; set; }
         public List<ClientPostLogoutRedirectUri> PostLogoutRedirectUris { get; set; }
         public string FrontChannelLogoutUri { get; set; }
@@ -55,6 +58,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Entities
         public string ClientClaimsPrefix { get; set; } = "client_";
         public string PairWiseSubjectSalt { get; set; }
         public List<ClientCorsOrigin> AllowedCorsOrigins { get; set; }
+        public string InitiateLoginUri { get; set; }
         public List<ClientProperty> Properties { get; set; }
         public int? UserSsoLifetime { get; set; }
         public string UserCodeType { get; set; }
