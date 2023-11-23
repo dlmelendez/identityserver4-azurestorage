@@ -7,14 +7,13 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 steps:
-- task: PowerShell@1
-  displayName: 'PowerShell Script'
+- task: PowerShell@2
   inputs:
-    scriptType: inlineScript
-    inlineScript: '(Get-Content .\tests\ElCamino.IdentityServer.AzureStorage.Tests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', ''$(STORAGECONNECTION)'' } | Set-Content .\tests\ElCamino.IdentityServer.AzureStorage.Tests\appsettings.json'
+    targetType: 'inline'
+    script: '(Get-Content .\tests\Elcamino.IdentityServer.AzureStorage.Tests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', ''$(STORAGECONNECTION)'' } | Set-Content .\tests\Elcamino.IdentityServer.AzureStorage.Tests\appsettings.json'
 
 - task: UseDotNet@2
   displayName: 'Use .Net Core sdk 6.x'
@@ -29,14 +28,11 @@ steps:
   inputs:
     projects: '**/ElCamino.IdentityServer.AzureStorage.sln'
     arguments: '-c $(BuildConfiguration) '
-- task: VSTest@2
+- task: DotNetCoreCLI@2
   inputs:
-    testSelector: 'testAssemblies'
-    testAssemblyVer2: |
-      **\ElCamino.IdentityServer.AzureStorage.Tests.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
-    searchFolder: '$(System.DefaultWorkingDirectory)'
+    command: 'test'
+    projects: '**/ElCamino.IdentityServer.AzureStorage.Tests.dll'
+    arguments: '--no-build -v d'
 - task: CopyFiles@1
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
   inputs:
