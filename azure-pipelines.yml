@@ -10,12 +10,11 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: PowerShell@1
-  displayName: 'PowerShell Script'
+- task: PowerShell@2
   inputs:
-    scriptType: inlineScript
-    inlineScript: '(Get-Content .\tests\ElCamino.IdentityServer.AzureStorage.Tests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', ''$(STORAGECONNECTION)'' } | Set-Content .\tests\ElCamino.IdentityServer.AzureStorage.Tests\appsettings.json'
-
+    targetType: 'inline'
+    script: '(Get-Content .\tests\ElCamino.IdentityServer.AzureStorage.Tests\appsettings.json) | Foreach-Object { $_ -replace ''''UseDevelopmentStorage=true;'''', ''''$(STORAGECONNECTION)'''' } | Set-Content .\tests\ElCamino.IdentityServer.AzureStorage.Tests\appsettings.json'
+    pwsh: true
 - task: UseDotNet@2
   displayName: 'Use .Net Core sdk 6.x'
   inputs:
