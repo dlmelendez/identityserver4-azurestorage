@@ -7,7 +7,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 steps:
 - task: PowerShell@1
@@ -29,14 +29,11 @@ steps:
   inputs:
     projects: '**/ElCamino.IdentityServer.AzureStorage.sln'
     arguments: '-c $(BuildConfiguration) '
-- task: VSTest@2
+- task: DotNetCoreCLI@2
   inputs:
-    testSelector: 'testAssemblies'
-    testAssemblyVer2: |
-      **\ElCamino.IdentityServer.AzureStorage.Tests.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
-    searchFolder: '$(System.DefaultWorkingDirectory)'
+    command: 'test'
+    projects: '**/ElCamino.IdentityServer.AzureStorage.Tests.dll'
+    arguments: '--no-build -v d'
 - task: CopyFiles@1
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
   inputs:
