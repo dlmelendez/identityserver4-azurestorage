@@ -31,7 +31,7 @@ steps:
     command: 'test'
     publishTestResults: true
     projects: '**/ElCamino.IdentityServer.AzureStorage.Tests.dll'
-    arguments: '-v d'
+    arguments: '--collect "Code coverage" -v d'
 
 - task: CopyFiles@1
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
