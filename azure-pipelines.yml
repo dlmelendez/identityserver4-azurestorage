@@ -31,7 +31,7 @@ steps:
     command: 'test'
     publishTestResults: true
     projects: '**/ElCamino.IdentityServer.AzureStorage.Tests.csproj'
-    arguments: '--no-build -v d'
+    arguments: '--no-build -c $(BuildConfiguration) -v d'
 
 - task: CopyFiles@1
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
