@@ -73,6 +73,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Entities
         public DateTime? Updated { get; set; }
         public DateTime? LastAccessed { get; set; }
         public bool NonEditable { get; set; }
+        public int? PushedAuthorizationLifetime { get; set; }
+        public bool RequirePushedAuthorization { get; set; }
 
     }
 }

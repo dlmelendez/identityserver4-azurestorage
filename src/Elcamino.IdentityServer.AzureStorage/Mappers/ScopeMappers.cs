@@ -17,6 +17,7 @@ public static class ScopeMappers
     {
         Mapper = new MapperConfiguration(cfg => cfg.AddProfile<ScopeMapperProfile>())
             .CreateMapper();
+        Mapper.ConfigurationProvider.AssertConfigurationIsValid();
     }
 
     internal static IMapper Mapper { get; }

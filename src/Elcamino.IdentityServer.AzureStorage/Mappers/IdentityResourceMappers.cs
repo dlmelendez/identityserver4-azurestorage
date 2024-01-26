@@ -17,6 +17,7 @@ public static class IdentityResourceMappers
     {
         Mapper = new MapperConfiguration(cfg => cfg.AddProfile<IdentityResourceMapperProfile>())
             .CreateMapper();
+        Mapper.ConfigurationProvider.AssertConfigurationIsValid();
     }
 
     internal static IMapper Mapper { get; }

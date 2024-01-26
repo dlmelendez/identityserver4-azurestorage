@@ -17,6 +17,7 @@ public static class ApiResourceMappers
     {
         Mapper = new MapperConfiguration(cfg => cfg.AddProfile<ApiResourceMapperProfile>())
             .CreateMapper();
+        Mapper.ConfigurationProvider.AssertConfigurationIsValid();
     }
 
     internal static IMapper Mapper { get; }
