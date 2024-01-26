@@ -19,6 +19,8 @@ steps:
   displayName: 'Use .Net Core sdk 8.x'
   inputs:
     version: 8.x
+    includePreviewVersions: true
+    performMultiLevelLookup: true
 - task: DotNetCoreCLI@2
   displayName: 'dotnet build'
   inputs:
