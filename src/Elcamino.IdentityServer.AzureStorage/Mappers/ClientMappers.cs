@@ -18,6 +18,7 @@ public static class ClientMappers
     {
         Mapper = new MapperConfiguration(cfg => cfg.AddProfile<ClientMapperProfile>())
             .CreateMapper();
+        Mapper.ConfigurationProvider.AssertConfigurationIsValid();
     }
 
     internal static IMapper Mapper { get; }
