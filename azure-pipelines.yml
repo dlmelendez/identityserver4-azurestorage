@@ -1,7 +1,3 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
 
 trigger:
 - master
@@ -31,7 +27,12 @@ steps:
     command: 'test'
     publishTestResults: true
     projects: '**/ElCamino.IdentityServer.AzureStorage.Tests.csproj'
-    arguments: '--no-build -c $(BuildConfiguration) -v d'
+    arguments: '--no-build --collect:"XPlat Code Coverage" -c $(BuildConfiguration) -v d'
+
+- task: PublishCodeCoverageResults@2
+  displayName: 'Publish Code Coverage'
+  inputs:
+    summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
 - task: CopyFiles@1
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
