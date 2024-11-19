@@ -382,14 +382,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
 
         private async Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, TableClient table, CancellationToken cancellationToken = default)
         {
-            string partitionKeyFilter = TableQuery.GenerateFilterCondition(nameof(TableEntity.PartitionKey),
+            var partitionKeyFilter = TableQuery.GenerateFilterCondition(nameof(TableEntity.PartitionKey),
                 QueryComparisons.Equal,
                 KeyGeneratorHelper.GenerateHashValue(scope));
 
-            TableQuery tq = new TableQuery();
-            tq.FilterString = partitionKeyFilter;
-
-            return await table.QueryAsync<Entities.ResourceScopeIndexTblEntity>(filter: partitionKeyFilter, cancellationToken: cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await table.QueryAsync<Entities.ResourceScopeIndexTblEntity>(filter: partitionKeyFilter.ToString(), cancellationToken: cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         private static Entities.ResourceScopeIndexTblEntity GenerateResourceIndexEntity(string name, string scope)

@@ -87,7 +87,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
             tq.FilterString = TableQuery.GenerateFilterConditionForDate("Expiration",
                 QueryComparisons.LessThan,
-                DateTimeOffset.UtcNow);
+                DateTimeOffset.UtcNow).ToString();
             tq.TakeCount = maxResults;
             
             return await PersistedGrantTable.ExecuteQueryAsync<PersistedGrantTblEntity>(tq, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
