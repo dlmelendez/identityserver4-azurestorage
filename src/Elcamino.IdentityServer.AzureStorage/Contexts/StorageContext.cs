@@ -1,22 +1,21 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer.AzureStorage.Helpers;
-using Azure.Storage.Blobs;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure;
-using Azure.Storage.Blobs.Models;
 using Azure.Data.Tables;
-using System.Text.Json;
-using Azure.Data.Tables.Models;
-using System.Threading;
-using System.Runtime.CompilerServices;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using Microsoft.Extensions.Logging;
 
 namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
@@ -28,7 +27,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public async Task<string> GetBlobContentAsync(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken = default)
         {
-            BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
+            BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed).ToString());
             return await GetBlobContentAsync(blob, cancellationToken).ConfigureAwait(false);
         }
 
@@ -100,7 +99,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public async Task<Entity> GetEntityBlobAsync<Entity>(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken = default) where Entity : class, new()
         {
-            BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
+            BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed).ToString());
             return await GetEntityBlobAsync<Entity>(blob, cancellationToken).ConfigureAwait(false);
         }
 
@@ -194,13 +193,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public Task DeleteBlobAsync(string keyNotHashed, BlobContainerClient container, CancellationToken cancellationToken = default)
         {
-            BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
+            BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed).ToString());
             return blob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
         }
 
         public Task SaveBlobWithHashedKeyAsync(string keyNotHashed, string jsonEntityContent, BlobContainerClient container, CancellationToken cancellationToken = default)
         {
-            BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed));
+            BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed).ToString());
 
             return blob.UploadAsync(new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent)), new BlobHttpHeaders() 
             { 
@@ -226,8 +225,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         public static async Task<Entity> GetEntityTableAsync<Entity>(string keyNotHashed, TableClient table, CancellationToken cancellationToken = default) 
             where Entity : class, ITableEntity, new()
         {
-            string hashedKey = KeyGeneratorHelper.GenerateHashValue(keyNotHashed);
-            return await table.GetEntityOrDefaultAsync<Entity>(hashedKey, hashedKey, cancellationToken: cancellationToken)
+            var hashedKey = KeyGeneratorHelper.GenerateHashValue(keyNotHashed);
+            return await table.GetEntityOrDefaultAsync<Entity>(hashedKey.ToString(), hashedKey.ToString(), cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
         }
         

@@ -2,25 +2,22 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using ElCamino.IdentityServer.AzureStorage.Contexts;
-using ElCamino.IdentityServer.AzureStorage.Helpers;
-using ElCamino.IdentityServer.AzureStorage.Mappers;
-using ElCamino.IdentityServer.AzureStorage.Entities;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Stores;
-using Azure.Storage.Blobs;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Duende.IdentityServer.Extensions;
-using Azure.Data.Tables;
-using Azure;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Azure;
+using Azure.Data.Tables;
+using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Stores;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Entities;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Mappers;
+using Microsoft.Extensions.Logging;
 
 namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
@@ -128,7 +125,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
 
         private static string GetTableFilter(PersistedGrantFilter grantFilter)
         {
-            string hashedSubject = KeyGeneratorHelper.GenerateHashValue(grantFilter.SubjectId);
+            var hashedSubject = KeyGeneratorHelper.GenerateHashValue(grantFilter.SubjectId);
 
             string tableFilter = TableQuery.GenerateFilterCondition(nameof(PersistedGrantTblEntity.PartitionKey),
                 QueryComparisons.Equal,

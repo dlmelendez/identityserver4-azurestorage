@@ -2,25 +2,22 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using ElCamino.IdentityServer.AzureStorage.Contexts;
-using ElCamino.IdentityServer.AzureStorage.Helpers;
-using ElCamino.IdentityServer.AzureStorage.Interfaces;
-using ElCamino.IdentityServer.AzureStorage.Mappers;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Stores;
-using Azure.Storage.Blobs;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Model = Duende.IdentityServer.Models;
-using ElCamino.IdentityServer.AzureStorage.Entities;
-using Azure.Data.Tables;
-using Azure;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
+using Azure;
+using Azure.Data.Tables;
+using Azure.Storage.Blobs;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Stores;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Mappers;
+using Microsoft.Extensions.Logging;
+using Model = Duende.IdentityServer.Models;
 
 namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
@@ -393,8 +390,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         {
             return new Entities.ResourceScopeIndexTblEntity()
             {
-                PartitionKey = KeyGeneratorHelper.GenerateHashValue(scope),
-                RowKey = KeyGeneratorHelper.GenerateHashValue(name),
+                PartitionKey = KeyGeneratorHelper.GenerateHashValue(scope).ToString(),
+                RowKey = KeyGeneratorHelper.GenerateHashValue(name).ToString(),
                 ResourceName = name,
                 ScopeName = scope,
                 ETag = KeyGeneratorHelper.ETagWildCard

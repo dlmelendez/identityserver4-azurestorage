@@ -1,20 +1,10 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer.AzureStorage.Contexts;
-using ElCamino.IdentityServer.AzureStorage.Helpers;
-using ElCamino.IdentityServer.AzureStorage.Stores;
-using Duende.IdentityServer;
-using Duende.IdentityServer.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Model = Duende.IdentityServer.Models;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ElCamino.IdentityServer.AzureStorage.Tests
 {
@@ -57,6 +47,27 @@ namespace ElCamino.IdentityServer.AzureStorage.Tests
             Assert.AreEqual<int>(-1, newerToNow);
 
             Assert.AreEqual<int>(0, String.Compare(nowBlobName, nowBlobName));
+        }
+
+        [TestMethod]
+        [DataRow("test")]
+        [DataRow("Test2")]
+        [DataRow(KeyGeneratorHelper.MaxSha1Hash)]
+        [DataRow(KeyGeneratorHelper.MinSha1Hash)]
+        public void GenerateKeyHashes_Equal(string testValue)
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var hashedKey = KeyGeneratorHelper.GenerateHashValue(testValue);
+            stopwatch.Stop();
+            Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue)}({testValue}): {stopwatch.Elapsed.TotalMilliseconds} ms");
+
+            stopwatch.Restart();
+            var hashedKey2 = KeyGeneratorHelper.GenerateHashValue_Deprecated(testValue);
+            stopwatch.Stop();
+            Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue_Deprecated)}({testValue}): {stopwatch.Elapsed.TotalMilliseconds} ms");
+
+            Assert.AreEqual<string>(hashedKey2, hashedKey.ToString());
         }
     }
 }
