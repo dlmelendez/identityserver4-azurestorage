@@ -25,12 +25,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Helpers
         /// <returns></returns>
         public static string ConvertToCaseSensitveHash(string plainText)
         {
-            if (!string.IsNullOrWhiteSpace(plainText))
-            {
-                return ConvertKeyToHash<SHA1>(SHA1.Create(), plainText);
-            }
-
-            return null;
+            plainText ??= string.Empty;
+            return ConvertKeyToHash<SHA1>(SHA1.Create(), plainText);
         }
 
         /// <summary>
