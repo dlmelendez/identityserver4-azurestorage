@@ -52,21 +52,24 @@ namespace ElCamino.IdentityServer.AzureStorage.Tests
         [TestMethod]
         [DataRow("test")]
         [DataRow("Test2")]
+        [DataRow("0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")]
         [DataRow(KeyGeneratorHelper.MaxSha1Hash)]
         [DataRow(KeyGeneratorHelper.MinSha1Hash)]
         public void GenerateKeyHashes_Equal(string testValue)
         {
+            Console.WriteLine(testValue);
+
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             var hashedKey = KeyGeneratorHelper.GenerateHashValue(testValue);
             stopwatch.Stop();
-            Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue)}({testValue}): {stopwatch.Elapsed.TotalMilliseconds} ms");
+            Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue)}(): {stopwatch.Elapsed.TotalMilliseconds} ms");
 
             stopwatch.Restart();
             var hashedKey2 = KeyGeneratorHelper.GenerateHashValue_Deprecated(testValue);
             stopwatch.Stop();
-            Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue_Deprecated)}({testValue}): {stopwatch.Elapsed.TotalMilliseconds} ms");
-
+            Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue_Deprecated)}(): {stopwatch.Elapsed.TotalMilliseconds} ms");
+            
             Assert.AreEqual<string>(hashedKey2, hashedKey.ToString());
         }
     }
