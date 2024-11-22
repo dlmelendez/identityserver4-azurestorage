@@ -143,7 +143,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             try
             {
                 //Create ApiScopes that don't exist
-                List<Entities.ApiScope> entityScopes = entity.Scopes.ToList();
+                List<Entities.ApiScope> entityScopes = [.. entity.Scopes];
                 if (entityScopes.Count > 0)
                 {
                     foreach (Entities.ApiScope entityScope in entityScopes)
@@ -523,7 +523,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             if (entities == null)
             {
                 entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.ApiResource>(StorageContext.ApiResourceBlobContainer, _logger, cancellationToken)
-                    .ToListAsync()
+                    .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
                 await UpdateApiResourceCacheFileAsync(entities, cancellationToken).ConfigureAwait(false);
             }

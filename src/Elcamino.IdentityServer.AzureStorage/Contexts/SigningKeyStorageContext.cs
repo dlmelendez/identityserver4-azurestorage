@@ -15,7 +15,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
     public class SigningKeyStorageContext : StorageContext
     {
-        private SigningKeyStorageConfig _config = null;
         private string BlobContainerName = string.Empty;
 
         public BlobServiceClient BlobClient { get; private set; }
@@ -24,38 +23,33 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public override JsonSerializerOptions JsonSerializerDefaultOptions => new () { IncludeFields = true };
 
-        public SigningKeyStorageContext(IOptions<SigningKeyStorageConfig> config) : this(config.Value)
+        public SigningKeyStorageContext(IOptions<SigningKeyStorageConfig> config, 
+            BlobServiceClient blobClient) : this(config.Value, blobClient)
         {
         }
 
-
-        public SigningKeyStorageContext(SigningKeyStorageConfig config)
+        public SigningKeyStorageContext(SigningKeyStorageConfig config,
+            BlobServiceClient blobClient)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(blobClient);
+            BlobClient = blobClient;    
             Initialize(config);
         }
 
         protected virtual void Initialize(SigningKeyStorageConfig config)
         {
-            _config = config;
-
-
-            BlobClient = new BlobServiceClient(_config.StorageConnectionString);
             BlobContainerName = config.BlobContainerName;
             if (string.IsNullOrWhiteSpace(BlobContainerName))
             {
                 throw new ArgumentException($"{nameof(config.BlobContainerName)} cannot be null or empty, check your configuration.", nameof(config));
             }
             SigningKeyBlobContainer = BlobClient.GetBlobContainerClient(BlobContainerName);
-
         }
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new Task[] { SigningKeyBlobContainer.CreateIfNotExistsAsync() };
+            Task[] tasks = [ SigningKeyBlobContainer.CreateIfNotExistsAsync() ];
             await Task.WhenAll(tasks).ConfigureAwait(false);
             return tasks.All(a => a.IsCompleted);       
         }

@@ -1,20 +1,17 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer.AzureStorage.Configuration;
-using Azure.Storage.Blobs;
-using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using ElCamino.IdentityServer.AzureStorage.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
     public class ClientStorageContext : StorageContext
     {
-        private ClientStorageConfig _config = null;
         private string BlobContainerName = string.Empty;
         private string BlobCacheContainerName = string.Empty;
 
@@ -26,26 +23,23 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public const string DefaultClientCacheBlobContainer = "clientstorecache";
 
-        public ClientStorageContext(IOptions<ClientStorageConfig> config) : this(config.Value)
+        public ClientStorageContext(IOptions<ClientStorageConfig> config,
+            BlobServiceClient blobClient) : this(config.Value, blobClient)
         {
         }
 
-
-        public ClientStorageContext(ClientStorageConfig config)
+        public ClientStorageContext(ClientStorageConfig config,
+            BlobServiceClient blobClient)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(blobClient);
+
+            BlobClient = blobClient;
             Initialize(config);
         }
 
         protected virtual void Initialize(ClientStorageConfig config)
         {
-            _config = config;
-
-
-            BlobClient = new BlobServiceClient(_config.StorageConnectionString);
             BlobContainerName = config.BlobContainerName;
             if (string.IsNullOrWhiteSpace(BlobContainerName))
             {
@@ -54,12 +48,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             ClientBlobContainer = BlobClient.GetBlobContainerClient(BlobContainerName);
             BlobCacheContainerName = !string.IsNullOrWhiteSpace(config.BlobCacheContainerName) ? config.BlobCacheContainerName : DefaultClientCacheBlobContainer;
             ClientCacheBlobContainer = BlobClient.GetBlobContainerClient(BlobCacheContainerName);
-
         }
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new Task[] { ClientBlobContainer.CreateIfNotExistsAsync(), ClientCacheBlobContainer.CreateIfNotExistsAsync() };
+            Task[] tasks = [ ClientBlobContainer.CreateIfNotExistsAsync(), ClientCacheBlobContainer.CreateIfNotExistsAsync() ];
             await Task.WhenAll(tasks).ConfigureAwait(false);
             return tasks.All(a => a.IsCompleted);       
         }

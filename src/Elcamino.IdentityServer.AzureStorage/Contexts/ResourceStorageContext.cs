@@ -15,7 +15,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
     public class ResourceStorageContext : StorageContext
     {
-        private ResourceStorageConfig _config = null;
         private string ApiBlobContainerName = string.Empty;
         private string ApiScopeBlobContainerName = string.Empty;
         private string IdentityBlobContainerName = string.Empty;
@@ -49,38 +48,40 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public BlobServiceClient BlobClient { get; private set; }
 
-        public ResourceStorageContext(IOptions<ResourceStorageConfig> config) : this(config.Value)
+        public ResourceStorageContext(IOptions<ResourceStorageConfig> config,
+            TableServiceClient tableClient,
+            BlobServiceClient blobClient) : this(config.Value, tableClient, blobClient)
         {
         }
 
-        public ResourceStorageContext(ResourceStorageConfig config)
+        public ResourceStorageContext(ResourceStorageConfig config,
+            TableServiceClient tableClient,
+            BlobServiceClient blobClient)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(tableClient);
+            ArgumentNullException.ThrowIfNull(blobClient);
+            TableClient = tableClient;
+            BlobClient = blobClient;
             Initialize(config);
         }
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new List<Task>() {
+            List<Task> tasks = [
                 ApiResourceTable.CreateIfNotExistsAsync(),
                 ApiResourceBlobContainer.CreateIfNotExistsAsync(),
                 ApiScopeBlobContainer.CreateIfNotExistsAsync(),
                 IdentityResourceBlobContainer.CreateIfNotExistsAsync(),
                 ApiResourceBlobCacheContainer.CreateIfNotExistsAsync(),
                 ApiScopeBlobCacheContainer.CreateIfNotExistsAsync(),
-                IdentityResourceBlobCacheContainer.CreateIfNotExistsAsync()};
+                IdentityResourceBlobCacheContainer.CreateIfNotExistsAsync()];
             await Task.WhenAll(tasks).ConfigureAwait(false);
             return tasks.Select(t => t.IsCompleted).All(a => a);
         }
 
         protected virtual void Initialize(ResourceStorageConfig config)
         {
-            _config = config;
-            TableClient = new TableServiceClient(_config.StorageConnectionString);
-
             //ApiResourceTableName
             ApiResourceTableName = config.ApiTableName;
 
@@ -90,8 +91,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             }
 
             ApiResourceTable = TableClient.GetTableClient(ApiResourceTableName);
-
-            BlobClient = new BlobServiceClient(_config.StorageConnectionString);
 
             // ApiResource blob config
             ApiBlobContainerName = config.ApiBlobContainerName;
@@ -125,7 +124,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
             IdentityBlobCacheContainerName = !string.IsNullOrWhiteSpace(config.IdentityBlobCacheContainerName) ? config.IdentityBlobCacheContainerName : DefaultIdentityBlobCacheContainerName;
             IdentityResourceBlobCacheContainer = BlobClient.GetBlobContainerClient(IdentityBlobCacheContainerName);
-
         }
     }
 }

@@ -1,20 +1,12 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Json;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ElCamino.IdentityServer.AzureStorage;
-using ElCamino.IdentityServer.AzureStorage.Stores;
+using Azure.Data.Tables;
+using Azure.Storage.Blobs;
 using Duende.IdentityServer.Stores.Serialization;
 using ElCamino.IdentityServer.AzureStorage.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 {
@@ -33,7 +25,8 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             Configuration = builder.Build();
 
             Services = new ServiceCollection();
-
+            Services.AddIdentityServerTableServiceClient(() => new TableServiceClient(Configuration.GetSection("IdentityServer:storageConnectionString").Value));
+            Services.AddIdentityServerBlobServiceClient(() => new BlobServiceClient(Configuration.GetSection("IdentityServer:storageConnectionString").Value));
             Services.AddPersistedGrantContext(Configuration.GetSection("IdentityServer:persistedGrantStorageConfig"))
                 .CreatePersistedGrantStorage();
             Services.AddClientContext(Configuration.GetSection("IdentityServer:clientStorageConfig"))

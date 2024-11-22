@@ -36,10 +36,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             try
             {
                 Response<BlobDownloadInfo> download = await blob.DownloadAsync(cancellationToken).ConfigureAwait(false);
-                using (StreamReader sr = new StreamReader(download.Value.Content, Encoding.UTF8))
-                {
-                    return await sr.ReadToEndAsync().ConfigureAwait(false);
-                }
+                using StreamReader sr = new StreamReader(download.Value.Content, Encoding.UTF8);
+                return await sr.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (RequestFailedException ex)
                when (ex.ErrorCode == BlobErrorCode.BlobNotFound)
@@ -108,10 +106,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             try
             {
                 var download = await blobJson.DownloadAsync(cancellationToken).ConfigureAwait(false);
-                using (Stream s = download.Value.Content)
-                {
-                    return JsonSerializer.Deserialize<Entity>(s, JsonSerializerDefaultOptions);
-                }
+                using Stream s = download.Value.Content;
+                return JsonSerializer.Deserialize<Entity>(s, JsonSerializerDefaultOptions);
             }
             catch (RequestFailedException ex)
                when (ex.ErrorCode == BlobErrorCode.BlobNotFound)

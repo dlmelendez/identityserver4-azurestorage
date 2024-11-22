@@ -10,8 +10,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Configuration
 
     public class DeviceFlowStorageConfig
     {
-        public string StorageConnectionString { get; set; }
-
         public string BlobUserContainerName { get; set; } = "deviceflowusercodes";
 
         public string BlobDeviceContainerName { get; set; } = "deviceflowdevicecodes";

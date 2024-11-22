@@ -11,8 +11,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Configuration
     {
         public string ApiTableName { get; set; }
 
-        public string StorageConnectionString { get; set; }
-
         public string ApiBlobContainerName { get; set; }
 
         public string ApiScopeBlobContainerName { get; set; }
