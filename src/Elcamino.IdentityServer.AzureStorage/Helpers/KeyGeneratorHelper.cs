@@ -40,10 +40,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Helpers
             ReadOnlySpan<char> trim = plainText.Trim();
             Span<char> lower = stackalloc char[trim.Length];
             int lowerCount = trim.ToLower(lower, System.Globalization.CultureInfo.InvariantCulture);
+
             Span<byte> encodedBytes = stackalloc byte[Encoding.UTF8.GetMaxByteCount(lowerCount)];
-            int encodedByteCount = Encoding.UTF8.GetBytes([.. lower.Slice(0, lowerCount)], encodedBytes);
+            int encodedByteCount = Encoding.UTF8.GetBytes(lower.Slice(0, lowerCount), encodedBytes);
+
             Span<byte> hashedBytes = stackalloc byte[SHA1.HashSizeInBytes];
             int hashedByteCount = SHA1.HashData(encodedBytes.Slice(0, encodedByteCount), hashedBytes);
+
             return Convert.ToHexString(hashedBytes.Slice(0, hashedByteCount)).ToLowerInvariant();
         }
 

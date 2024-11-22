@@ -51,7 +51,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Tests
 
         [TestMethod]
         [DataRow("test")]
-        [DataRow("Test2")]
+        [DataRow("Test2   ")]
         [DataRow("0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")]
         [DataRow(KeyGeneratorHelper.MaxSha1Hash)]
         [DataRow(KeyGeneratorHelper.MinSha1Hash)]
@@ -71,6 +71,41 @@ namespace ElCamino.IdentityServer.AzureStorage.Tests
             Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue_Deprecated)}(): {stopwatch.Elapsed.TotalMilliseconds} ms");
             
             Assert.AreEqual<string>(hashedKey2, hashedKey.ToString());
+        }
+
+        [TestMethod]
+        [DataRow("test")]
+        [DataRow("Test2   ")]
+        [DataRow("0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")]
+        [DataRow(KeyGeneratorHelper.MaxSha1Hash)]
+        [DataRow(KeyGeneratorHelper.MinSha1Hash)]
+        public void GenerateKeyHashes_MemTest(string testValue)
+        {
+            Console.WriteLine(testValue);
+
+            Stopwatch sw = new Stopwatch();
+            long mem = GC.GetTotalAllocatedBytes();
+            sw.Start();
+            for(int trial = 0; trial < 1000; trial++)
+            {
+                _ = KeyGeneratorHelper.GenerateHashValue(testValue);
+            }
+
+            sw.Stop();
+            mem = GC.GetTotalAllocatedBytes() - mem;
+            Console.WriteLine($"New Time: {sw.Elapsed.TotalMilliseconds}ms, Alloc: {mem /1024.0 / 1024:N2}mb");
+
+            mem = GC.GetTotalAllocatedBytes();
+            sw.Start();
+            for (int trial = 0; trial < 1000; trial++)
+            {
+                _ = KeyGeneratorHelper.GenerateHashValue_Deprecated(testValue);
+            }
+
+            sw.Stop();
+            mem = GC.GetTotalAllocatedBytes() - mem;
+            Console.WriteLine($"Old Time: {sw.Elapsed.TotalMilliseconds}ms, Alloc: {mem / 1024.0 / 1024:N2}mb");
+
         }
     }
 }
