@@ -96,7 +96,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Tests
             Console.WriteLine($"New Time: {sw.Elapsed.TotalMilliseconds}ms, Alloc: {mem /1024.0 / 1024:N2}mb");
 
             mem = GC.GetTotalAllocatedBytes();
-            sw.Start();
+            sw.Restart();
             for (int trial = 0; trial < 1000; trial++)
             {
                 _ = KeyGeneratorHelper.GenerateHashValue_Deprecated(testValue);
