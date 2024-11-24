@@ -122,13 +122,20 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             var returnGrants = await store.StorageContext.GetExpiredAsync(1000, default);
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStorageContext.GetExpiredAsync(): {stopwatch.ElapsedMilliseconds} ms");
-            //Clean out expired grants
-            foreach (var expiredGrant in returnGrants.Where(f => f.Key != grant.Key))
+            
+            try
             {
-                await store.RemoveAsync(expiredGrant.Key);
+                AssertGrantsEqual(grant, returnGrants.FirstOrDefault(f => f.Key == grant.Key).ToModel(), false);
+                Assert.AreEqual<int>(2, returnGrants.Where(f => f.Key == grant.Key).Count());
             }
-            AssertGrantsEqual(grant, returnGrants.FirstOrDefault(f => f.Key == grant.Key).ToModel(), false);
-            Assert.AreEqual<int>(2, returnGrants.Where(f => f.Key == grant.Key).Count());
+            finally
+            {
+                //Clean out expired grants
+                foreach (var expiredGrant in returnGrants.Where(f => f.Key != grant.Key))
+                {
+                    await store.RemoveAsync(expiredGrant.Key);
+                }
+            }
 
         }
 
