@@ -9,8 +9,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Configuration
 {
     public class PersistedGrantStorageConfig
     {
-        public string StorageConnectionString { get; set; }
-
         public string BlobContainerName { get; set; }
 
         public string PersistedGrantTableName { get; set; }

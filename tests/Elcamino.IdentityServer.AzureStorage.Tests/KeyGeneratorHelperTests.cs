@@ -1,20 +1,10 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer.AzureStorage.Contexts;
-using ElCamino.IdentityServer.AzureStorage.Helpers;
-using ElCamino.IdentityServer.AzureStorage.Stores;
-using Duende.IdentityServer;
-using Duende.IdentityServer.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Model = Duende.IdentityServer.Models;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ElCamino.IdentityServer.AzureStorage.Tests
 {
@@ -57,6 +47,65 @@ namespace ElCamino.IdentityServer.AzureStorage.Tests
             Assert.AreEqual<int>(-1, newerToNow);
 
             Assert.AreEqual<int>(0, String.Compare(nowBlobName, nowBlobName));
+        }
+
+        [TestMethod]
+        [DataRow("test")]
+        [DataRow("Test2   ")]
+        [DataRow("0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")]
+        [DataRow(KeyGeneratorHelper.MaxSha1Hash)]
+        [DataRow(KeyGeneratorHelper.MinSha1Hash)]
+        public void GenerateKeyHashes_Equal(string testValue)
+        {
+            Console.WriteLine(testValue);
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var hashedKey = KeyGeneratorHelper.GenerateHashValue(testValue);
+            stopwatch.Stop();
+            Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue)}(): {stopwatch.Elapsed.TotalMilliseconds} ms");
+
+            stopwatch.Restart();
+            var hashedKey2 = KeyGeneratorHelper.GenerateHashValue_Deprecated(testValue);
+            stopwatch.Stop();
+            Console.WriteLine($"{nameof(KeyGeneratorHelper)}.{nameof(KeyGeneratorHelper.GenerateHashValue_Deprecated)}(): {stopwatch.Elapsed.TotalMilliseconds} ms");
+            
+            Assert.AreEqual<string>(hashedKey2, hashedKey.ToString());
+        }
+
+        [TestMethod]
+        [DataRow("test")]
+        [DataRow("Test2   ")]
+        [DataRow("0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ0000000000000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")]
+        [DataRow(KeyGeneratorHelper.MaxSha1Hash)]
+        [DataRow(KeyGeneratorHelper.MinSha1Hash)]
+        public void GenerateKeyHashes_MemTest(string testValue)
+        {
+            Console.WriteLine(testValue);
+
+            Stopwatch sw = new Stopwatch();
+            long mem = GC.GetTotalAllocatedBytes();
+            sw.Start();
+            for(int trial = 0; trial < 1000; trial++)
+            {
+                _ = KeyGeneratorHelper.GenerateHashValue(testValue);
+            }
+
+            sw.Stop();
+            mem = GC.GetTotalAllocatedBytes() - mem;
+            Console.WriteLine($"New Time: {sw.Elapsed.TotalMilliseconds}ms, Alloc: {mem /1024.0 / 1024:N2}mb");
+
+            mem = GC.GetTotalAllocatedBytes();
+            sw.Restart();
+            for (int trial = 0; trial < 1000; trial++)
+            {
+                _ = KeyGeneratorHelper.GenerateHashValue_Deprecated(testValue);
+            }
+
+            sw.Stop();
+            mem = GC.GetTotalAllocatedBytes() - mem;
+            Console.WriteLine($"Old Time: {sw.Elapsed.TotalMilliseconds}ms, Alloc: {mem / 1024.0 / 1024:N2}mb");
+
         }
     }
 }

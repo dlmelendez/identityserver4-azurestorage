@@ -3,12 +3,9 @@
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
 using AutoMapper;
-using ElCamino.IdentityServer.AzureStorage.Helpers;
-using ElCamino.IdentityServer.AzureStorage.Entities;
 using Duende.IdentityServer.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using ElCamino.IdentityServer.AzureStorage.Entities;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
 
 namespace ElCamino.IdentityServer.AzureStorage.Mappers
 {
@@ -29,11 +26,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Mappers
                 cfg.CreateMap<PersistedGrant, PersistedGrantTblEntity>()                
                  .ForMember(dest => dest.RowKey,
                      opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key));
+                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key).ToString());
                      })
                 .ForMember(dest => dest.PartitionKey,
                      opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key));
+                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key).ToString());
                      })                
                  .ForMember(dest => dest.Timestamp, opt => opt.Ignore())
                  .ForMember(dest => dest.ETag,
@@ -54,11 +51,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Mappers
                 cfg.CreateMap<PersistedGrant, PersistedGrantTblEntity>()
                  .ForMember(dest => dest.RowKey,
                      opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key));
+                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key).ToString());
                      })
                 .ForMember(dest => dest.PartitionKey,
                      opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.SubjectId));
+                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.SubjectId).ToString());
                      })
                  .ForMember(dest => dest.Timestamp, opt => opt.Ignore())
                  .ForMember(dest => dest.ETag,

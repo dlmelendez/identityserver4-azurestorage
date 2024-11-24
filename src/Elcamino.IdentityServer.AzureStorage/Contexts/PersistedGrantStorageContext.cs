@@ -24,7 +24,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
     {
         private string BlobContainerName = string.Empty;
 
-
         public string PersistedGrantTableName { get; private set; }
 
         public TableClient PersistedGrantTable { get; private set; }
@@ -36,32 +35,36 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
         public BlobContainerClient PersistedGrantBlobContainer { get; private set; }
 
 
-        public PersistedGrantStorageContext(IOptions<PersistedGrantStorageConfig> config) : this(config.Value)
+        public PersistedGrantStorageContext(IOptions<PersistedGrantStorageConfig> config,
+            TableServiceClient tableClient,
+            BlobServiceClient blobClient) : this(config.Value, tableClient, blobClient)
         {
         }
 
-
-        public PersistedGrantStorageContext(PersistedGrantStorageConfig config)
+        public PersistedGrantStorageContext(PersistedGrantStorageConfig config,
+            TableServiceClient tableClient,
+            BlobServiceClient blobClient)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(tableClient);
+            ArgumentNullException.ThrowIfNull(blobClient);
+
+            TableClient = tableClient;
+            BlobClient = blobClient;
+
             Initialize(config);
         }
 
         public async Task<bool> CreateStorageIfNotExists()
         {
-            var tasks = new Task[] { PersistedGrantTable.CreateIfNotExistsAsync(),
-                PersistedGrantBlobContainer.CreateIfNotExistsAsync()};
+            Task[] tasks = [ PersistedGrantTable.CreateIfNotExistsAsync(),
+                PersistedGrantBlobContainer.CreateIfNotExistsAsync() ];
             await Task.WhenAll(tasks).ConfigureAwait(false);
             return true;
         }
 
         protected virtual void Initialize(PersistedGrantStorageConfig config)
         {
-            TableClient = new TableServiceClient(config.StorageConnectionString);
-
             PersistedGrantTableName = config.PersistedGrantTableName;
 
             if (string.IsNullOrWhiteSpace(PersistedGrantTableName))
@@ -71,7 +74,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
             PersistedGrantTable = TableClient.GetTableClient(PersistedGrantTableName);
 
-            BlobClient = new BlobServiceClient(config.StorageConnectionString);
             BlobContainerName = config.BlobContainerName;
             if (string.IsNullOrWhiteSpace(BlobContainerName))
             {
@@ -87,7 +89,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
             tq.FilterString = TableQuery.GenerateFilterConditionForDate("Expiration",
                 QueryComparisons.LessThan,
-                DateTimeOffset.UtcNow);
+                DateTimeOffset.UtcNow).ToString();
             tq.TakeCount = maxResults;
             
             return await PersistedGrantTable.ExecuteQueryAsync<PersistedGrantTblEntity>(tq, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);

@@ -8,8 +8,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Configuration
 {
     public class ClientStorageConfig
     {
-        public string StorageConnectionString { get; set; }
-
         public string BlobContainerName { get; set; }
 
         public string BlobCacheContainerName { get; set; }

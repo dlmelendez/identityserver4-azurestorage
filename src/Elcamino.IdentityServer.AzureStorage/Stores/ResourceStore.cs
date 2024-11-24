@@ -2,25 +2,22 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using ElCamino.IdentityServer.AzureStorage.Contexts;
-using ElCamino.IdentityServer.AzureStorage.Helpers;
-using ElCamino.IdentityServer.AzureStorage.Interfaces;
-using ElCamino.IdentityServer.AzureStorage.Mappers;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Stores;
-using Azure.Storage.Blobs;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Model = Duende.IdentityServer.Models;
-using ElCamino.IdentityServer.AzureStorage.Entities;
-using Azure.Data.Tables;
-using Azure;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
+using Azure;
+using Azure.Data.Tables;
+using Azure.Storage.Blobs;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Stores;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Helpers;
+using ElCamino.IdentityServer.AzureStorage.Mappers;
+using Microsoft.Extensions.Logging;
+using Model = Duende.IdentityServer.Models;
 
 namespace ElCamino.IdentityServer.AzureStorage.Stores
 {
@@ -146,7 +143,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             try
             {
                 //Create ApiScopes that don't exist
-                List<Entities.ApiScope> entityScopes = entity.Scopes.ToList();
+                List<Entities.ApiScope> entityScopes = [.. entity.Scopes];
                 if (entityScopes.Count > 0)
                 {
                     foreach (Entities.ApiScope entityScope in entityScopes)
@@ -382,22 +379,19 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
 
         private async Task<IEnumerable<Entities.ResourceScopeIndexTblEntity>> GetResourceScopeIndexTblEntitiesAsync(string scope, TableClient table, CancellationToken cancellationToken = default)
         {
-            string partitionKeyFilter = TableQuery.GenerateFilterCondition(nameof(TableEntity.PartitionKey),
+            var partitionKeyFilter = TableQuery.GenerateFilterCondition(nameof(TableEntity.PartitionKey),
                 QueryComparisons.Equal,
                 KeyGeneratorHelper.GenerateHashValue(scope));
 
-            TableQuery tq = new TableQuery();
-            tq.FilterString = partitionKeyFilter;
-
-            return await table.QueryAsync<Entities.ResourceScopeIndexTblEntity>(filter: partitionKeyFilter, cancellationToken: cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await table.QueryAsync<Entities.ResourceScopeIndexTblEntity>(filter: partitionKeyFilter.ToString(), cancellationToken: cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         private static Entities.ResourceScopeIndexTblEntity GenerateResourceIndexEntity(string name, string scope)
         {
             return new Entities.ResourceScopeIndexTblEntity()
             {
-                PartitionKey = KeyGeneratorHelper.GenerateHashValue(scope),
-                RowKey = KeyGeneratorHelper.GenerateHashValue(name),
+                PartitionKey = KeyGeneratorHelper.GenerateHashValue(scope).ToString(),
+                RowKey = KeyGeneratorHelper.GenerateHashValue(name).ToString(),
                 ResourceName = name,
                 ScopeName = scope,
                 ETag = KeyGeneratorHelper.ETagWildCard
@@ -529,7 +523,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             if (entities == null)
             {
                 entities = await StorageContext.GetAllBlobEntitiesAsync<Entities.ApiResource>(StorageContext.ApiResourceBlobContainer, _logger, cancellationToken)
-                    .ToListAsync()
+                    .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
                 await UpdateApiResourceCacheFileAsync(entities, cancellationToken).ConfigureAwait(false);
             }

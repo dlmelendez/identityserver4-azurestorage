@@ -125,7 +125,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             try
             {
                 _logger.LogTrace($"Querying for {nameof(ClientStorageContext)} cache refresh");
-                ClientStorageContext context = _serviceProvider.CreateScope().ServiceProvider.GetService<ClientStorageContext>();
+                ClientStorageContext context = _serviceProvider.CreateScope().ServiceProvider.GetRequiredService<ClientStorageContext>();
                 await RefreshCacheAsync(context, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)

@@ -1,17 +1,12 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using ElCamino.IdentityServer.AzureStorage.Configuration;
 using Microsoft.Extensions.Options;
-using Azure.Storage.Blobs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ElCamino.IdentityServer.AzureStorage.Entities;
-using ElCamino.IdentityServer.AzureStorage.Helpers;
-using ElCamino.IdentityServer.AzureStorage.Mappers;
 
 namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
@@ -24,24 +19,24 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public BlobContainerClient DeviceCodeBlobContainer { get; private set; }
 
-        public DeviceFlowStorageContext(IOptions<DeviceFlowStorageConfig> config) : this(config.Value)
+        public DeviceFlowStorageContext(IOptions<DeviceFlowStorageConfig> config,
+            BlobServiceClient blobClient) : this(config.Value, blobClient)
         {
         }
 
 
-        public DeviceFlowStorageContext(DeviceFlowStorageConfig config)
+        public DeviceFlowStorageContext(DeviceFlowStorageConfig config,
+            BlobServiceClient blobClient)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(blobClient);
+            BlobClient = blobClient;
             Initialize(config);
         }
 
         protected virtual void Initialize(DeviceFlowStorageConfig config)
         {
 
-            BlobClient = new BlobServiceClient(config.StorageConnectionString);
             if (string.IsNullOrWhiteSpace(config.BlobUserContainerName))
             {
                 throw new ArgumentException($"{nameof(config.BlobUserContainerName)} cannot be null or empty, check your configuration.", nameof(config));
