@@ -28,8 +28,8 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
-    <PackageReference Include="Azure.Data.Tables" Version="12.10.0" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
+    <PackageReference Include="Azure.Data.Tables" Version="12.8.2" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageReference Include="Duende.IdentityServer.Storage" Version="7.1.0" />
     <PackageReference Include="ElCamino.Azure.Data.Tables" Version="9.0.2" />
   </ItemGroup>
