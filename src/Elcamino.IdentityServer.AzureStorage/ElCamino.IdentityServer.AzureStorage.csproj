@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <AssemblyName>ElCamino.IdentityServer.AzureStorage</AssemblyName>
     <RootNamespace>ElCamino.IdentityServer.AzureStorage</RootNamespace>
     <LangVersion>13.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright ©  2024 David Melendez, Apache 2.0 License</Copyright>
+    <Copyright>Copyright ©  2025 David Melendez, Apache 2.0 License</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/dlmelendez/identityserver4-azurestorage</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dlmelendez/identityserver4-azurestorage.git</RepositoryUrl>
@@ -32,12 +32,22 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
     <PackageReference Include="Duende.IdentityServer.Storage" Version="7.1.0" />
     <PackageReference Include="ElCamino.Azure.Data.Tables" Version="9.0.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.*" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net9.0' ">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.*" />
+  </ItemGroup>
+  
   <ItemGroup>
     <None Include="..\..\README.md">
       <Pack>True</Pack>
