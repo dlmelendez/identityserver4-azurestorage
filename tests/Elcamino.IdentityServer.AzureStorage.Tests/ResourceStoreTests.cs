@@ -174,6 +174,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             string[] findScopes = new string[] { "api1Scope", Guid.NewGuid().ToString() };
             var findScopesResources = await store.FindApiResourcesByScopeNameAsync(findScopes);
             stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.FindApiResourcesByScopeAsync({string.Join(",", findScopesResources.Select(r => r.Name))})-resources found: {findScopesResources.Count()} ");
             Console.WriteLine($"ResourceStore.FindApiResourcesByScopeAsync({string.Join(",", findScopes)})-api: {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<string>(resource.Name, findScopesResources.Single()?.Name);
 
@@ -189,7 +190,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             stopwatch.Reset();
             stopwatch.Start();
             string findScope = findScopes[0];
-            var apiScopes = await store.FindApiScopesByNameAsync([findScope]);
+            var apiScopes = await store.FindApiScopesByNameAsync(findScopes);
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.FindApiScopesByNameAsync({findScope})-api: {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<int>(1, apiScopes.Where(w => w.Name == findScope).Count());
