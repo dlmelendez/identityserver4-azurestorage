@@ -1,23 +1,19 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer.AzureStorage.Contexts;
-using ElCamino.IdentityServer.AzureStorage.Mappers;
-using ElCamino.IdentityServer.AzureStorage.Stores;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Stores.Serialization;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Token = Duende.IdentityServer.Models.Token;
-using DeviceCode = Duende.IdentityServer.Models.DeviceCode;
 using System.Security.Claims;
-using IdentityModel;
+using System.Threading.Tasks;
+using Duende.IdentityModel;
+using Duende.IdentityServer.Stores.Serialization;
+using ElCamino.IdentityServer.AzureStorage.Contexts;
+using ElCamino.IdentityServer.AzureStorage.Stores;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using DeviceCode = Duende.IdentityServer.Models.DeviceCode;
 
 namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 {
