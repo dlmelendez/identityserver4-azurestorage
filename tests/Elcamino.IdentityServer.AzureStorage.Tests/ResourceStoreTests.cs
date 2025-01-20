@@ -174,6 +174,8 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             string[] findScopes = new string[] { "api1Scope", Guid.NewGuid().ToString() };
             var findScopesResources = await store.FindApiResourcesByScopeNameAsync(findScopes);
             stopwatch.Stop();
+            Console.WriteLine($"ResourceStore.FindApiResourcesByScopeAsync({string.Join(",", findScopesResources.Select(r => r.Name))})-resources found: {findScopesResources.Count()} ");
+            Console.WriteLine(JsonConvert.SerializeObject(findScopesResources));
             Console.WriteLine($"ResourceStore.FindApiResourcesByScopeAsync({string.Join(",", findScopes)})-api: {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<string>(resource.Name, findScopesResources.Single()?.Name);
 

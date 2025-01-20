@@ -1,22 +1,17 @@
 ﻿// Copyright (c) David Melendez. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using ElCamino.IdentityServer.AzureStorage.Configuration;
-using Microsoft.Extensions.Options;
-using Azure.Storage;
-using Azure.Storage.Blobs;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Azure.Data.Tables;
+using Azure.Storage.Blobs;
+using ElCamino.IdentityServer.AzureStorage.Configuration;
 using ElCamino.IdentityServer.AzureStorage.Entities;
 using ElCamino.IdentityServer.AzureStorage.Helpers;
 using ElCamino.IdentityServer.AzureStorage.Mappers;
-using Azure.Data.Tables;
-using Azure;
-using System.Threading;
-using IdentityModel;
+using Microsoft.Extensions.Options;
 
 namespace ElCamino.IdentityServer.AzureStorage.Contexts
 {
