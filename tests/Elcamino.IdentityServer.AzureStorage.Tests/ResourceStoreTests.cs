@@ -189,7 +189,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             stopwatch.Reset();
             stopwatch.Start();
             string findScope = findScopes[0];
-            var apiScopes = await store.FindApiScopesByNameAsync(findScopes);
+            var apiScopes = await store.FindApiScopesByNameAsync([findScope]);
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.FindApiScopesByNameAsync({findScope})-api: {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<int>(1, apiScopes.Where(w => w.Name == findScope).Count());
