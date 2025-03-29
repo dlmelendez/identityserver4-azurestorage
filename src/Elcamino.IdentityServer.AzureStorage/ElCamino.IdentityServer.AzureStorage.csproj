@@ -18,7 +18,7 @@
     <Authors>David Melendez</Authors>
     <Company>David Melendez</Company>
     <Description>Uses Azure Blob and Table Storage services as an alternative to Entity Framework/SQL data access for Duende IdentityServer.</Description>
-    <Version>7.1</Version>
+    <Version>7.2</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -29,9 +29,9 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Azure.Data.Tables" Version="12.10.0" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
-    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.1.0" />
-    <PackageReference Include="ElCamino.Azure.Data.Tables" Version="9.0.2" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
+    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.2.0" />
+    <PackageReference Include="ElCamino.Azure.Data.Tables" Version="9.0.5" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
@@ -42,10 +42,10 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'net9.0' ">
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.*" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.*" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.*" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.3" />
   </ItemGroup>
   
   <ItemGroup>

@@ -80,13 +80,13 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
 
         public async Task<IEnumerable<PersistedGrantTblEntity>> GetExpiredAsync(int maxResults, CancellationToken cancellationToken = default)
         {
-            TableQuery tq = new TableQuery();
-
-            tq.FilterString = TableQuery.GenerateFilterConditionForDate("Expiration",
-                QueryComparisons.LessThan,
-                DateTimeOffset.UtcNow).ToString();
-            tq.TakeCount = maxResults;
-            
+            TableQuery tq = new TableQuery()
+            {
+                FilterString = TableQuery.GenerateFilterConditionForDate("Expiration",
+                    QueryComparisons.LessThan,
+                    DateTimeOffset.UtcNow).ToString(),
+                TakeCount = maxResults
+            };            
             return await PersistedGrantTable.ExecuteQueryAsync<PersistedGrantTblEntity>(tq, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
