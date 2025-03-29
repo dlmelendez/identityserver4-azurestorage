@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -13,6 +14,7 @@ using Azure.Data.Tables;
 using Duende.IdentityServer.Extensions;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
+using ElCamino.Azure.Data.Tables;
 using ElCamino.IdentityServer.AzureStorage.Contexts;
 using ElCamino.IdentityServer.AzureStorage.Entities;
 using ElCamino.IdentityServer.AzureStorage.Helpers;
@@ -41,7 +43,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         {
             int counter = 0;
             grantFilter.Validate();
-            string tableFilter = GetTableFilter(grantFilter);
+#if DEBUG
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+#endif
+            string tableFilter = GetTableFilter(grantFilter).ToString();
+#if DEBUG
+            sw.Stop();
+            Debug.WriteLine(message: $"{nameof(GetTableFilter)}: {sw.ElapsedMilliseconds} ms");
+#endif
 
             await foreach (var model in Contexts.StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
                 (tableFilter, StorageContext.PersistedGrantTable, p => p.ToModel(), cancellationToken).ConfigureAwait(false))
@@ -87,8 +97,16 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         {
             grantFilter.Validate();
             TableClient table = StorageContext.PersistedGrantTable;
+#if DEBUG
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+#endif
+            string tableFilter = GetTableFilter(grantFilter).ToString();
+#if DEBUG
+            sw.Stop();
+            Debug.WriteLine(message: $"{nameof(GetTableFilter)}: {sw.ElapsedMilliseconds} ms");
+#endif
 
-            string tableFilter = GetTableFilter(grantFilter);
             _logger.LogDebug(message: $"removing persisted grants from database for table filter {tableFilter} ");
 
             var mainTasks = (await table.QueryAsync<PersistedGrantTblEntity>(filter: tableFilter, cancellationToken: cancellationToken)
@@ -123,36 +141,45 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }
 
-        private static string GetTableFilter(PersistedGrantFilter grantFilter)
+        private static ReadOnlySpan<char> GetTableFilter(PersistedGrantFilter grantFilter)
         {
             var hashedSubject = KeyGeneratorHelper.GenerateHashValue(grantFilter.SubjectId);
 
-            string tableFilter = TableQuery.GenerateFilterCondition(nameof(PersistedGrantTblEntity.PartitionKey),
+            var tableFilter = TableQuery.GenerateFilterCondition(nameof(PersistedGrantTblEntity.PartitionKey),
                 QueryComparisons.Equal,
-                hashedSubject).ToString();
+                hashedSubject);
 
-            if (!String.IsNullOrWhiteSpace(grantFilter.ClientId))
+            if (!string.IsNullOrWhiteSpace(grantFilter.ClientId)
+                || !string.IsNullOrWhiteSpace(grantFilter.Type)
+                || !string.IsNullOrWhiteSpace(grantFilter.SessionId))
             {
-                var rowClientFilter = TableQuery.GenerateFilterCondition(nameof(PersistedGrantTblEntity.ClientId),
-                    QueryComparisons.Equal,
-                    grantFilter.ClientId);
-                tableFilter = TableQuery.CombineFilters(tableFilter, TableOperators.And, rowClientFilter).ToString();
-            }
+                TableQueryBuilder queryBuilder = new TableQueryBuilder();
+                queryBuilder.AddFilter(tableFilter);
+                if (!string.IsNullOrWhiteSpace(grantFilter.ClientId))
+                {
+                    queryBuilder.CombineFilters(TableOperator.And);
+                    queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.ClientId),
+                        QueryComparison.Equal,
+                        grantFilter.ClientId.AsSpan());
+                }
 
-            if (!String.IsNullOrWhiteSpace(grantFilter.Type))
-            {
-                var rowTypeFilter = TableQuery.GenerateFilterCondition(nameof(PersistedGrantTblEntity.Type),
-                   QueryComparisons.Equal,
-                   grantFilter.Type);
-                tableFilter = TableQuery.CombineFilters(tableFilter, TableOperators.And, rowTypeFilter).ToString();
-            }
+                if (!string.IsNullOrWhiteSpace(grantFilter.Type))
+                {
+                    queryBuilder.CombineFilters(TableOperator.And);
+                    queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.Type),
+                        QueryComparison.Equal,
+                        grantFilter.Type.AsSpan());
+                }
 
-            if (!String.IsNullOrWhiteSpace(grantFilter.SessionId))
-            {
-                var rowSessionIdFilter = TableQuery.GenerateFilterCondition(nameof(PersistedGrantTblEntity.SessionId),
-                   QueryComparisons.Equal,
-                   grantFilter.SessionId);
-                tableFilter = TableQuery.CombineFilters(tableFilter, TableOperators.And, rowSessionIdFilter).ToString();
+                if (!string.IsNullOrWhiteSpace(grantFilter.SessionId))
+                {
+                    queryBuilder.CombineFilters(TableOperator.And);
+                    queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.SessionId),
+                        QueryComparison.Equal,
+                        grantFilter.SessionId.AsSpan());
+                }
+
+                return queryBuilder.ToString();
             }
 
             return tableFilter;
