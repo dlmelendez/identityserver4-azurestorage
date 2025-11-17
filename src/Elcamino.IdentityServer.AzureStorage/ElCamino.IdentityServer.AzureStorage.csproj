@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>ElCamino.IdentityServer.AzureStorage</AssemblyName>
     <RootNamespace>ElCamino.IdentityServer.AzureStorage</RootNamespace>
-    <LangVersion>13.0</LangVersion>
+    <LangVersion>14.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Copyright>Copyright ©  2025 David Melendez, Apache 2.0 License</Copyright>
@@ -18,7 +18,7 @@
     <Authors>David Melendez</Authors>
     <Company>David Melendez</Company>
     <Description>Uses Azure Blob and Table Storage services as an alternative to Entity Framework/SQL data access for Duende IdentityServer.</Description>
-    <Version>7.2</Version>
+    <Version>7.3.2</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -27,11 +27,17 @@
 
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Azure.Data.Tables" Version="12.10.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
-    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.2.0" />
-    <PackageReference Include="ElCamino.Azure.Data.Tables" Version="9.0.5" />
+    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.3.2" />
+    <PackageReference Include="ElCamino.Azure.Data.Tables" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.*" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
@@ -41,13 +47,13 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.*" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net9.0' ">
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.3" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.*" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Include="..\..\README.md">
       <Pack>True</Pack>
