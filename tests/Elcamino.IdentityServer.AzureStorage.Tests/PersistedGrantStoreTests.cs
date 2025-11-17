@@ -235,7 +235,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject })).ToList();
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}): {stopwatch.ElapsedMilliseconds} ms");
-            Assert.AreEqual<int>(grants.Count, returnGrants.Count);
+            Assert.HasCount(grants.Count, returnGrants);
             grants.ForEach(g => AssertGrantsEqual(g, returnGrants.FirstOrDefault(f => f.Key == g.Key)));
         }
 
@@ -265,7 +265,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject })).Where(w => w.ClientId == client).ToList();
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}): {stopwatch.ElapsedMilliseconds} ms");
-            Assert.AreEqual<int>(grants.Count, returnGrants.Count);
+            Assert.HasCount(grants.Count, returnGrants);
             grants.ForEach(g => AssertGrantsEqual(g, returnGrants.FirstOrDefault(f => f.Key == g.Key)));
 
             stopwatch.Reset();
@@ -274,7 +274,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.RemoveAllAsync({subject}, {client}): {stopwatch.ElapsedMilliseconds} ms");
             returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject })).Where(w => w.ClientId == client).ToList();
-            Assert.AreEqual<int>(0, returnGrants.Count);
+            Assert.IsEmpty(returnGrants);
 
         }
 
@@ -306,7 +306,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type= type })).ToList();
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}, {client}, {type}): {stopwatch.ElapsedMilliseconds} ms");
-            Assert.AreEqual<int>(grants.Count, returnGrants.Count);
+            Assert.HasCount(grants.Count, returnGrants);
             grants.ForEach(g => AssertGrantsEqual(g, returnGrants.FirstOrDefault(f => f.Key == g.Key)));
 
             stopwatch.Reset();
@@ -315,7 +315,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.RemoveAllAsync({subject}, {client}, {type}): {stopwatch.ElapsedMilliseconds} ms");
             returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type })).ToList();
-            Assert.AreEqual<int>(0, returnGrants.Count);
+            Assert.IsEmpty(returnGrants);
 
         }
 
@@ -351,7 +351,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type, SessionId = sessionTarget })).ToList();
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}, {client}, {type}, {sessionTarget}): {stopwatch.ElapsedMilliseconds} ms");
-            Assert.AreEqual<int>(1, returnGrants.Count);
+            Assert.HasCount(1, returnGrants);
             returnGrants.ForEach(g => AssertGrantsEqual(g, grants.FirstOrDefault(f => f.Key == g.Key)));
 
             stopwatch.Reset();
@@ -360,7 +360,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.RemoveAllAsync({subject}, {client}, {type}, {sessionTarget}): {stopwatch.ElapsedMilliseconds} ms");
             returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type })).ToList();
-            Assert.AreEqual<int>(grants.Count - 1, returnGrants.Count);
+            Assert.HasCount(grants.Count - 1, returnGrants);
 
         }
 

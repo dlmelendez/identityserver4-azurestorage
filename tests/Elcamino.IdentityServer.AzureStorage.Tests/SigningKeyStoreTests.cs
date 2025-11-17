@@ -93,7 +93,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             int count = clients.Count();
             stopwatch.Stop();
             Console.WriteLine($"SigningKeyStore.LoadKeysAsync() Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
-            Assert.IsTrue(count > 0);
+            Assert.IsGreaterThan(0, count);
 
             stopwatch.Reset();
             stopwatch.Start();
