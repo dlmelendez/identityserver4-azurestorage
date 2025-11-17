@@ -2,8 +2,6 @@
 // See LICENSE in the project root for license information.
 
 
-using AutoMapper;
-using Entities = ElCamino.IdentityServer.AzureStorage.Entities;
 using Models = Duende.IdentityServer.Models;
 
 namespace ElCamino.IdentityServer.AzureStorage.Mappers;
@@ -13,32 +11,33 @@ namespace ElCamino.IdentityServer.AzureStorage.Mappers;
 /// </summary>
 public static class IdentityProviderMappers
 {
-    static IdentityProviderMappers()
-    {
-        Mapper = new MapperConfiguration(cfg => cfg.AddProfile<IdentityProviderMapperProfile>())
-            .CreateMapper();
-        Mapper.ConfigurationProvider.AssertConfigurationIsValid();
-    }
-
-    internal static IMapper Mapper { get; }
-
     /// <summary>
     /// Maps an entity to a model.
     /// </summary>
     /// <param name="entity">The entity.</param>
     /// <returns></returns>
-    public static Models.IdentityProvider ToModel(this Entities.IdentityProvider entity)
-    {
-        return entity == null ? null : Mapper.Map<Models.IdentityProvider>(entity);
-    }
+    public static Models.IdentityProvider ToModel(this Entities.IdentityProvider entity) => entity == null ? null :
+            new Models.IdentityProvider(entity.Type)
+            {
+                Scheme = entity.Scheme,
+                DisplayName = entity.DisplayName,
+                Enabled = entity.Enabled,
+                Type = entity.Type,
+                Properties = PropertiesConverter.Convert(entity.Properties)
+            };
 
     /// <summary>
     /// Maps a model to an entity.
     /// </summary>
     /// <param name="model">The model.</param>
     /// <returns></returns>
-    public static Entities.IdentityProvider ToEntity(this Models.IdentityProvider model)
-    {
-        return model == null ? null : Mapper.Map<Entities.IdentityProvider>(model);
-    }
+    public static Entities.IdentityProvider ToEntity(this Models.IdentityProvider model) => model == null ? null :
+            new Entities.IdentityProvider
+            {
+                Scheme = model.Scheme,
+                DisplayName = model.DisplayName,
+                Enabled = model.Enabled,
+                Type = model.Type,
+                Properties = PropertiesConverter.Convert(model.Properties)
+            };
 }

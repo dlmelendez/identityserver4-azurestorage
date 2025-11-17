@@ -2,84 +2,85 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 // Based on work from Brock Allen & Dominick Baier, https://github.com/IdentityServer/Duende.IdentityServer
 
-using AutoMapper;
-using Duende.IdentityServer.Models;
 using ElCamino.IdentityServer.AzureStorage.Entities;
 using ElCamino.IdentityServer.AzureStorage.Helpers;
+using Models = Duende.IdentityServer.Models;
 
 namespace ElCamino.IdentityServer.AzureStorage.Mappers
 {
     public static class PersistedGrantMappers
     {
-        private static readonly MapperConfiguration KeyMapperConfiguration;
-
-        public static IMapper KeyMapper { get; private set; }
-
-        private static readonly MapperConfiguration SubjectMapperConfiguration;
-
-        public static IMapper SubjectMapper { get; private set; }
-
-        static PersistedGrantMappers()
+        public static (PersistedGrantTblEntity keyGrant, PersistedGrantTblEntity subjectGrant) ToEntities(this Models.PersistedGrant persistedGrant)
         {
-            KeyMapperConfiguration = new MapperConfiguration((cfg) =>
-            {
-                cfg.CreateMap<PersistedGrant, PersistedGrantTblEntity>()                
-                 .ForMember(dest => dest.RowKey,
-                     opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key).ToString());
-                     })
-                .ForMember(dest => dest.PartitionKey,
-                     opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key).ToString());
-                     })                
-                 .ForMember(dest => dest.Timestamp, opt => opt.Ignore())
-                 .ForMember(dest => dest.ETag,
-                     opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.ETagWildCard);
-                     }).ConstructUsing((n) => new PersistedGrantTblEntity());
-                cfg.CreateMap<PersistedGrantTblEntity, PersistedGrant>()                                 
-                 .ConstructUsing((n) => new PersistedGrant());
-            });
-
-            KeyMapperConfiguration.CompileMappings();
-
-            KeyMapper = KeyMapperConfiguration.CreateMapper();
-            KeyMapper.ConfigurationProvider.AssertConfigurationIsValid();
-
-            SubjectMapperConfiguration = new MapperConfiguration((cfg) =>
-            {
-                cfg.CreateMap<PersistedGrant, PersistedGrantTblEntity>()
-                 .ForMember(dest => dest.RowKey,
-                     opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.Key).ToString());
-                     })
-                .ForMember(dest => dest.PartitionKey,
-                     opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.GenerateHashValue(src.SubjectId).ToString());
-                     })
-                 .ForMember(dest => dest.Timestamp, opt => opt.Ignore())
-                 .ForMember(dest => dest.ETag,
-                     opt => {
-                         opt.MapFrom(src => KeyGeneratorHelper.ETagWildCard);
-                     }).ConstructUsing((n) => new PersistedGrantTblEntity());
-                cfg.CreateMap<PersistedGrantTblEntity, PersistedGrant>()
-                 .ConstructUsing((n) => new PersistedGrant());
-            });
-
-            SubjectMapperConfiguration.CompileMappings();
-
-            SubjectMapper = SubjectMapperConfiguration.CreateMapper();
-            SubjectMapper.ConfigurationProvider.AssertConfigurationIsValid();
+            return (persistedGrant.ToEntityKey(), persistedGrant.ToEntitySubject());
         }
 
-        public static (PersistedGrantTblEntity keyGrant, PersistedGrantTblEntity subjectGrant) ToEntities(this PersistedGrant persistedGrant)
-        {
-            return (KeyMapper.Map<PersistedGrantTblEntity>(persistedGrant), SubjectMapper.Map<PersistedGrantTblEntity>(persistedGrant));
-        }
+        /// <summary>
+        /// Maps an entity to a model.
+        /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <returns></returns>
+        public static Models.PersistedGrant ToModel(this PersistedGrantTblEntity entity) => entity == null ? null :
+                new Models.PersistedGrant
+                {
+                    Key = entity.Key,
+                    Type = entity.Type,
+                    SubjectId = entity.SubjectId,
+                    SessionId = entity.SessionId,
+                    ClientId = entity.ClientId,
+                    Description = entity.Description,
+                    CreationTime = entity.CreationTime,
+                    Expiration = entity.Expiration,
+                    ConsumedTime = entity.ConsumedTime,
+                    Data = entity.Data
+                };
 
-        public static PersistedGrant ToModel(this PersistedGrantTblEntity entity)
-        {
-            return KeyMapper.Map<PersistedGrant>(entity);
-        }
+        /// <summary>
+        /// Maps a model to a key entity.
+        /// </summary>
+        /// <param name="model">The model.</param>
+        /// <returns></returns>
+        public static PersistedGrantTblEntity ToEntityKey(this Models.PersistedGrant model) => model == null ? null :
+                new PersistedGrantTblEntity
+                {
+                    RowKey = KeyGeneratorHelper.GenerateHashValue(model.Key).ToString(),
+                    PartitionKey = KeyGeneratorHelper.GenerateHashValue(model.Key).ToString(),
+                    ETag = KeyGeneratorHelper.ETagWildCard,
+                    Key = model.Key,
+                    Type = model.Type,
+                    SubjectId = model.SubjectId,
+                    SessionId = model.SessionId,
+                    ClientId = model.ClientId,
+                    Description = model.Description,
+                    CreationTime = model.CreationTime,
+                    Expiration = model.Expiration,
+                    ConsumedTime = model.ConsumedTime,
+                    Data = model.Data
+                };
+
+        /// <summary>
+        /// Maps a model to a subject entity.
+        /// </summary>
+        /// <param name="model">The model.</param>
+        /// <returns></returns>
+        public static PersistedGrantTblEntity ToEntitySubject(this Models.PersistedGrant model) => model == null ? null :
+                new PersistedGrantTblEntity
+                {
+                    RowKey = KeyGeneratorHelper.GenerateHashValue(model.Key).ToString(),
+                    PartitionKey = KeyGeneratorHelper.GenerateHashValue(model.SubjectId).ToString(),
+                    ETag = KeyGeneratorHelper.ETagWildCard,
+                    Key = model.Key,
+                    Type = model.Type,
+                    SubjectId = model.SubjectId,
+                    SessionId = model.SessionId,
+                    ClientId = model.ClientId,
+                    Description = model.Description,
+                    CreationTime = model.CreationTime,
+                    Expiration = model.Expiration,
+                    ConsumedTime = model.ConsumedTime,
+                    Data = model.Data
+                };
+
+
     }
 }
