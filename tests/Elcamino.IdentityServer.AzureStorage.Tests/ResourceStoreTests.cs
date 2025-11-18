@@ -185,7 +185,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             int count = resources.ApiResources.Count;
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.GetAllResourcesAsync().ApiResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
-            Assert.IsTrue(count > 0);
+            Assert.IsGreaterThan(0, count);
 
 
             stopwatch.Reset();
@@ -309,7 +309,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             int count = resources.IdentityResources.Count;
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.GetAllResourcesAsync().IdentityResources.Count: {count} : {stopwatch.ElapsedMilliseconds} ms");
-            Assert.IsTrue(count > 0);
+            Assert.IsGreaterThan(0, count);
 
             stopwatch.Reset();
             //Remove
