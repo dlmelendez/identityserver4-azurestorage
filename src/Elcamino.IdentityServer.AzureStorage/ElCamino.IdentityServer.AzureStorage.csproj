@@ -18,7 +18,7 @@
     <Authors>David Melendez</Authors>
     <Company>David Melendez</Company>
     <Description>Uses Azure Blob and Table Storage services as an alternative to Entity Framework/SQL data access for Duende IdentityServer.</Description>
-    <Version>7.3.2</Version>
+    <Version>7.4.4</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -29,7 +29,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.10.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
-    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.3.2" />
+    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.4.4" />
     <PackageReference Include="ElCamino.Azure.Data.Tables" Version="10.0.0" />
   </ItemGroup>
 
