@@ -193,23 +193,26 @@ namespace ElCamino.IdentityServer.AzureStorage.Contexts
             return blob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
         }
 
-        public Task SaveBlobWithHashedKeyAsync(string keyNotHashed, string jsonEntityContent, BlobContainerClient container, CancellationToken cancellationToken = default)
+        public async Task SaveBlobWithHashedKeyAsync(string keyNotHashed, string jsonEntityContent, BlobContainerClient container, CancellationToken cancellationToken = default)
         {
             BlobClient blob = container.GetBlobClient(KeyGeneratorHelper.GenerateHashValue(keyNotHashed).ToString());
 
-            return blob.UploadAsync(new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent)), new BlobHttpHeaders() 
+            using MemoryStream contentStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent));
+            await blob.UploadAsync(contentStream, new BlobHttpHeaders() 
             { 
                 ContentType = "application/json"
-            }, cancellationToken: cancellationToken);
+            }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
-        public Task SaveBlobAsync(string blobName, string jsonEntityContent, BlobContainerClient container, CancellationToken cancellationToken = default)
+        public async Task SaveBlobAsync(string blobName, string jsonEntityContent, BlobContainerClient container, CancellationToken cancellationToken = default)
         {
             BlobClient blob = container.GetBlobClient(blobName);
-            return blob.UploadAsync(new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent)), new BlobHttpHeaders()
+
+            using MemoryStream contentStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonEntityContent));
+            await blob.UploadAsync(contentStream, new BlobHttpHeaders()
             {
                 ContentType = "application/json"
-            }, cancellationToken: cancellationToken); ;
+            }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
        
         /// <summary>
