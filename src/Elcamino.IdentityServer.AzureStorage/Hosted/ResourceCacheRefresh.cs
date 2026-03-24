@@ -78,6 +78,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             _logger.LogDebug("Stopping Resource cache refresh");
 
             _source.Cancel();
+            _source.Dispose();
             _source = null;
         }
 
@@ -125,7 +126,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             try
             {
                 _logger.LogTrace($"Querying for {nameof(ResourceStorageContext)} cache refresh");
-                var context = _serviceProvider.CreateScope().ServiceProvider.GetService<ResourceStorageContext>();
+                using var scope = _serviceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetService<ResourceStorageContext>();
                 await Task.WhenAll(RefreshApiCacheAsync(context, cancellationToken), 
                     RefreshIdentityCacheAsync(context, cancellationToken),
                     RefreshApiScopeCacheAsync(context, cancellationToken)).ConfigureAwait(false);

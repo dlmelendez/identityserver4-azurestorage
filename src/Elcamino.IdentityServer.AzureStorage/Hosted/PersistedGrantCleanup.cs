@@ -79,6 +79,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             _logger.LogDebug("Stopping grant removal");
 
             _source.Cancel();
+            _source.Dispose();
             _source = null;
         }
 
@@ -126,7 +127,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             try
             {
                 _logger.LogTrace("Querying for expired grants to remove");
-                var context = _serviceProvider.CreateScope().ServiceProvider.GetService<PersistedGrantStorageContext>();
+                using var scope = _serviceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetService<PersistedGrantStorageContext>();
                 await RemoveGrants(context, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)

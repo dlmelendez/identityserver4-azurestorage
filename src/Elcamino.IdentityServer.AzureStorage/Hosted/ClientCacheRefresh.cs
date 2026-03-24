@@ -78,6 +78,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             _logger.LogDebug("Stopping Client cache refresh");
 
             _source.Cancel();
+            _source.Dispose();
             _source = null;
         }
 
@@ -125,7 +126,8 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
             try
             {
                 _logger.LogTrace($"Querying for {nameof(ClientStorageContext)} cache refresh");
-                ClientStorageContext context = _serviceProvider.CreateScope().ServiceProvider.GetRequiredService<ClientStorageContext>();
+                using var scope = _serviceProvider.CreateScope();
+                ClientStorageContext context = scope.ServiceProvider.GetRequiredService<ClientStorageContext>();
                 await RefreshCacheAsync(context, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
