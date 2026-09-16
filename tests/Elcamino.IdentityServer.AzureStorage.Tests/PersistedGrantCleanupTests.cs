@@ -5,6 +5,7 @@ using ElCamino.IdentityServer.AzureStorage.Contexts;
 using ElCamino.IdentityServer.AzureStorage.Hosted;
 using ElCamino.IdentityServer.AzureStorage.Stores;
 using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -130,6 +131,47 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
                 Assert.IsFalse(string.IsNullOrEmpty(after.Data), $"active grant {grant.Key} lost its token data blob");
                 await store.RemoveAsync(grant.Key);
             }
+        }
+
+        [TestMethod]
+        public async Task PersistedGrantCleanup_LookupDuringPagedTeardownTest()
+        {
+            var storageContext = _serviceProvider.GetService<PersistedGrantStorageContext>();
+            var store = new PersistedGrantStore(storageContext, _logger);
+            var cleanup = _serviceProvider.GetService<PersistedGrantCleanup>();
+            await cleanup.RemoveExpiredGrantsAsync();
+
+            var grantA = CreateTestGrant(storageContext.JsonSerializerDefaultOptions, DateTime.UtcNow.AddMinutes(-5));
+            var grantB = CreateTestGrant(storageContext.JsonSerializerDefaultOptions, DateTime.UtcNow.AddMinutes(-5));
+            await store.StoreAsync(grantA);
+            await store.StoreAsync(grantB);
+
+            var expiredRows = (await storageContext.GetExpiredAsync(1000)).ToList();
+            var aKeyRow = expiredRows.Single(r => r.Key == grantA.Key && r.PartitionKey == r.RowKey);
+            var aSubjectRow = expiredRows.Single(r => r.Key == grantA.Key && r.PartitionKey != r.RowKey);
+            var bKeyRow = expiredRows.Single(r => r.Key == grantB.Key && r.PartitionKey == r.RowKey);
+            var bSubjectRow = expiredRows.Single(r => r.Key == grantB.Key && r.PartitionKey != r.RowKey);
+
+            // teardown order 1: subject index removed first, key row + blob still present
+            Assert.IsTrue(await storageContext.RemoveExpiredAsync(aSubjectRow));
+            var aByKey = await store.GetAsync(grantA.Key);
+            Assert.IsNotNull(aByKey, "grant must stay readable by key until its key row is torn down");
+            Assert.AreEqual(grantA.Data, aByKey.Data, "grant read mid-teardown must be intact, never partial");
+            var aBySubject = await store.GetAllAsync(new PersistedGrantFilter { SubjectId = grantA.SubjectId });
+            Assert.IsFalse(aBySubject.Any(), "subject lookup must be empty once the subject index row is gone");
+
+            // teardown order 2: key row + blob removed first, subject index row still present
+            Assert.IsTrue(await storageContext.RemoveExpiredAsync(bKeyRow));
+            Assert.IsNull(await store.GetAsync(grantB.Key), "key lookup must miss once the key row is gone");
+            var bBySubject = (await store.GetAllAsync(new PersistedGrantFilter { SubjectId = grantB.SubjectId })).ToList();
+            Assert.IsFalse(bBySubject.Any(g => string.IsNullOrEmpty(g.Data)), "no corrupt grant may surface mid-teardown");
+            Assert.IsFalse(bBySubject.Any(), "grant without its key row and blob must be invisible to subject lookups");
+
+            // completing teardown in either order leaves nothing behind
+            Assert.IsTrue(await storageContext.RemoveExpiredAsync(aKeyRow));
+            Assert.IsTrue(await storageContext.RemoveExpiredAsync(bSubjectRow));
+            Assert.IsNull(await store.GetAsync(grantA.Key));
+            Assert.IsFalse((await store.GetAllAsync(new PersistedGrantFilter { SubjectId = grantB.SubjectId })).Any());
         }
 
         [TestMethod]
