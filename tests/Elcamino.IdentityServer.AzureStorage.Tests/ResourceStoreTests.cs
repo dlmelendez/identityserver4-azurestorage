@@ -8,11 +8,11 @@ using Duende.IdentityServer.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Model = Duende.IdentityServer.Models;
 
@@ -124,7 +124,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             Console.WriteLine($"api scope name: {scopeName}");
 
             var resource = CreateApiV3EntityTestObject(apiResourceName, scopeName);
-            await storageContext.SaveBlobWithHashedKeyAsync(apiResourceName, JsonConvert.SerializeObject(resource),
+            await storageContext.SaveBlobWithHashedKeyAsync(apiResourceName, JsonSerializer.Serialize(resource),
                 storageContext.ApiResourceBlobContainer);
             
             // Run Migration
@@ -155,7 +155,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             Assert.IsNotNull(store);
 
             var resource = CreateApiTestObject();
-            Console.WriteLine(JsonConvert.SerializeObject(resource));
+            Console.WriteLine(JsonSerializer.Serialize(resource));
 
             stopwatch.Start();
             await store.StoreAsync(resource);
@@ -175,7 +175,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             var findScopesResources = await store.FindApiResourcesByScopeNameAsync(findScopes);
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.FindApiResourcesByScopeAsync({string.Join(",", findScopesResources.Select(r => r.Name))})-resources found: {findScopesResources.Count()} ");
-            Console.WriteLine(JsonConvert.SerializeObject(findScopesResources));
+            Console.WriteLine(JsonSerializer.Serialize(findScopesResources));
             Console.WriteLine($"ResourceStore.FindApiResourcesByScopeAsync({string.Join(",", findScopes)})-api: {stopwatch.ElapsedMilliseconds} ms");
             Assert.AreEqual<string>(resource.Name, findScopesResources.Single()?.Name);
 
@@ -212,7 +212,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 
             string name = Guid.NewGuid().ToString("n");
             var resource = CreateApiTestObject(name);
-            Console.WriteLine(JsonConvert.SerializeObject(resource));
+            Console.WriteLine(JsonSerializer.Serialize(resource));
 
             stopwatch.Start();
             await store.StoreAsync(resource);
@@ -257,7 +257,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 
             foreach (Model.IdentityResource resource in GetIdentityResources())
             {
-                Console.WriteLine(JsonConvert.SerializeObject(resource));
+                Console.WriteLine(JsonSerializer.Serialize(resource));
 
                 stopwatch.Start();
                 await store.StoreAsync(resource);
@@ -295,7 +295,7 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             Assert.IsNotNull(store);
 
             var resource = new IdentityResources.Address();
-            Console.WriteLine(JsonConvert.SerializeObject(resource));
+            Console.WriteLine(JsonSerializer.Serialize(resource));
 
             stopwatch.Start();
             await store.StoreAsync(resource);

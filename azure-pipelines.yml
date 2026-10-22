@@ -7,9 +7,33 @@ pool:
 
 steps:
 - task: PowerShell@2
+  displayName: 'Update appsettings.json storage connection (master branch builds only)'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   inputs:
     targetType: 'inline'
     script: '(Get-Content .\tests\Elcamino.IdentityServer.AzureStorage.Tests\appsettings.json) | Foreach-Object { $_ -replace ''UseDevelopmentStorage=true;'', ''$(STORAGECONNECTION)'' } | Set-Content .\tests\Elcamino.IdentityServer.AzureStorage.Tests\appsettings.json'
+
+- bash: |
+    set -e
+    npm install -g azurite
+    azurite --version
+    mkdir -p $(Agent.TempDirectory)/azurite
+    nohup azurite --loose --skipApiVersionCheck --location $(Agent.TempDirectory)/azurite > $(Agent.TempDirectory)/azurite.log 2>&1 < /dev/null &
+    echo "Waiting for Azurite to start..."
+    for i in {1..30}; do
+      if (echo > /dev/tcp/127.0.0.1/10000) >/dev/null 2>&1 \
+         && (echo > /dev/tcp/127.0.0.1/10001) >/dev/null 2>&1 \
+         && (echo > /dev/tcp/127.0.0.1/10002) >/dev/null 2>&1; then
+        echo "Azurite is ready"
+        exit 0
+      fi
+      sleep 1
+    done
+    echo "Azurite did not start within 30 seconds"
+    cat $(Agent.TempDirectory)/azurite.log
+    exit 1
+  displayName: 'Install and start Azurite storage emulator (latest) - CI builds only'
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 - task: UseDotNet@2
   displayName: 'Use .Net Core sdk 8.x'
