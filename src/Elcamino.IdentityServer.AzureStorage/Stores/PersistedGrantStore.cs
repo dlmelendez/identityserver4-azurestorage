@@ -56,12 +56,14 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             await foreach (var model in Contexts.StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
                 (tableFilter, StorageContext.PersistedGrantTable, p => p.ToModel(), cancellationToken).ConfigureAwait(false))
             {
-                await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer, cancellationToken)
-                        .ContinueWith((blobTask) =>
-                        {
-                            model.Data = blobTask.Result;
-                        }, cancellationToken)
+                string tokenData = await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer, cancellationToken)
                         .ConfigureAwait(false);
+                if (string.IsNullOrEmpty(tokenData))
+                {
+                    _logger.LogWarning("{persistedGrantKey} grant row found but token data blob is missing; skipping", model.Key);
+                    continue;
+                }
+                model.Data = tokenData;
                 counter++;
                 yield return model;
             }
@@ -82,6 +84,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             var model = entityTask.Result?.ToModel();
             if (model != null)
             {
+                if (string.IsNullOrEmpty(tokenDataTask.Result))
+                {
+                    _logger.LogWarning("{persistedGrantKey} grant row found but token data blob is missing; treating grant as not found", key);
+                    return null;
+                }
                 model.Data = tokenDataTask.Result;
             }
             _logger.LogDebug("{0} found in table storage and blob data: {1}", key, model != null);
@@ -230,8 +237,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             TableClient table = StorageContext.PersistedGrantTable;
             try
             {
-                await Task.WhenAll(table.UpsertEntityAsync(entities.keyGrant, TableUpdateMode.Replace, cancellationToken),
-                    table.UpsertEntityAsync(entities.subjectGrant, TableUpdateMode.Replace, cancellationToken),
+                // Invariant: the key row is written before the subject row and blob.
+                // PersistedGrantStorageContext.RemoveExpiredAsync relies on this ordering to make
+                // its ETag-guarded key-row delete the gate for the subject-row and blob deletes.
+                await table.UpsertEntityAsync(entities.keyGrant, TableUpdateMode.Replace, cancellationToken).ConfigureAwait(false);
+                await Task.WhenAll(table.UpsertEntityAsync(entities.subjectGrant, TableUpdateMode.Replace, cancellationToken),
                     StorageContext.SaveBlobWithHashedKeyAsync(grant.Key, grant.Data, StorageContext.PersistedGrantBlobContainer, cancellationToken))
                     .ConfigureAwait(false);
             }

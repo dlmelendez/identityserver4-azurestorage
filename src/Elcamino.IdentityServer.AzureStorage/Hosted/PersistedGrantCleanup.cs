@@ -154,13 +154,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Hosted
                     {
                         try
                         {
-                            await context.RemoveAsync(expiredGrant.Key, cancellationToken).ConfigureAwait(false);
+                            await context.RemoveExpiredAsync(expiredGrant, cancellationToken).ConfigureAwait(false);
                         }
-                        catch (Exception ex)
+                        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                         {
-                            // we get this if/when someone else already deleted the records
-                            // we want to essentially ignore this, and keep working
-                            _logger.LogDebug("Exception removing expired grants: {exception}", ex.Message);
+                            _logger.LogWarning(ex, "Failed to remove expired grant; it remains expired and will be retried next cleanup cycle.");
                         }
                     }
                 }
