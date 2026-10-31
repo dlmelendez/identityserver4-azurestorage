@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -235,6 +236,29 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             var returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject })).ToList();
             stopwatch.Stop();
             Console.WriteLine($"PersistedGrantStore.GetAllAsync({subject}): {stopwatch.ElapsedMilliseconds} ms");
+            Assert.HasCount(grants.Count, returnGrants);
+            grants.ForEach(g => AssertGrantsEqual(g, returnGrants.FirstOrDefault(f => f.Key == g.Key)));
+        }
+
+        [TestMethod]
+        public async Task PersistedGrantStore_InterfaceGetAllAsyncTest()
+        {
+            var storageContext = Services.BuildServiceProvider().GetService<PersistedGrantStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            IPersistedGrantStore store = new PersistedGrantStore(storageContext, _logger);
+
+            string subject = Guid.NewGuid().ToString();
+            List<PersistedGrant> grants = new List<PersistedGrant>();
+            for (int iCounter = 0; iCounter < 3; iCounter++)
+            {
+                var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions, subjectId: subject);
+                await store.StoreAsync(grant, CancellationToken.None);
+                grants.Add(grant);
+            }
+
+            IReadOnlyCollection<PersistedGrant> returnGrants = await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject }, CancellationToken.None);
+
             Assert.HasCount(grants.Count, returnGrants);
             grants.ForEach(g => AssertGrantsEqual(g, returnGrants.FirstOrDefault(f => f.Key == g.Key)));
         }

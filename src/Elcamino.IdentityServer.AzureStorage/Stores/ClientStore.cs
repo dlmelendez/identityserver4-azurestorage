@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Model = Duende.IdentityServer.Models;
@@ -33,11 +34,21 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Client>> GetAllClients()
+        public async Task<IEnumerable<Client>> GetAllClients(CancellationToken cancellationToken = default)
         {
-            var entities = await GetAllClientEntities().ConfigureAwait(false);
+            var entities = await GetAllClientEntities(cancellationToken).ConfigureAwait(false);
 
             return entities.Select(s => s?.ToModel()).ToArray();
+        }
+
+        public async IAsyncEnumerable<Client> GetAllClientsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var entities = await GetAllClientEntities(cancellationToken).ConfigureAwait(false);
+            foreach (var entity in entities)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return entity?.ToModel();
+            }
         }
 
         private async Task<IEnumerable<Entities.Client>> GetAllClientEntities(CancellationToken cancellationToken = default)

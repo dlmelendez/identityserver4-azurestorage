@@ -53,12 +53,7 @@ public class SigningKeyStore : ISigningKeyStore
     /// Loads all keys from store.
     /// </summary>
     /// <returns></returns>
-    Task<IEnumerable<SerializedKey>> ISigningKeyStore.LoadKeysAsync()
-    {
-        return LoadKeysAsync(default);
-    }
-
-    public async Task<IEnumerable<SerializedKey>> LoadKeysAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<SerializedKey>> LoadKeysAsync(CancellationToken cancellationToken = default)
     {
         var entities = await GetAllSigningKeyEntities(cancellationToken).ConfigureAwait(false);
 
@@ -80,11 +75,6 @@ public class SigningKeyStore : ISigningKeyStore
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    Task ISigningKeyStore.StoreKeyAsync(SerializedKey key)
-    {
-        return StoreKeyAsync(key, default);
-    }
-
     public async Task StoreKeyAsync(SerializedKey model, CancellationToken cancellationToken = default)
     {
         Entities.Key entity = new()
@@ -126,11 +116,6 @@ public class SigningKeyStore : ISigningKeyStore
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    Task ISigningKeyStore.DeleteKeyAsync(string keyId)
-    {
-        return DeleteKeyAsync(keyId, default);
-    }
-
     public async Task DeleteKeyAsync(string keyId, CancellationToken cancellationToken = default)
     {
         try

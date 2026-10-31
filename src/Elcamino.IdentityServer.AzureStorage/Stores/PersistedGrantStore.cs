@@ -39,6 +39,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return await GetAllAsync(grantFilter, default).ToListAsync().ConfigureAwait(false);
         }
 
+        async Task<IReadOnlyCollection<PersistedGrant>> IPersistedGrantStore.GetAllAsync(PersistedGrantFilter grantFilter, CancellationToken cancellationToken)
+        {
+            return await GetAllAsync(grantFilter, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         public async IAsyncEnumerable<PersistedGrant> GetAllAsync(PersistedGrantFilter grantFilter, [EnumeratorCancellation]CancellationToken cancellationToken = default)
         {
             int counter = 0;

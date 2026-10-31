@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using Duende.IdentityServer.Stores;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -117,6 +119,87 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             Assert.IsNotNull(getClient);
 
 
+        }
+
+        [TestMethod]
+        public async Task ClientStore_GetAllClientsAsyncTest()
+        {
+            var storageContext = Services.BuildServiceProvider().GetService<ClientStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            var store = new ClientStore(storageContext, _logger);
+            var storedClients = Enumerable.Range(0, 3).Select(_ => CreateTestObject(clientid: Guid.NewGuid().ToString("n"))).ToList();
+            foreach (var storedClient in storedClients)
+            {
+                await store.StoreAsync(storedClient);
+            }
+
+            try
+            {
+                IClientStore clientStore = store;
+                var clients = await clientStore.GetAllClientsAsync(CancellationToken.None).ToListAsync();
+
+                foreach (var storedClient in storedClients)
+                {
+                    var returnedClient = clients.FirstOrDefault(f => f.ClientId == storedClient.ClientId);
+                    Assert.IsNotNull(returnedClient, $"{storedClient.ClientId} not returned by {nameof(IClientStore.GetAllClientsAsync)}");
+                    Assert.AreEqual(storedClient.ClientName, returnedClient.ClientName);
+                }
+            }
+            finally
+            {
+                foreach (var storedClient in storedClients)
+                {
+                    await store.RemoveAsync(storedClient.ClientId);
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task ClientStore_GetAllClientsAsyncCanceledTest()
+        {
+            var storageContext = Services.BuildServiceProvider().GetService<ClientStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            IClientStore clientStore = new ClientStore(storageContext, _logger);
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await clientStore.GetAllClientsAsync(cancellationTokenSource.Token).ToListAsync());
+        }
+
+        [TestMethod]
+        public async Task ClientStore_GetAllClientsAsyncCanceledDuringEnumerationTest()
+        {
+            var storageContext = Services.BuildServiceProvider().GetService<ClientStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            var store = new ClientStore(storageContext, _logger);
+            var storedClients = Enumerable.Range(0, 2).Select(_ => CreateTestObject(clientid: Guid.NewGuid().ToString("n"))).ToList();
+            foreach (var storedClient in storedClients)
+            {
+                await store.StoreAsync(storedClient);
+            }
+
+            try
+            {
+                IClientStore clientStore = store;
+                using var cancellationTokenSource = new CancellationTokenSource();
+                await using var enumerator = clientStore.GetAllClientsAsync(cancellationTokenSource.Token).GetAsyncEnumerator();
+
+                Assert.IsTrue(await enumerator.MoveNextAsync());
+                cancellationTokenSource.Cancel();
+
+                await Assert.ThrowsAsync<OperationCanceledException>(async () => await enumerator.MoveNextAsync());
+            }
+            finally
+            {
+                foreach (var storedClient in storedClients)
+                {
+                    await store.RemoveAsync(storedClient.ClientId);
+                }
+            }
         }
 
         [TestMethod]

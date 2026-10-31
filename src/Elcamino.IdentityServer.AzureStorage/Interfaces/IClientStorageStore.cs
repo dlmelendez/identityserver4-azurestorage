@@ -5,12 +5,13 @@ using Duende.IdentityServer.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ElCamino.IdentityServer.AzureStorage.Interfaces
 {
     public interface IClientStorageStore
     {
-        Task<IEnumerable<Client>> GetAllClients();
+        Task<IEnumerable<Client>> GetAllClients(CancellationToken cancellationToken = default);
     }
 }

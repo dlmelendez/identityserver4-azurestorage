@@ -424,17 +424,17 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="scopeNames"></param>
         /// <returns></returns>
-        public Task<IEnumerable<Model.ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
+        public Task<IReadOnlyCollection<Model.ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
         {
             return FindApiResourcesByScopeNameAsync(scopeNames, default);
         }
 
-        public async Task<IEnumerable<Model.ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<Model.ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
         {
             var entities = await GetResourcesByScopeAsync<Entities.ApiResource>(scopeNames, StorageContext.ApiResourceTable, StorageContext.ApiResourceBlobContainer, cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Found {scopes} API scopes in blob storage", entities.Count());
 
-            return entities.Select(s => s?.ToModel());
+            return entities.Select(s => s?.ToModel()).ToArray();
         }
 
         private async Task<IEnumerable<Entity>> GetResourcesByScopeAsync<Entity>(IEnumerable<string> scopeNames, TableClient table, BlobContainerClient container, CancellationToken cancellationToken = default) where Entity : class, new()
@@ -462,12 +462,12 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="scopeNames"></param>
         /// <returns></returns>
-        public Task<IEnumerable<Model.IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
+        public Task<IReadOnlyCollection<Model.IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
         {
             return FindIdentityResourcesByScopeNameAsync(scopeNames, default);
         }
 
-        public async Task<IEnumerable<Model.IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<Model.IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
         {
             var scopes = scopeNames.Where(w => !string.IsNullOrWhiteSpace(w)).Distinct();
 
@@ -480,7 +480,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
 
             _logger.LogDebug($"Found {scopes.Count()} {nameof(Model.IdentityResource)} scopes in blob storage");
 
-            return entities.Where(w => w != null).Select(s => s?.ToModel());
+            return entities.Where(w => w != null).Select(s => s?.ToModel()).ToArray();
 
         }
 
@@ -559,12 +559,12 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             return entities;
         }
 
-        public Task<IEnumerable<Model.ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames)
+        public Task<IReadOnlyCollection<Model.ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames)
         {
             return FindApiScopesByNameAsync(scopeNames, default);
         }
 
-        public async Task<IEnumerable<Model.ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<Model.ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames, CancellationToken cancellationToken = default)
         {
             var scopes = scopeNames.Where(w => !string.IsNullOrWhiteSpace(w)).Distinct();
 
@@ -576,15 +576,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
 
             _logger.LogDebug($"Found {scopes.Count()} {nameof(Model.ApiScope)} scopes in blob storage");
 
-            return entities.Where(w => w != null).Select(s => s?.ToModel());
+            return entities.Where(w => w != null).Select(s => s?.ToModel()).ToArray();
         }
 
-        public Task<IEnumerable<Model.ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames)
+        public Task<IReadOnlyCollection<Model.ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames)
         {
             return FindApiResourcesByNameAsync(apiResourceNames, default);
         }
 
-        public async Task<IEnumerable<Model.ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<Model.ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames, CancellationToken cancellationToken = default)
         {
             IEnumerable<string> apiResources = apiResourceNames.Where(w => !string.IsNullOrWhiteSpace(w)).Distinct();
 
@@ -592,7 +592,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
 
             await Task.WhenAll(keyTasks).ConfigureAwait(false);
 
-            var models = keyTasks.Select(t => t.Result);
+            var models = keyTasks.Select(t => t.Result).ToArray();
             _logger.LogDebug($"Found {models.Count()} {nameof(Model.ApiResource)} scopes in blob storage");
 
             return models;
