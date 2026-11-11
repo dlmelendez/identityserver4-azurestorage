@@ -52,15 +52,19 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             Stopwatch sw = new Stopwatch();
             sw.Start();
 #endif
-            string tableFilter = GetTableFilter(grantFilter).ToString();
+            var (tableFilter, isMatch) = GetGrantQuery(grantFilter);
 #if DEBUG
             sw.Stop();
-            Debug.WriteLine(message: $"{nameof(GetTableFilter)}: {sw.ElapsedMilliseconds} ms");
+            Debug.WriteLine(message: $"{nameof(GetGrantQuery)}: {sw.ElapsedMilliseconds} ms");
 #endif
 
             await foreach (var model in Contexts.StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
                 (tableFilter, StorageContext.PersistedGrantTable, p => p.ToModel(), cancellationToken).ConfigureAwait(false))
             {
+                if (isMatch is not null && !isMatch(model.ClientId, model.Type))
+                {
+                    continue;
+                }
                 string tokenData = await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer, cancellationToken)
                         .ConfigureAwait(false);
                 if (string.IsNullOrEmpty(tokenData))
@@ -113,10 +117,10 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             Stopwatch sw = new Stopwatch();
             sw.Start();
 #endif
-            string tableFilter = GetTableFilter(grantFilter).ToString();
+            var (tableFilter, isMatch) = GetGrantQuery(grantFilter);
 #if DEBUG
             sw.Stop();
-            Debug.WriteLine(message: $"{nameof(GetTableFilter)}: {sw.ElapsedMilliseconds} ms");
+            Debug.WriteLine(message: $"{nameof(GetGrantQuery)}: {sw.ElapsedMilliseconds} ms");
 #endif
 
             _logger.LogDebug(message: $"removing persisted grants from database for table filter {tableFilter} ");
@@ -124,6 +128,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             var mainTasks = (await table.QueryAsync<PersistedGrantTblEntity>(filter: tableFilter, cancellationToken: cancellationToken)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false))
+                .Where(subjectEntity => isMatch is null || isMatch(subjectEntity.ClientId, subjectEntity.Type))
                 .Select(subjectEntity =>
                 {
                     var deletes = subjectEntity.ToModel().ToEntities();
@@ -153,42 +158,94 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }
 
-        private static ReadOnlySpan<char> GetTableFilter(PersistedGrantFilter grantFilter)
+        /// <summary>
+        /// Translates a <see cref="PersistedGrantFilter"/> into a table query plus an in-memory match.
+        /// </summary>
+        /// <remarks>
+        /// Follows Duende's reference stores: a non-empty <see cref="PersistedGrantFilter.ClientIds"/> matches those ids
+        /// plus <see cref="PersistedGrantFilter.ClientId"/> when set; otherwise <see cref="PersistedGrantFilter.ClientId"/>
+        /// alone applies. <see cref="PersistedGrantFilter.Types"/> and <see cref="PersistedGrantFilter.Type"/> work the same way.
+        /// An empty list is no constraint.
+        /// The lists are matched in memory instead of in the table filter, because Table Storage allows at most
+        /// 15 comparisons in one $filter. The table query is already limited to the subject's partition.
+        /// </remarks>
+        /// <returns>
+        /// The table filter, and a (ClientId, Type) match to apply to each row it returns,
+        /// or null when the table filter is exact.
+        /// </returns>
+        private static (string TableFilter, Func<string, string, bool> IsMatch) GetGrantQuery(PersistedGrantFilter grantFilter)
         {
-            var hashedSubject = KeyGeneratorHelper.GenerateHashValue(grantFilter.SubjectId);
+            HashSet<string> clientIds = GetAllowedValues(grantFilter.ClientIds, grantFilter.ClientId);
+            HashSet<string> types = GetAllowedValues(grantFilter.Types, grantFilter.Type);
+
+            // When a list is set, the singular value only widens the match, so it must not narrow the table query.
+            string tableFilter = GetTableFilter(grantFilter.SubjectId,
+                grantFilter.SessionId,
+                clientIds is null ? grantFilter.ClientId : null,
+                types is null ? grantFilter.Type : null).ToString();
+
+            if (clientIds is null && types is null)
+            {
+                return (tableFilter, null);
+            }
+
+            return (tableFilter, (clientId, type) =>
+                (clientIds is null || clientIds.Contains(clientId))
+                && (types is null || types.Contains(type)));
+        }
+
+        /// <returns>The values plus <paramref name="value"/> when set, or null when <paramref name="values"/> is empty.</returns>
+        private static HashSet<string> GetAllowedValues(IReadOnlyCollection<string> values, string value)
+        {
+            if (values is not { Count: > 0 })
+            {
+                return null;
+            }
+
+            var allowed = new HashSet<string>(values, StringComparer.Ordinal);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                allowed.Add(value);
+            }
+            return allowed;
+        }
+
+        private static ReadOnlySpan<char> GetTableFilter(string subjectId, string sessionId, string clientId, string type)
+        {
+            var hashedSubject = KeyGeneratorHelper.GenerateHashValue(subjectId);
 
             var tableFilter = TableQuery.GenerateFilterCondition(nameof(PersistedGrantTblEntity.PartitionKey),
                 QueryComparisons.Equal,
                 hashedSubject);
 
-            if (!string.IsNullOrWhiteSpace(grantFilter.ClientId)
-                || !string.IsNullOrWhiteSpace(grantFilter.Type)
-                || !string.IsNullOrWhiteSpace(grantFilter.SessionId))
+            if (!string.IsNullOrWhiteSpace(clientId)
+                || !string.IsNullOrWhiteSpace(type)
+                || !string.IsNullOrWhiteSpace(sessionId))
             {
                 TableQueryBuilder queryBuilder = new TableQueryBuilder();
                 queryBuilder.AddFilter(tableFilter);
-                if (!string.IsNullOrWhiteSpace(grantFilter.ClientId))
+                if (!string.IsNullOrWhiteSpace(clientId))
                 {
                     queryBuilder.CombineFilters(TableOperator.And);
                     queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.ClientId),
                         QueryComparison.Equal,
-                        grantFilter.ClientId.AsSpan());
+                        clientId.AsSpan());
                 }
 
-                if (!string.IsNullOrWhiteSpace(grantFilter.Type))
+                if (!string.IsNullOrWhiteSpace(type))
                 {
                     queryBuilder.CombineFilters(TableOperator.And);
                     queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.Type),
                         QueryComparison.Equal,
-                        grantFilter.Type.AsSpan());
+                        type.AsSpan());
                 }
 
-                if (!string.IsNullOrWhiteSpace(grantFilter.SessionId))
+                if (!string.IsNullOrWhiteSpace(sessionId))
                 {
                     queryBuilder.CombineFilters(TableOperator.And);
                     queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.SessionId),
                         QueryComparison.Equal,
-                        grantFilter.SessionId.AsSpan());
+                        sessionId.AsSpan());
                 }
 
                 return queryBuilder.ToString();
