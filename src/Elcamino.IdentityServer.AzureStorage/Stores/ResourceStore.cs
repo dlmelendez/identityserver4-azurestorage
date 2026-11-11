@@ -344,7 +344,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             {
                 return await StorageContext.GetLatestFromCacheBlobAsync<Entities.ApiResource>(StorageContext.ApiResourceBlobCacheContainer, cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 _logger.LogError(ex, $"{nameof(GetLatestApiResourceCacheAsync)} error");
             }
@@ -357,7 +357,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             {
                 return await StorageContext.GetLatestFromCacheBlobAsync<Entities.ApiScope>(StorageContext.ApiScopeBlobCacheContainer, cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 _logger.LogError(ex, $"{nameof(GetLatestApiScopeCacheAsync)} error");
             }
@@ -370,7 +370,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             {
                 return await StorageContext.GetLatestFromCacheBlobAsync<Entities.IdentityResource>(StorageContext.IdentityResourceBlobCacheContainer, cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 _logger.LogError(ex, $"{nameof(GetLatestIdentityResourceCacheAsync)} error");
             }
@@ -592,7 +592,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
 
             await Task.WhenAll(keyTasks).ConfigureAwait(false);
 
-            var models = keyTasks.Select(t => t.Result).ToArray();
+            var models = keyTasks.Select(t => t.Result).Where(m => m != null).ToArray();
             _logger.LogDebug($"Found {models.Count()} {nameof(Model.ApiResource)} scopes in blob storage");
 
             return models;

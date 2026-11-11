@@ -170,6 +170,20 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
         }
 
         [TestMethod]
+        public async Task ClientStore_GetLatestClientCacheAsyncCanceledTest()
+        {
+            var storageContext = Services.BuildServiceProvider().GetService<ClientStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            var store = new ClientStore(storageContext, _logger);
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() => store.GetLatestClientCacheAsync(cancellationTokenSource.Token));
+        }
+
+        [TestMethod]
         public async Task ClientStore_GetAllClientsAsyncCanceledDuringEnumerationTest()
         {
             var storageContext = Services.BuildServiceProvider().GetService<ClientStorageContext>();

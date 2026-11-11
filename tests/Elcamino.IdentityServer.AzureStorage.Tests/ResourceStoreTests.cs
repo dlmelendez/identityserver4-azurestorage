@@ -108,6 +108,23 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
         }
 
         [TestMethod]
+        public async Task ResourceStore_GetLatestCacheAsyncCanceledTest()
+        {
+            var storageContext = Services.BuildServiceProvider().GetService<ResourceStorageContext>();
+            Assert.IsNotNull(storageContext);
+
+            var store = new ResourceStore(storageContext, _logger);
+
+            using var cancellationTokenSource = new System.Threading.CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+            var cancellationToken = cancellationTokenSource.Token;
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() => store.GetLatestApiResourceCacheAsync(cancellationToken));
+            await Assert.ThrowsAsync<OperationCanceledException>(() => store.GetLatestApiScopeCacheAsync(cancellationToken));
+            await Assert.ThrowsAsync<OperationCanceledException>(() => store.GetLatestIdentityResourceCacheAsync(cancellationToken));
+        }
+
+        [TestMethod]
         public async Task ResourceStore_MigrateV3Test()
         {
             Stopwatch stopwatch = new Stopwatch();
@@ -237,10 +254,10 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 
             stopwatch.Reset();
             stopwatch.Start();
-            var findResource = (await store.FindApiResourcesByNameAsync(new string[] { resource.Name })).FirstOrDefault();
+            var findResources = await store.FindApiResourcesByNameAsync(new string[] { resource.Name });
             stopwatch.Stop();
             Console.WriteLine($"ResourceStore.FindResourceByIdAsync({resource.Name})-api: {stopwatch.ElapsedMilliseconds} ms");
-            Assert.IsNull(findResource);
+            Assert.HasCount(0, findResources);
 
         }
 

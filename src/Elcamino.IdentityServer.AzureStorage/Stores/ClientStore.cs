@@ -130,7 +130,7 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 return await StorageContext.GetLatestFromCacheBlobAsync<Entities.Client>(StorageContext.ClientCacheBlobContainer, cancellationToken)
                     .ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 _logger.LogError(ex, $"{nameof(GetLatestClientCacheAsync)} error");
             }
