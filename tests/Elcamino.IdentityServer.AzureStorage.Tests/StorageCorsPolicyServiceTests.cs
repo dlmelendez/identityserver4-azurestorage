@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Model = Duende.IdentityServer.Models;
 using System.Text.Json;
@@ -58,11 +59,23 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 
             stopwatch.Reset();
             stopwatch.Start();
-            bool allowed = await corsPolicyService.IsOriginAllowedAsync(ClientStoreTests.DefaultAllowedCors).ConfigureAwait(false);
+            bool allowed = await corsPolicyService.IsOriginAllowedAsync(ClientStoreTests.DefaultAllowedCors, CancellationToken.None).ConfigureAwait(false);
             stopwatch.Stop();
             Console.WriteLine($"StorageCorsPolicyService.IsOriginAllowedAsync({ClientStoreTests.DefaultAllowedCors}): output:{allowed} :{stopwatch.ElapsedMilliseconds} ms");
 
             Assert.IsTrue(allowed);
+        }
+
+        [TestMethod]
+        public async Task IsOriginAllowedCanceledTest()
+        {
+            var corsPolicyService = Services.BuildServiceProvider().GetService<ICorsPolicyService>();
+            Assert.IsNotNull(corsPolicyService);
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() => corsPolicyService.IsOriginAllowedAsync(ClientStoreTests.DefaultAllowedCors, cancellationTokenSource.Token));
         }
 
     }

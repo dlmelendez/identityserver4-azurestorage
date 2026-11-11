@@ -6,6 +6,7 @@ using Duende.IdentityServer.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ElCamino.IdentityServer.AzureStorage.Helpers;
 using ElCamino.IdentityServer.AzureStorage.Interfaces;
@@ -39,9 +40,9 @@ namespace ElCamino.IdentityServer.AzureStorage.Services
         /// </summary>
         /// <param name="origin">The origin.</param>
         /// <returns></returns>
-        public virtual async Task<bool> IsOriginAllowedAsync(string origin)
+        public virtual async Task<bool> IsOriginAllowedAsync(string origin, CancellationToken cancellationToken = default)
         {
-            var clients = await _clientStore.GetAllClients().ConfigureAwait(false);
+            var clients = await _clientStore.GetAllClients(cancellationToken).ConfigureAwait(false);
             var query =
                 from client in clients
                 from url in client.AllowedCorsOrigins

@@ -12,8 +12,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Duende.IdentityServer" Version="7.4.14" />
-    <PackageReference Include="Duende.IdentityServer.Storage" Version="7.4.14" />
+    <PackageReference Include="Duende.IdentityServer" Version="8.0.10" />
+    <PackageReference Include="Duende.IdentityServer.Storage" Version="8.0.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.*" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.*" />

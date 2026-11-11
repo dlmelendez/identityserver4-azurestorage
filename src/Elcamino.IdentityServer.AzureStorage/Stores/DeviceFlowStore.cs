@@ -61,11 +61,11 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// <param name="userCode">The user code.</param>
         /// <param name="data">The data.</param>
         /// <returns></returns>
-        public virtual async Task StoreDeviceAuthorizationAsync(string deviceCode, string userCode, DeviceCode data)
+        public virtual async Task StoreDeviceAuthorizationAsync(string deviceCode, string userCode, DeviceCode data, CancellationToken cancellationToken = default)
         {
             string entityJson = JsonSerializer.Serialize(ToEntity(data, deviceCode, userCode), Context.JsonSerializerDefaultOptions);
-            await Task.WhenAll(Context.SaveBlobWithHashedKeyAsync(deviceCode, entityJson, Context.DeviceCodeBlobContainer),
-                               Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer))
+            await Task.WhenAll(Context.SaveBlobWithHashedKeyAsync(deviceCode, entityJson, Context.DeviceCodeBlobContainer, cancellationToken),
+                               Context.SaveBlobWithHashedKeyAsync(userCode, entityJson, Context.UserCodeBlobContainer, cancellationToken))
                 .ConfigureAwait(false);
         }
 
@@ -74,11 +74,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="userCode">The user code.</param>
         /// <returns></returns>
-        public virtual Task<DeviceCode> FindByUserCodeAsync(string userCode) 
-        {
-            return FindByUserCodeAsync(userCode, default);
-        }
-
         public virtual async Task<DeviceCode> FindByUserCodeAsync(string userCode, CancellationToken cancellationToken = default)
         {
             DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer, cancellationToken)
@@ -95,11 +90,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="deviceCode">The device code.</param>
         /// <returns></returns>
-        public virtual Task<DeviceCode> FindByDeviceCodeAsync(string deviceCode)
-        {
-            return FindByDeviceCodeAsync(deviceCode, default);
-        }
-
         public virtual async Task<DeviceCode> FindByDeviceCodeAsync(string deviceCode, CancellationToken cancellationToken = default)
         {
             DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer, cancellationToken)
@@ -117,11 +107,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// <param name="userCode">The user code.</param>
         /// <param name="data">The data.</param>
         /// <returns></returns>
-        public virtual Task UpdateByUserCodeAsync(string userCode, DeviceCode data)
-        {
-            return UpdateByUserCodeAsync(userCode, data, default);
-        }
-
         public virtual async Task UpdateByUserCodeAsync(string userCode, DeviceCode data, CancellationToken cancellationToken = default)
         {
             DeviceFlowCodes existingUserCode = await Context.GetEntityBlobAsync<DeviceFlowCodes>(userCode, Context.UserCodeBlobContainer, cancellationToken)
@@ -159,11 +144,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
         /// </summary>
         /// <param name="deviceCode">The device code.</param>
         /// <returns></returns>
-        public virtual Task RemoveByDeviceCodeAsync(string deviceCode)
-        {
-            return RemoveByDeviceCodeAsync(deviceCode, default);
-        }
-
         public virtual async Task RemoveByDeviceCodeAsync(string deviceCode, CancellationToken cancellationToken = default)
         {
             DeviceFlowCodes deviceFlowCodes = await Context.GetEntityBlobAsync<DeviceFlowCodes>(deviceCode, Context.DeviceCodeBlobContainer, cancellationToken)
