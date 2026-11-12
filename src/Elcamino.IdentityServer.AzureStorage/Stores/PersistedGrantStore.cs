@@ -153,6 +153,12 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }
 
+        /// <remarks>
+        /// Follows Duende's reference stores: a non-empty <see cref="PersistedGrantFilter.ClientIds"/> matches those ids
+        /// plus <see cref="PersistedGrantFilter.ClientId"/> when set; otherwise <see cref="PersistedGrantFilter.ClientId"/>
+        /// alone applies. <see cref="PersistedGrantFilter.Types"/> and <see cref="PersistedGrantFilter.Type"/> work the same way.
+        /// An empty list is no constraint.
+        /// </remarks>
         private static ReadOnlySpan<char> GetTableFilter(PersistedGrantFilter grantFilter)
         {
             var hashedSubject = KeyGeneratorHelper.GenerateHashValue(grantFilter.SubjectId);
@@ -161,27 +167,17 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
                 QueryComparisons.Equal,
                 hashedSubject);
 
-            if (!string.IsNullOrWhiteSpace(grantFilter.ClientId)
-                || !string.IsNullOrWhiteSpace(grantFilter.Type)
+            string[] clientIds = GetFilterValues(grantFilter.ClientIds, grantFilter.ClientId);
+            string[] types = GetFilterValues(grantFilter.Types, grantFilter.Type);
+
+            if (clientIds.Length > 0
+                || types.Length > 0
                 || !string.IsNullOrWhiteSpace(grantFilter.SessionId))
             {
                 TableQueryBuilder queryBuilder = new TableQueryBuilder();
                 queryBuilder.AddFilter(tableFilter);
-                if (!string.IsNullOrWhiteSpace(grantFilter.ClientId))
-                {
-                    queryBuilder.CombineFilters(TableOperator.And);
-                    queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.ClientId),
-                        QueryComparison.Equal,
-                        grantFilter.ClientId.AsSpan());
-                }
-
-                if (!string.IsNullOrWhiteSpace(grantFilter.Type))
-                {
-                    queryBuilder.CombineFilters(TableOperator.And);
-                    queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.Type),
-                        QueryComparison.Equal,
-                        grantFilter.Type.AsSpan());
-                }
+                AddAnyOfFilter(queryBuilder, nameof(PersistedGrantTblEntity.ClientId), clientIds);
+                AddAnyOfFilter(queryBuilder, nameof(PersistedGrantTblEntity.Type), types);
 
                 if (!string.IsNullOrWhiteSpace(grantFilter.SessionId))
                 {
@@ -195,6 +191,50 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
 
             return tableFilter;
+        }
+
+        /// <returns>
+        /// The list plus <paramref name="value"/> when the list is not empty; otherwise <paramref name="value"/> when set;
+        /// otherwise no values, meaning no constraint.
+        /// </returns>
+        private static string[] GetFilterValues(IReadOnlyCollection<string> values, string value)
+        {
+            if (values is { Count: > 0 })
+            {
+                IEnumerable<string> allValues = string.IsNullOrWhiteSpace(value) ? values : values.Append(value);
+                return [.. allValues.Distinct(StringComparer.Ordinal)];
+            }
+            return string.IsNullOrWhiteSpace(value) ? [] : [value];
+        }
+
+        /// <summary>
+        /// Adds "and (property eq value1 or property eq value2 ...)". A single value is added without the group,
+        /// so the filter is the same as for a plain ClientId or Type. Adds nothing when there are no values.
+        /// </summary>
+        private static void AddAnyOfFilter(TableQueryBuilder queryBuilder, string propertyName, string[] values)
+        {
+            if (values.Length == 0)
+            {
+                return;
+            }
+
+            queryBuilder.CombineFilters(TableOperator.And);
+            if (values.Length > 1)
+            {
+                queryBuilder.BeginGroup();
+            }
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (i > 0)
+                {
+                    queryBuilder.CombineFilters(TableOperator.Or);
+                }
+                queryBuilder.AddFilter(propertyName, QueryComparison.Equal, values[i].AsSpan());
+            }
+            if (values.Length > 1)
+            {
+                queryBuilder.EndGroup();
+            }
         }
 
         public Task RemoveAsync(string key)

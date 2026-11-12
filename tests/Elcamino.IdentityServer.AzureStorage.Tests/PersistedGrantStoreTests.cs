@@ -4,6 +4,7 @@
 using ElCamino.IdentityServer.AzureStorage.Contexts;
 using ElCamino.IdentityServer.AzureStorage.Mappers;
 using ElCamino.IdentityServer.AzureStorage.Stores;
+using Duende.IdentityServer;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Stores;
 using Microsoft.Extensions.DependencyInjection;
@@ -386,6 +387,84 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
             returnGrants = (await store.GetAllAsync(new PersistedGrantFilter() { SubjectId = subject, ClientId = client, Type = type })).ToList();
             Assert.HasCount(grants.Count - 1, returnGrants);
 
+        }
+
+        private const string ClientA = "client_a";
+        private const string ClientB = "client_b";
+        private const string RefreshToken = IdentityServerConstants.PersistedGrantTypes.RefreshToken;
+        private const string UserConsent = IdentityServerConstants.PersistedGrantTypes.UserConsent;
+
+        [TestMethod]
+        public Task PersistedGrantStore_FilterTypesKeepsConsentsTest() =>
+            AssertFilterMatchesAsync(subject => new PersistedGrantFilter { SubjectId = subject, Types = [RefreshToken] },
+                (ClientA, RefreshToken), (ClientB, RefreshToken));
+
+        [TestMethod]
+        public Task PersistedGrantStore_FilterClientIdsKeepsOtherClientsTest() =>
+            AssertFilterMatchesAsync(subject => new PersistedGrantFilter { SubjectId = subject, ClientIds = [ClientA] },
+                (ClientA, RefreshToken), (ClientA, UserConsent));
+
+        [TestMethod]
+        public Task PersistedGrantStore_FilterClientIdAndClientIdsIsUnionTest() =>
+            AssertFilterMatchesAsync(subject => new PersistedGrantFilter { SubjectId = subject, ClientId = ClientB, ClientIds = [ClientA] },
+                (ClientA, RefreshToken), (ClientA, UserConsent), (ClientB, RefreshToken), (ClientB, UserConsent));
+
+        [TestMethod]
+        public Task PersistedGrantStore_FilterTypeAndTypesIsUnionTest() =>
+            AssertFilterMatchesAsync(subject => new PersistedGrantFilter { SubjectId = subject, Type = UserConsent, Types = [RefreshToken] },
+                (ClientA, RefreshToken), (ClientA, UserConsent), (ClientB, RefreshToken), (ClientB, UserConsent));
+
+        [TestMethod]
+        public Task PersistedGrantStore_FilterEmptyListsAreNoConstraintTest() =>
+            AssertFilterMatchesAsync(subject => new PersistedGrantFilter { SubjectId = subject, ClientIds = [], Types = [] },
+                (ClientA, RefreshToken), (ClientA, UserConsent), (ClientB, RefreshToken), (ClientB, UserConsent));
+
+        [TestMethod]
+        public Task PersistedGrantStore_FilterManyClientIdsAndTypesTest() =>
+            AssertFilterMatchesAsync(subject => new PersistedGrantFilter
+                {
+                    SubjectId = subject,
+                    ClientIds = [.. Enumerable.Range(0, 20).Select(i => $"other_client_{i}"), ClientB],
+                    Types = [.. Enumerable.Range(0, 19).Select(i => $"other_type_{i}"), UserConsent],
+                },
+                (ClientB, UserConsent));
+
+        /// <summary>
+        /// Stores refresh token and consent grants for <see cref="ClientA"/> and <see cref="ClientB"/> under a new subject,
+        /// then checks that GetAllAsync returns, and RemoveAllAsync removes, exactly the expected grants.
+        /// </summary>
+        private async Task AssertFilterMatchesAsync(Func<string, PersistedGrantFilter> createFilter, params (string ClientId, string Type)[] expectedMatches)
+        {
+            var storageContext = Services.BuildServiceProvider().GetService<PersistedGrantStorageContext>();
+            Assert.IsNotNull(storageContext);
+            var store = new PersistedGrantStore(storageContext, _logger);
+
+            string subject = Guid.NewGuid().ToString();
+            List<PersistedGrant> grants = new List<PersistedGrant>();
+            foreach (string clientId in new[] { ClientA, ClientB })
+            {
+                foreach (string type in new[] { RefreshToken, UserConsent })
+                {
+                    var grant = CreateTestObject(serializerOptions: storageContext.JsonSerializerDefaultOptions,
+                        subjectId: subject, clientId: clientId, type: type);
+                    await store.StoreAsync(grant);
+                    grants.Add(grant);
+                }
+            }
+
+            List<string> expectedKeys = grants.Where(g => expectedMatches.Contains((g.ClientId, g.Type)))
+                .Select(g => g.Key).Order().ToList();
+            List<string> expectedRemainingKeys = grants.Select(g => g.Key).Except(expectedKeys).Order().ToList();
+            PersistedGrantFilter filter = createFilter(subject);
+
+            List<string> foundKeys = (await store.GetAllAsync(filter)).Select(g => g.Key).Order().ToList();
+            CollectionAssert.AreEqual(expectedKeys, foundKeys, "GetAllAsync returned the wrong grants");
+
+            await store.RemoveAllAsync(filter);
+
+            List<string> remainingKeys = (await store.GetAllAsync(new PersistedGrantFilter { SubjectId = subject }))
+                .Select(g => g.Key).Order().ToList();
+            CollectionAssert.AreEqual(expectedRemainingKeys, remainingKeys, "RemoveAllAsync removed the wrong grants");
         }
 
         public static void AssertGrantsEqual(PersistedGrant expected, PersistedGrant actual, bool checkData = true)
