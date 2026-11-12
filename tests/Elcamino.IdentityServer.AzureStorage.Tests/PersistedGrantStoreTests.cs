@@ -421,19 +421,13 @@ namespace ElCamino.IdentityServer.AzureStorage.UnitTests
 
         [TestMethod]
         public Task PersistedGrantStore_FilterManyClientIdsAndTypesTest() =>
-            // More values than the 15 comparisons Table Storage allows in one $filter.
             AssertFilterMatchesAsync(subject => new PersistedGrantFilter
                 {
                     SubjectId = subject,
-                    ClientIds = [ClientA, .. Enumerable.Range(0, 20).Select(i => $"other_client_{i}")],
-                    Types = [
-                        IdentityServerConstants.PersistedGrantTypes.AuthorizationCode,
-                        IdentityServerConstants.PersistedGrantTypes.BackChannelAuthenticationRequest,
-                        IdentityServerConstants.PersistedGrantTypes.ReferenceToken,
-                        RefreshToken,
-                    ],
+                    ClientIds = [.. Enumerable.Range(0, 20).Select(i => $"other_client_{i}"), ClientB],
+                    Types = [.. Enumerable.Range(0, 19).Select(i => $"other_type_{i}"), UserConsent],
                 },
-                (ClientA, RefreshToken));
+                (ClientB, UserConsent));
 
         /// <summary>
         /// Stores refresh token and consent grants for <see cref="ClientA"/> and <see cref="ClientB"/> under a new subject,

@@ -52,19 +52,15 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             Stopwatch sw = new Stopwatch();
             sw.Start();
 #endif
-            var (tableFilter, isMatch) = GetGrantQuery(grantFilter);
+            string tableFilter = GetTableFilter(grantFilter).ToString();
 #if DEBUG
             sw.Stop();
-            Debug.WriteLine(message: $"{nameof(GetGrantQuery)}: {sw.ElapsedMilliseconds} ms");
+            Debug.WriteLine(message: $"{nameof(GetTableFilter)}: {sw.ElapsedMilliseconds} ms");
 #endif
 
             await foreach (var model in Contexts.StorageContext.GetAllByTableQueryAsync<PersistedGrantTblEntity, PersistedGrant>
                 (tableFilter, StorageContext.PersistedGrantTable, p => p.ToModel(), cancellationToken).ConfigureAwait(false))
             {
-                if (isMatch is not null && !isMatch(model.ClientId, model.Type))
-                {
-                    continue;
-                }
                 string tokenData = await StorageContext.GetBlobContentAsync(model.Key, StorageContext.PersistedGrantBlobContainer, cancellationToken)
                         .ConfigureAwait(false);
                 if (string.IsNullOrEmpty(tokenData))
@@ -117,10 +113,10 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             Stopwatch sw = new Stopwatch();
             sw.Start();
 #endif
-            var (tableFilter, isMatch) = GetGrantQuery(grantFilter);
+            string tableFilter = GetTableFilter(grantFilter).ToString();
 #if DEBUG
             sw.Stop();
-            Debug.WriteLine(message: $"{nameof(GetGrantQuery)}: {sw.ElapsedMilliseconds} ms");
+            Debug.WriteLine(message: $"{nameof(GetTableFilter)}: {sw.ElapsedMilliseconds} ms");
 #endif
 
             _logger.LogDebug(message: $"removing persisted grants from database for table filter {tableFilter} ");
@@ -128,7 +124,6 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             var mainTasks = (await table.QueryAsync<PersistedGrantTblEntity>(filter: tableFilter, cancellationToken: cancellationToken)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false))
-                .Where(subjectEntity => isMatch is null || isMatch(subjectEntity.ClientId, subjectEntity.Type))
                 .Select(subjectEntity =>
                 {
                     var deletes = subjectEntity.ToModel().ToEntities();
@@ -158,100 +153,88 @@ namespace ElCamino.IdentityServer.AzureStorage.Stores
             }
         }
 
-        /// <summary>
-        /// Translates a <see cref="PersistedGrantFilter"/> into a table query plus an in-memory match.
-        /// </summary>
         /// <remarks>
         /// Follows Duende's reference stores: a non-empty <see cref="PersistedGrantFilter.ClientIds"/> matches those ids
         /// plus <see cref="PersistedGrantFilter.ClientId"/> when set; otherwise <see cref="PersistedGrantFilter.ClientId"/>
         /// alone applies. <see cref="PersistedGrantFilter.Types"/> and <see cref="PersistedGrantFilter.Type"/> work the same way.
         /// An empty list is no constraint.
-        /// The lists are matched in memory instead of in the table filter, because Table Storage allows at most
-        /// 15 comparisons in one $filter. The table query is already limited to the subject's partition.
         /// </remarks>
-        /// <returns>
-        /// The table filter, and a (ClientId, Type) match to apply to each row it returns,
-        /// or null when the table filter is exact.
-        /// </returns>
-        private static (string TableFilter, Func<string, string, bool> IsMatch) GetGrantQuery(PersistedGrantFilter grantFilter)
+        private static ReadOnlySpan<char> GetTableFilter(PersistedGrantFilter grantFilter)
         {
-            HashSet<string> clientIds = GetAllowedValues(grantFilter.ClientIds, grantFilter.ClientId);
-            HashSet<string> types = GetAllowedValues(grantFilter.Types, grantFilter.Type);
-
-            // When a list is set, the singular value only widens the match, so it must not narrow the table query.
-            string tableFilter = GetTableFilter(grantFilter.SubjectId,
-                grantFilter.SessionId,
-                clientIds is null ? grantFilter.ClientId : null,
-                types is null ? grantFilter.Type : null).ToString();
-
-            if (clientIds is null && types is null)
-            {
-                return (tableFilter, null);
-            }
-
-            return (tableFilter, (clientId, type) =>
-                (clientIds is null || clientIds.Contains(clientId))
-                && (types is null || types.Contains(type)));
-        }
-
-        /// <returns>The values plus <paramref name="value"/> when set, or null when <paramref name="values"/> is empty.</returns>
-        private static HashSet<string> GetAllowedValues(IReadOnlyCollection<string> values, string value)
-        {
-            if (values is not { Count: > 0 })
-            {
-                return null;
-            }
-
-            var allowed = new HashSet<string>(values, StringComparer.Ordinal);
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                allowed.Add(value);
-            }
-            return allowed;
-        }
-
-        private static ReadOnlySpan<char> GetTableFilter(string subjectId, string sessionId, string clientId, string type)
-        {
-            var hashedSubject = KeyGeneratorHelper.GenerateHashValue(subjectId);
+            var hashedSubject = KeyGeneratorHelper.GenerateHashValue(grantFilter.SubjectId);
 
             var tableFilter = TableQuery.GenerateFilterCondition(nameof(PersistedGrantTblEntity.PartitionKey),
                 QueryComparisons.Equal,
                 hashedSubject);
 
-            if (!string.IsNullOrWhiteSpace(clientId)
-                || !string.IsNullOrWhiteSpace(type)
-                || !string.IsNullOrWhiteSpace(sessionId))
+            string[] clientIds = GetFilterValues(grantFilter.ClientIds, grantFilter.ClientId);
+            string[] types = GetFilterValues(grantFilter.Types, grantFilter.Type);
+
+            if (clientIds.Length > 0
+                || types.Length > 0
+                || !string.IsNullOrWhiteSpace(grantFilter.SessionId))
             {
                 TableQueryBuilder queryBuilder = new TableQueryBuilder();
                 queryBuilder.AddFilter(tableFilter);
-                if (!string.IsNullOrWhiteSpace(clientId))
-                {
-                    queryBuilder.CombineFilters(TableOperator.And);
-                    queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.ClientId),
-                        QueryComparison.Equal,
-                        clientId.AsSpan());
-                }
+                AddAnyOfFilter(queryBuilder, nameof(PersistedGrantTblEntity.ClientId), clientIds);
+                AddAnyOfFilter(queryBuilder, nameof(PersistedGrantTblEntity.Type), types);
 
-                if (!string.IsNullOrWhiteSpace(type))
-                {
-                    queryBuilder.CombineFilters(TableOperator.And);
-                    queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.Type),
-                        QueryComparison.Equal,
-                        type.AsSpan());
-                }
-
-                if (!string.IsNullOrWhiteSpace(sessionId))
+                if (!string.IsNullOrWhiteSpace(grantFilter.SessionId))
                 {
                     queryBuilder.CombineFilters(TableOperator.And);
                     queryBuilder.AddFilter(nameof(PersistedGrantTblEntity.SessionId),
                         QueryComparison.Equal,
-                        sessionId.AsSpan());
+                        grantFilter.SessionId.AsSpan());
                 }
 
                 return queryBuilder.ToString();
             }
 
             return tableFilter;
+        }
+
+        /// <returns>
+        /// The list plus <paramref name="value"/> when the list is not empty; otherwise <paramref name="value"/> when set;
+        /// otherwise no values, meaning no constraint.
+        /// </returns>
+        private static string[] GetFilterValues(IReadOnlyCollection<string> values, string value)
+        {
+            if (values is { Count: > 0 })
+            {
+                IEnumerable<string> allValues = string.IsNullOrWhiteSpace(value) ? values : values.Append(value);
+                return [.. allValues.Distinct(StringComparer.Ordinal)];
+            }
+            return string.IsNullOrWhiteSpace(value) ? [] : [value];
+        }
+
+        /// <summary>
+        /// Adds "and (property eq value1 or property eq value2 ...)". A single value is added without the group,
+        /// so the filter is the same as for a plain ClientId or Type. Adds nothing when there are no values.
+        /// </summary>
+        private static void AddAnyOfFilter(TableQueryBuilder queryBuilder, string propertyName, string[] values)
+        {
+            if (values.Length == 0)
+            {
+                return;
+            }
+
+            queryBuilder.CombineFilters(TableOperator.And);
+            if (values.Length > 1)
+            {
+                queryBuilder.BeginGroup();
+            }
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (i > 0)
+                {
+                    queryBuilder.CombineFilters(TableOperator.Or);
+                }
+                queryBuilder.AddFilter(propertyName, QueryComparison.Equal, values[i].AsSpan());
+            }
+            if (values.Length > 1)
+            {
+                queryBuilder.EndGroup();
+            }
         }
 
         public Task RemoveAsync(string key)
